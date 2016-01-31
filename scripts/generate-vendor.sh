@@ -280,6 +280,7 @@ gen_mk_for_bytecode() {
   local dsoMName=""
   local arch=""
   local apk_lib_slinks=""
+  local hasApkSymLinks=false
 
   # Set module path (output)
   if [[ "$RELROOT" == "vendor" ]]; then
@@ -301,6 +302,7 @@ gen_mk_for_bytecode() {
     fileExt="${zipName##*.}"
     pkgName=$(basename $file .$fileExt)
     appDir="$origin/$pkgName"
+    apk_lib_slinks=""
 
     # Adjust APK/JAR specifics
     if [[ "$fileExt" == "jar" ]]; then
@@ -335,6 +337,7 @@ gen_mk_for_bytecode() {
     # lib directories, with app directory containing a softlink to. Resolve such
     # cases to adjust includes so that we don't copy across the same file twice
     if [ -d "$appDir/lib" ]; then
+      hasApkSymLinks=true
       for lib in $(find -L "$appDir/lib" -type l -iname '*.so')
       do
         # We don't expect a depth bigger than 1 here
@@ -402,7 +405,7 @@ gen_mk_for_bytecode() {
   mv "$VENDORMK.tmp" "$VENDORMK"
 
   # Update vendor mk again with softlink moodules if present
-  if [[ "$apk_lib_slinks" != "" ]]; then 
+  if [ $hasApkSymLinks = true ]; then 
     echo "" >> $VENDORMK
     echo "# Prebuilt APKs libs symlinks from '$RELROOT/$RELSUBROOT'" >> $VENDORMK
     echo 'PRODUCT_PACKAGES += \' >> $VENDORMK
