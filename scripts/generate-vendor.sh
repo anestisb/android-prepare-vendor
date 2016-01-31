@@ -285,11 +285,11 @@ gen_mk_for_bytecode() {
   # Set module path (output)
   if [[ "$RELROOT" == "vendor" ]]; then
     origin="$INDIR/vendor/$RELSUBROOT"
-    lcMPath="\$(TARGET_OUT_VENDOR)/$RELSUBROOT"
+    lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_VENDOR)/$RELSUBROOT"
     dsoRoot="/vendor"
   elif [[ "$RELROOT" == "proprietary" ]]; then
     origin="$INDIR/system/$RELSUBROOT"
-    lcMPath="\$(TARGET_OUT_SYSTEM)/$RELSUBROOT"
+    lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_SYSTEM)/$RELSUBROOT"
     dsoRoot="/system"
   else
     echo "[-] Invalid '$RELDIR' relative directory"
