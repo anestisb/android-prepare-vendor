@@ -243,7 +243,6 @@ gen_apk_dso_symlink() {
   echo "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
   echo "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
   echo "\$(LOCAL_BUILT_MODULE):"
-  echo "\t\$(hide) echo \"fuck symlinks..........................\")"
   echo "\t\$(hide) mkdir -p \$(dir \$@)"
   echo "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
   echo "\t\$(hide) rm -rf \$@"
