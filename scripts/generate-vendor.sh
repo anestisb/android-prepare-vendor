@@ -489,7 +489,7 @@ mkdir -p $PROP_EXTRACT_BASE
 echo "[*] Copying files to '$OUTPUT_VENDOR' ..."
 extract_blobs $BLOBS_LIST $INPUT_DIR $OUTPUT_VENDOR
 
-# Generate $DEVICE-vendor-blobs.mk makefile (all pre-builds except APKs/JARs)
+# Generate $DEVICE-vendor-blobs.mk makefile (all pre-builts except APKs/JARs)
 echo "[*] Generating '$DEVICE-vendor-blobs.mk' makefile"
 gen_vendor_blobs_mk $BLOBS_LIST $OUTPUT_VENDOR $VENDOR
 
@@ -501,7 +501,7 @@ gen_dev_vendor_mk $OUTPUT_VENDOR
 echo "[*] Generating 'BoardConfigVendor.mk'"
 gen_board_cfg_mk $OUTPUT_VENDOR $DEVICE
 
-# Iterate over directories with bytecode zips & generate a unified Android.mk file
+# Iterate over directories with bytecode & generate a unified Android.mk file
 echo "[*] Generating 'Android.mk' ..."
 
 OUTMK="$OUTPUT_VENDOR/Android.mk"
