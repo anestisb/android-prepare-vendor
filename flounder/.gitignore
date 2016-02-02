@@ -1,0 +1,6 @@
+# Ignore everything
+*
+
+# Except
+!.gitignore
+!proprietary-blobs.txt

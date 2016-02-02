@@ -33,8 +33,9 @@ Individual scripts include usage info with additional flags that be used for tar
 ## Supported devices
 
 * bullhead - Nexus 5x
+* flounder - Nexus 9
 
-Nexus 9 & Nexus 6p support will be added at some point in the near future.
+Nexus 6p support will be added at some point in the near future.
 
 If you want to contribute to `proprietary-blobs.txt` files, please test against the target device before pull request. 
 

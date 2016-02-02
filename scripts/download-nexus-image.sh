@@ -18,7 +18,8 @@ usage() {
 cat <<_EOF
   Usage: $(basename $0) [options]
     OPTIONS:
-      -d|--device  : Device codename (angler, bullhead, etc.)
+      -d|--device  : Device AOSP codename (angler, bullhead, etc.)
+      -a|--alias   : Device alias at Google Dev website (e.g. volantis vs flounder)
       -b|--buildID : BuildID string (e.g. MMB29P)
       -o|--output  : Path to save images archived
 _EOF
@@ -39,6 +40,7 @@ do
 done
 
 DEVICE=""
+DEV_ALIAS=""
 BUILDID=""
 OUTPUT_DIR=""
 
@@ -52,6 +54,10 @@ do
       ;;
     -d|--device)
       DEVICE=$(echo $2 | tr '[:upper:]' '[:lower:]')
+      shift
+      ;;
+    -a|--alias)
+      DEV_ALIAS=$(echo $2 | tr '[:upper:]' '[:lower:]')
       shift
       ;;
     -b|--buildID)
@@ -79,7 +85,13 @@ if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
   usage
 fi
 
-url=$(curl --silent $GURL | grep -i "<a href=.*$DEVICE-$BUILDID" | cut -d '"' -f2)
+# If alias not provided assume same as device codename for simplicity
+# If wrong choice, later scripts will fail to find blobs list file
+if [[ "$DEV_ALIAS" == "" ]]; then
+  DEV_ALIAS="$DEVICE"
+fi
+
+url=$(curl --silent $GURL | grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | cut -d '"' -f2)
 if [ "$url" == "" ]; then
   echo "[-] Image URL not found"
   abort 1

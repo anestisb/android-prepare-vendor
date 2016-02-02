@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "mount" "su" "uname" "rsync")
+declare -a sysTools=("tar" "find" "unzip" "mount" "su" "uname" "rsync" "fdisk")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -34,6 +34,22 @@ _EOF
 
 command_exists() {
   type "$1" &> /dev/null ;
+}
+
+extract_vendor_partition_size() {
+  local VENDOR_IMG_RAW="$1"
+  local OUT_FILE="$2/vendor_partition_size"
+  local size=""
+
+  size="$(fdisk -l "$VENDOR_IMG_RAW" | egrep 'Disk.*bytes' | cut -d ',' -f2 | cut -d ' ' -f2)"
+  if [[ "$size" == "" ]]; then
+    echo "[!] Failed to extract vendor partition size from '$VENDOR_IMG_RAW'"
+    abort 1
+  fi
+
+  # Write to file so that 'generate-vendor.sh' can pick the value
+  # for BoardConfigVendor makefile generation 
+  echo $size > "$OUT_FILE"
 }
 
 # Check that system tools exist
@@ -141,6 +157,9 @@ if ! $SIMG2IMG $vImg $rawVImg; then
   echo "[-] simg2img failed to convert vendor.img from sparse"
   abort 1
 fi
+
+# Save raw vendor img partition size
+extract_vendor_partition_size $rawVImg $OUTPUT_DIR
 
 sysImgData="$extractDir/factory.system"
 mkdir -p "$sysImgData"

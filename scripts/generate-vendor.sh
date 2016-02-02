@@ -15,7 +15,7 @@ declare -a dirsWithBC=("app" "framework" "priv-app")
 # TODO: automate via fdisk to gather size
 readonly BULLHEAD_VENDOR_IMG_SZ="260034560"
 readonly ANGLER_VENDOR_IMG_SZ="209702912"
-readonly VOLANTIS_VENDOR_IMG_SZ="268419072"
+readonly FLOUNDER_VENDOR_IMG_SZ="268419072"
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -67,6 +67,15 @@ get_vendor() {
     abort 1
   fi
   echo $vendor
+}
+
+has_vendor_size() {
+  local SEARCH_FILE="$1/vendor_partition_size"
+  if [ -f "$SEARCH_FILE" ]; then
+    cat "$SEARCH_FILE"
+  else
+    echo ""
+  fi
 }
 
 extract_blobs() {
@@ -193,20 +202,27 @@ gen_dev_vendor_mk() {
 }
 
 gen_board_cfg_mk() {
-  local OUTDIR="$1"
-  local DEVICE="$2"
+  local INDIR="$1"
+  local OUTDIR="$2"
+  local DEVICE="$3"
   local OUTMK="$OUTDIR/BoardConfigVendor.mk"
 
-  local v_img_sz=""
-  if [[ "$DEVICE" == "bullhead" ]]; then
-    v_img_sz=$BULLHEAD_VENDOR_IMG_SZ
-  elif [[ "$DEVICE" == "angler" ]]; then
-    v_img_sz=$ANGLER_VENDOR_IMG_SZ
-  elif [[ "$DEVICE" == "volantis" ]]; then
-    v_img_sz=$VOLANTIS_VENDOR_IMG_SZ
-  else
-    echo "[-] Unknown vendor image size for '$DEVICE' device"
-    abort 1
+  # First lets check if vendor partition size has been extracted from
+  # previous data extraction script
+  local v_img_sz="$(has_vendor_size $INDIR)"
+
+  # If not found, fail over to last known value from hardcoded entries
+  if [[ "$v_img_sz" == "" ]]; then
+    if [[ "$DEVICE" == "bullhead" ]]; then
+      v_img_sz=$BULLHEAD_VENDOR_IMG_SZ
+    elif [[ "$DEVICE" == "angler" ]]; then
+      v_img_sz=$ANGLER_VENDOR_IMG_SZ
+    elif [[ "$DEVICE" == "flounder" ]]; then
+      v_img_sz=$FLOUNDER_VENDOR_IMG_SZ
+    else
+      echo "[-] Unknown vendor image size for '$DEVICE' device"
+      abort 1
+    fi
   fi
 
   echo "# Auto-generated file, do not edit" > "$OUTMK"
@@ -502,7 +518,7 @@ gen_dev_vendor_mk $OUTPUT_VENDOR
 
 # Generate BoardConfigVendor.mk (vendor partition type)
 echo "[*] Generating 'BoardConfigVendor.mk'"
-gen_board_cfg_mk $OUTPUT_VENDOR $DEVICE
+gen_board_cfg_mk $INPUT_DIR $OUTPUT_VENDOR $DEVICE
 
 # Iterate over directories with bytecode & generate a unified Android.mk file
 echo "[*] Generating 'Android.mk' ..."

@@ -26,8 +26,8 @@ export PATH=/usr/local/java/jdk1.8.0_71/bin/:$PATH
 
 declare -a sysTools=("mkdir" "java")
 
-# angler & volantis are wip
-declare -a availDevices=("bullhead")
+# angler is wip
+declare -a availDevices=("bullhead" "flounder")
 
 abort() {
   exit $1
@@ -65,6 +65,7 @@ OUTPUT_DIR=""
 INPUT_IMGS_TAR=""
 KEEP_DATA=false
 HOST_OS=""
+DEV_ALIAS=""
 
 while [[ $# > 0 ]]
 do
@@ -143,13 +144,20 @@ FACTORY_IMGS_DATA="$OUT_BASE/factory_imgs_data"
 FACTORY_IMGS_R_DATA="$OUT_BASE/factory_imgs_repaired_data"
 echo "[*] Setting output base to '$OUT_BASE'"
 
+# Factory image alias for devices with naming incompatibilities with AOSP
+if [[ "$DEVICE" == "flounder" ]]; then
+  DEV_ALIAS="volantis"
+else
+  DEV_ALIAS="$DEVICE"
+fi
+
 # Download images if not provided
 if [[ "$INPUT_IMGS_TAR" == "" ]]; then
-  if ! $DOWNLOAD_SCRIPT --device $DEVICE --buildID $BUILDID --output "$OUT_BASE"; then
+  if ! $DOWNLOAD_SCRIPT --device $DEVICE --alias $DEV_ALIAS --buildID $BUILDID --output "$OUT_BASE"; then
     echo "[-] Images download failed"
     abort 1
   fi
-  archName="$(find $OUT_BASE -iname "*$DEVICE*$BUILDID*.tgz" | head -1)"
+  archName="$(find $OUT_BASE -iname "*$DEV_ALIAS*$BUILDID*.tgz" | head -1)"
 else
   archName="$INPUT_IMGS_TAR"
 fi
@@ -182,6 +190,11 @@ fi
 # However, move it to repaired data directory to hava a single source for
 # next script
 mv "$FACTORY_IMGS_DATA/vendor" "$FACTORY_IMGS_R_DATA"
+
+# Copy vendor partition image size as saved from $EXTRACT_SCRIPT script
+# $VGEN_SCRIPT will fail over to last known working default if image size
+# file not found when parsing data
+cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 
 if ! $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt"; then
