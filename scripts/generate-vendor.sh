@@ -9,13 +9,19 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
-declare -a sysTools=("cp" "sed" "java" "zipinfo" "jarsigner")
+declare -a sysTools=("cp" "sed" "java" "zipinfo" "jarsigner" "awk")
 declare -a dirsWithBC=("app" "framework" "priv-app")
 
-# TODO: automate via fdisk to gather size
+# Last known good defaults in case fdisk automation failed
 readonly BULLHEAD_VENDOR_IMG_SZ="260034560"
 readonly ANGLER_VENDOR_IMG_SZ="209702912"
 readonly FLOUNDER_VENDOR_IMG_SZ="268419072"
+
+# Standalone symlinks. Need to also take care standalone firmware bin
+# symlinks between /data/misc & /system/etc/firmware
+declare -a S_SLINKS_SRC
+declare -a S_SLINKS_DST 
+hasStandAloneSymLinks=false
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -78,6 +84,18 @@ has_vendor_size() {
   fi
 }
 
+read_invalid_symlink() {
+  local INBASE="$1"
+  local RELTARGET="$2"
+  ls -l "$INBASE/$RELTARGET" | awk '{ print $11 }'
+}
+
+array_contains() {
+  local element
+  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
+  return 1
+}
+
 extract_blobs() {
   local BLOBS_LIST="$1"
   local INDIR="$2"
@@ -98,6 +116,20 @@ extract_blobs() {
       dst=$src
     fi
 
+    # Special handling if source file is a symbolic link. Additional rules will be handled later
+    # when unified Android.mk is created
+    if [[ -L "$INDIR/$src" ]]; then
+      if [[ "$dst" != "$src" ]]; then
+        echo "[-] Softlink paths cannot have their destination alterted"
+        abort 1
+      fi
+      symLinkSrc="$(read_invalid_symlink $INDIR $src | sed 's#^/##')"
+      S_SLINKS_SRC=("${S_SLINKS_SRC[@]-}" "$symLinkSrc")
+      S_SLINKS_DST=("${S_SLINKS_DST[@]-}" "$src")
+      hasStandAloneSymLinks=true
+      continue
+    fi
+
     # Files under /system go to OUTDIR_PROP, while files from /vendor to OUTDIR_VENDOR
     if [[ $src == system/* ]]; then
       outBase=$OUTDIR_PROP
@@ -106,7 +138,7 @@ extract_blobs() {
       outBase=$OUTDIR_VENDOR
       dst=$(echo $dst | sed 's#^vendor/##')
     else
-      echo "[-] Invalid path detected at '$BLOBS_LIST'"
+      echo "[-] Invalid path detected at '$BLOBS_LIST' ($src)"
       abort 1
     fi
 
@@ -153,6 +185,13 @@ gen_vendor_blobs_mk() {
     fileExt="${file##*.}"
     if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
       continue
+    fi
+
+    # Skip standalone symbolic links if available
+    if [ $hasStandAloneSymLinks = true ]; then
+      if array_contains $file "${S_SLINKS_DST[@]}"; then
+        continue
+      fi
     fi
 
     # Split the file from the destination (format is "file[:destination]")
@@ -265,6 +304,58 @@ gen_apk_dso_symlink() {
   echo "\t\$(hide) rm -rf \$(SYMLINK)"
   echo "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
   echo "\t\$(hide) touch \$@"
+}
+
+gen_standalone_symlinks() {
+  local INDIR="$1"
+  local OUTBASE="$2"
+  local VENDOR="$3"
+  local OUTMK="$4"
+  local VENDORMK="$OUTBASE/device-vendor.mk"
+
+  local -a PKGS_SSLINKS
+  local pkgName=""
+  local cnt=1
+
+  if [ ${#S_SLINKS_SRC[@]} -ne ${#S_SLINKS_DST[@]} ]; then
+    echo "[-] Standalone symlinks arrays are corrupted. Inspect paths manually."
+    abort 1
+  fi
+
+  for link in ${S_SLINKS_SRC[@]}
+  do
+    pkgName=$(basename $link)
+    PKGS_SSLINKS=("${PKGS_SSLINKS[@]-}" "$pkgName")
+
+    echo -e "\ninclude \$(CLEAR_VARS)" >> $OUTMK
+    echo -e "LOCAL_MODULE := $pkgName" >> $OUTMK
+    echo -e "LOCAL_MODULE_CLASS := FAKE" >> $OUTMK
+    echo -e "LOCAL_MODULE_TAGS := optional" >> $OUTMK
+    echo -e "LOCAL_MODULE_OWNER := $VENDOR" >> $OUTMK
+    echo -e 'include $(BUILD_SYSTEM)/base_rules.mk' >> $OUTMK
+    echo -e "\$(LOCAL_BUILT_MODULE): TARGET := /${S_SLINKS_SRC[$cnt]}" >> $OUTMK
+    echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}" >> $OUTMK
+    echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk" >> $OUTMK
+    echo -e "\$(LOCAL_BUILT_MODULE):" >> $OUTMK
+    echo -e "\t\$(hide) mkdir -p \$(dir \$@)" >> $OUTMK
+    echo -e "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))" >> $OUTMK
+    echo -e "\t\$(hide) rm -rf \$@" >> $OUTMK
+    echo -e "\t\$(hide) rm -rf \$(SYMLINK)" >> $OUTMK
+    echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)" >> $OUTMK
+    echo -e "\t\$(hide) touch \$@" >> $OUTMK
+
+    let cnt=cnt+1
+  done
+
+  echo "" >> $VENDORMK
+  echo "# Standalone symbolic links" >> $VENDORMK
+  echo 'PRODUCT_PACKAGES += \' >> $VENDORMK
+  for module in ${PKGS_SSLINKS[@]}
+  do
+    echo "    $module \\" >> $VENDORMK
+  done
+  cat "$VENDORMK" | sed '$s/ \\//' > "$VENDORMK.tmp"
+  mv "$VENDORMK.tmp" "$VENDORMK" 
 }
 
 gen_mk_for_bytecode() {
@@ -539,6 +630,11 @@ do
     fi
   done
 done
+
+if [ $hasStandAloneSymLinks = true ]; then
+  echo "[*] Processing standalone symlinks"
+  gen_standalone_symlinks $INPUT_DIR $OUTPUT_VENDOR $VENDOR $OUTMK
+fi
 
 echo "" >> "$OUTMK"
 echo "endif" >> "$OUTMK"
