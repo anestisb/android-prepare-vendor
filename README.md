@@ -34,8 +34,7 @@ Individual scripts include usage info with additional flags that be used for tar
 
 * bullhead - Nexus 5x
 * flounder - Nexus 9
-
-Nexus 6p support will be added at some point in the near future.
+* angler - Nexus 6p
 
 If you want to contribute to `proprietary-blobs.txt` files, please test against the target device before pull request. 
 

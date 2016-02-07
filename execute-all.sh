@@ -27,7 +27,7 @@ export PATH=/usr/local/java/jdk1.8.0_71/bin/:$PATH
 declare -a sysTools=("mkdir" "java")
 
 # angler is wip
-declare -a availDevices=("bullhead" "flounder")
+declare -a availDevices=("bullhead" "flounder" "angler")
 
 abort() {
   exit $1
