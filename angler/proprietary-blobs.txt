@@ -334,6 +334,7 @@ vendor/lib64/libvoice-svc.so
 vendor/lib64/libwms.so
 vendor/lib64/libxml.so
 vendor/lib64/mediadrm/libdrmclearkeyplugin.so
+vendor/lib64/libkmcrypto.so
 vendor/lib/egl/eglSubDriverAndroid.so
 vendor/lib/egl/libEGL_adreno.so
 vendor/lib/egl/libGLESv1_CM_adreno.so
@@ -578,6 +579,7 @@ vendor/lib/libWVStreamControlAPI_L1.so
 vendor/lib/libxml.so
 vendor/lib/mediadrm/libdrmclearkeyplugin.so
 vendor/lib/mediadrm/libwvdrmengine.so
+vendor/lib/libkmcrypto.so
 vendor/media/LMspeed_508.emd
 vendor/media/PFFprec_600.emd
 vendor/pittpatt/models/detection/multi_pose_face_landmark_detectors.8/landmark_group_meta_data.bin

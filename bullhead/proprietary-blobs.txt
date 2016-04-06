@@ -410,6 +410,7 @@ vendor/lib/mediadrm/libdrmclearkeyplugin.so
 vendor/lib/libmmcamera_isp_linearization40.so
 vendor/lib/libllvm-qcom.so
 vendor/lib/libgoog_rownr.so
+vendor/lib/libkmcrypto.so
 vendor/media/PFFprec_600.emd
 vendor/media/LMspeed_508.emd
 vendor/pittpatt/models/detection/multi_pose_face_landmark_detectors.8/landmark_group_meta_data.bin
@@ -536,6 +537,7 @@ vendor/lib64/lib-rtpdaemoninterface.so
 vendor/lib64/libdrmtime.so
 vendor/lib64/mediadrm/libdrmclearkeyplugin.so
 vendor/lib64/libllvm-qcom.so
+vendor/lib64/libkmcrypto.so
 vendor/etc/msm_irqbalance.conf
 vendor/etc/perf-profile0.conf
 vendor/etc/audio_effects.conf
