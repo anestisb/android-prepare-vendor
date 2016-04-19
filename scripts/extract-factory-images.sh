@@ -41,7 +41,7 @@ extract_vendor_partition_size() {
   local OUT_FILE="$2/vendor_partition_size"
   local size=""
 
-  size="$(fdisk -l "$VENDOR_IMG_RAW" | egrep 'Disk.*bytes' | cut -d ',' -f2 | cut -d ' ' -f2)"
+  size="$(LANG=C fdisk -l "$VENDOR_IMG_RAW" | egrep 'Disk.*bytes' | cut -d ',' -f2 | cut -d ' ' -f2)"
   if [[ "$size" == "" ]]; then
     echo "[!] Failed to extract vendor partition size from '$VENDOR_IMG_RAW'"
     abort 1
