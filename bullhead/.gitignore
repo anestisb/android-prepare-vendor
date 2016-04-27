@@ -3,4 +3,4 @@
 
 # Except
 !.gitignore
-!proprietary-blobs.txt
+!system-proprietary-blobs.txt

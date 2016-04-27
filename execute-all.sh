@@ -15,6 +15,9 @@ readonly DOWNLOAD_SCRIPT="$SCRIPTS_ROOT/scripts/download-nexus-image.sh"
 # Helper script to extract system & vendor images data
 readonly EXTRACT_SCRIPT="$SCRIPTS_ROOT/scripts/extract-factory-images.sh"
 
+# Helper script to generate "proprietary-blobs.txt" file
+readonly GEN_BLOBS_LIST_SCRIPT="$SCRIPTS_ROOT/scripts/gen-prop-blobs-list.sh"
+
 # Helper script to de-optimize bytecode prebuilts
 readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 
@@ -198,6 +201,14 @@ fi
 if ! $EXTRACT_SCRIPT --input "$archName" --output "$FACTORY_IMGS_DATA" \
      --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/simg2img"; then
   echo "[-] Factory images data extract failed"
+  abort 1
+fi
+
+# Generate unified readonly "proprietary-blobs.txt"
+if ! $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
+     --output "$SCRIPTS_ROOT/$DEVICE" \
+     --sys-list "$SCRIPTS_ROOT/$DEVICE/system-proprietary-blobs.txt"; then
+  echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
 fi
 
