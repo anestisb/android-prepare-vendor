@@ -242,8 +242,7 @@ gen_dev_vendor_mk() {
 
   echo "# Auto-generated file, do not edit" > "$OUTMK"
   echo "" >> "$OUTMK"
-  echo "\$(call inherit-product,
-           vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)" >> "$OUTMK"
+  echo "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)" >> "$OUTMK"
 }
 
 gen_board_cfg_mk() {
