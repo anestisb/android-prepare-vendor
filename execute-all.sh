@@ -46,6 +46,11 @@ _EOF
 
 command_exists() {
   type "$1" &> /dev/null ;
+run_as_root() {
+  if [[ $EUID -ne 0 ]]; then
+    echo "[-] Script must run as root"
+    abort 1
+  fi
 }
 
 # Check that system tools exist
@@ -74,6 +79,10 @@ else
   export JAVA_HOME="$JAVAPATH"
   export PATH="$JAVADIR":$PATH
 fi
+
+# Check if script run as root
+run_as_root
+
 DEVICE=""
 BUILDID=""
 OUTPUT_DIR=""

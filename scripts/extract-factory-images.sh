@@ -53,6 +53,13 @@ extract_vendor_partition_size() {
   echo $size > "$OUT_FILE"
 }
 
+run_as_root() {
+  if [[ $EUID -ne 0 ]]; then
+    echo "[-] Script must run as root"
+    abort 1
+  fi
+}
+
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
@@ -66,6 +73,9 @@ if [[ "$(uname)" == "Darwin" ]]; then
   echo "[-] Darwin platform is not supported"
   abort 1
 fi
+
+# Check if script run as root
+run_as_root
 
 INPUT_TAR=""
 OUTPUT_DIR=""
@@ -169,7 +179,7 @@ mountCmd="mount -t ext4 -o ro,loop $rawSysImg $sysImgData"
 umountCmd="umount $sysImgData"
 
 # Mount to loopback
-if ! su -c "$mountCmd"; then
+if ! $mountCmd; then
   echo "[-] '$mountCmd' failed"
   abort 1
 fi
@@ -183,7 +193,7 @@ if ! rsync -aruz "$sysImgData/" "$SYSTEM_DATA_OUT"; then
 fi
 
 # Unmount
-if ! su -c "$umountCmd"; then
+if ! $umountCmd; then
   echo "[-] '$umountCmd' failed"
 fi
 
@@ -195,7 +205,7 @@ mountCmd="mount -t ext4 -o ro,loop $rawVImg $vImgData"
 umountCmd="umount $vImgData"
 
 # Mount to loopback
-if ! su -c "$mountCmd"; then
+if ! $mountCmd; then
   echo "[-] '$mountCmd' failed"
   if [[ "$OS" == "Darwin" ]]; then
     echo "[!] Most probably your MAC doesn't support ext4"
@@ -211,7 +221,7 @@ if ! rsync -aruz "$vImgData/" "$VENDOR_DATA_OUT"; then
 fi
 
 # Unmount
-if ! su -c "$umountCmd"; then
+if ! $umountCmd; then
   echo "[-] '$umountCmd' failed"
 fi
 
