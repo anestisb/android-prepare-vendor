@@ -25,7 +25,8 @@ usage() {
 cat <<_EOF
   Usage: $(basename $0) [options]
     OPTIONS:
-      -i|--input    : tar archive with factory images as downloaded from Nexus website
+      -i|--input    : tar archive with factory images as downloaded from
+                      Nexus website
       -o|--output   : Path to save contents extracted from images
       -t|--simg2img : simg2img binary path to convert sparse images
 _EOF
@@ -33,7 +34,7 @@ _EOF
 }
 
 command_exists() {
-  type "$1" &> /dev/null ;
+  type "$1" &> /dev/null
 }
 
 extract_vendor_partition_size() {
@@ -49,7 +50,7 @@ extract_vendor_partition_size() {
   fi
 
   # Write to file so that 'generate-vendor.sh' can pick the value
-  # for BoardConfigVendor makefile generation 
+  # for BoardConfigVendor makefile generation
   echo $size > "$OUT_FILE"
 }
 
@@ -184,9 +185,8 @@ if ! $mountCmd; then
   abort 1
 fi
 
-# Copy files - it is very IMPORTANT that softlinks are followed
-# and copied.
-echo "[*] Copying files from system parition ..."
+# Copy files - it is very IMPORTANT that symbolic links are followed and copied
+echo "[*] Copying files from system partition ..."
 if ! rsync -aruz "$sysImgData/" "$SYSTEM_DATA_OUT"; then
   echo "[-] system rsync failed"
   abort 1

@@ -18,13 +18,13 @@ readonly ANGLER_VENDOR_IMG_SZ="209702912"
 readonly FLOUNDER_VENDOR_IMG_SZ="268419072"
 
 # Standalone symlinks. Need to also take care standalone firmware bin
-# symlinks between /data/misc & /system/etc/firmware
+# symlinks between /data/misc & /system/etc/firmware.
 declare -a S_SLINKS_SRC
-declare -a S_SLINKS_DST 
+declare -a S_SLINKS_DST
 hasStandAloneSymLinks=false
 
 abort() {
-  # If debug keep work dir for bugs investigation
+  # If debug keep work directory for bugs investigation
   if [[ "$-" == *x* ]]; then
     echo "[*] Workspace available at '$TMP_WORK_DIR' - delete manually when done"
   else
@@ -38,7 +38,8 @@ cat <<_EOF
   Usage: $(basename $0) [options]
     OPTIONS:
       -i|--input      : Root path of extracted /system & /vendor partitions
-      -o|--output     : Path to save vendor blobs & makefiles in AOSP compatible structure
+      -o|--output     : Path to save vendor blobs & makefiles in AOSP
+                        compatible structure
       -b|--blobs-list : Text file with list of propriatery blobs to copy
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
@@ -47,7 +48,7 @@ _EOF
 }
 
 command_exists() {
-  type "$1" &> /dev/null ;
+  type "$1" &> /dev/null
 }
 
 verify_input() {
@@ -58,7 +59,8 @@ verify_input() {
 }
 
 get_device_codename() {
-  local device=$(cat $1 | grep 'ro.product.device=' | cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
+  local device=$(cat $1 | grep 'ro.product.device=' | \
+                 cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
   if [[ "$device" == "" ]]; then
     echo "[-] Device string not found"
     abort 1
@@ -67,7 +69,8 @@ get_device_codename() {
 }
 
 get_vendor() {
-  local vendor=$(cat $1 | grep 'ro.product.manufacturer=' | cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
+  local vendor=$(cat $1 | grep 'ro.product.manufacturer=' | \
+                 cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
   if [[ "$vendor" == "" ]]; then
     echo "[-] Device codename string not found"
     abort 1
@@ -116,11 +119,11 @@ extract_blobs() {
       dst=$src
     fi
 
-    # Special handling if source file is a symbolic link. Additional rules will be handled later
-    # when unified Android.mk is created
+    # Special handling if source file is a symbolic link. Additional rules
+    # will be handled later when unified Android.mk is created
     if [[ -L "$INDIR/$src" ]]; then
       if [[ "$dst" != "$src" ]]; then
-        echo "[-] Softlink paths cannot have their destination alterted"
+        echo "[-] Symlink paths cannot have their destination altered"
         abort 1
       fi
       symLinkSrc="$(read_invalid_symlink $INDIR $src | sed 's#^/##')"
@@ -130,7 +133,8 @@ extract_blobs() {
       continue
     fi
 
-    # Files under /system go to OUTDIR_PROP, while files from /vendor to OUTDIR_VENDOR
+    # Files under /system go to $OUTDIR_PROP, while files from /vendor
+    # to $OUTDIR_VENDOR
     if [[ $src == system/* ]]; then
       outBase=$OUTDIR_PROP
       dst=$(echo $dst | sed 's#^system/##')
@@ -149,7 +153,8 @@ extract_blobs() {
     fi
     cp "$INDIR/$src" "$outBase/$dst"
 
-    # Some vendor xml's don't satisfy xmllint running from AOSP - better apply fix-up here
+    # Some vendor xml's don't satisfy xmllint running from AOSP.
+    # Better apply fix-up here
     if [[ "${file##*.}" == "xml" ]]; then
       local openTag=$(cat $outBase/$dst | grep '^<?xml version')
       cat $outBase/$dst | grep -v '^<?xml version' > "$TMP_WORK_DIR/xml_fixup.tmp"
@@ -237,7 +242,8 @@ gen_dev_vendor_mk() {
 
   echo "# Auto-generated file, do not edit" > "$OUTMK"
   echo "" >> "$OUTMK"
-  echo "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)" >> "$OUTMK"
+  echo "\$(call inherit-product,
+           vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)" >> "$OUTMK"
 }
 
 gen_board_cfg_mk() {
@@ -318,7 +324,7 @@ gen_standalone_symlinks() {
   local cnt=1
 
   if [ ${#S_SLINKS_SRC[@]} -ne ${#S_SLINKS_DST[@]} ]; then
-    echo "[-] Standalone symlinks arrays are corrupted. Inspect paths manually."
+    echo "[-] Standalone symlinks arrays corruption - inspect paths manually"
     abort 1
   fi
 
@@ -355,7 +361,7 @@ gen_standalone_symlinks() {
     echo "    $module \\" >> $VENDORMK
   done
   cat "$VENDORMK" | sed '$s/ \\//' > "$VENDORMK.tmp"
-  mv "$VENDORMK.tmp" "$VENDORMK" 
+  mv "$VENDORMK.tmp" "$VENDORMK"
 }
 
 gen_mk_for_bytecode() {
@@ -403,7 +409,8 @@ gen_mk_for_bytecode() {
     abort 1
   fi
 
-  for file in $(find $OUTBASE/$RELROOT/$RELSUBROOT -maxdepth 2 -type f -iname '*.apk' -o -iname '*.jar')
+  for file in $(find $OUTBASE/$RELROOT/$RELSUBROOT -maxdepth 2 \
+                -type f -iname '*.apk' -o -iname '*.jar')
   do
     zipName=$(basename $file)
     fileExt="${zipName##*.}"
@@ -428,21 +435,24 @@ gen_mk_for_bytecode() {
       priv='LOCAL_PRIVILEGED_MODULE := true'
     fi
 
-    # APKs under /vendor should not be optimized and alawys use the PRESIGNED cert
+    # APKs under /vendor should not be optimized and always use the
+    # PRESIGNED cert
     if [[ "$fileExt" == "apk" && "$RELROOT" == "vendor" ]]; then
       cert="PRESIGNED"
       opt='LOCAL_DEX_PREOPT := false'
     elif [[ "$fileExt" == "apk" ]]; then
-      # All other APKs have been repaired (de-optimized from oat) & thus need resign
+      # All other APKs have been repaired (de-optimized from oat) & thus
+      # need resign
       cert="platform"
     else
       # Framework JAR's don't contain signatures, so annotate to skip signing
       cert="PRESIGNED"
     fi
 
-    # Some prebuilt APKs have prebuilt JNI libs that are stored under system-wide 
-    # lib directories, with app directory containing a softlink to. Resolve such
-    # cases to adjust includes so that we don't copy across the same file twice
+    # Some prebuilt APKs have also prebuilt JNI libs that are stored under
+    # system-wide lib directories, with app directory containing a symlink to.
+    # Resolve such cases to adjust includes so that we don't copy across the
+    # same file twice.
     if [ -d "$appDir/lib" ]; then
       hasApkSymLinks=true
       for lib in $(find -L "$appDir/lib" -type l -iname '*.so')
@@ -458,7 +468,8 @@ gen_mk_for_bytecode() {
           dsoRoot="$dsoRoot/lib"
         fi
 
-        # Generate symlink fake rule & cache module_names to append later to vendor mk
+        # Generate symlink fake rule & cache module_names to append later to
+        # vendor mk
         PKGS_SLINKS=("${PKGS_SLINKS[@]-}" "$dsoMName")
         apk_lib_slinks="$apk_lib_slinks\n$(gen_apk_dso_symlink $dsoName \
                         $dsoMName $dsoRoot "$lcMPath/$pkgName" $arch $VENDOR)"
@@ -476,7 +487,7 @@ gen_mk_for_bytecode() {
     echo "LOCAL_MODULE_PATH := $lcMPath" >> "$OUTMK"
     echo "LOCAL_SRC_FILES := $src" >> "$OUTMK"
     if [[ "$apk_lib_slinks" != "" ]]; then
-      # Force softlinke modules dependencies to avoid omissions from wrong cleans
+      # Force symlink modules dependencies to avoid omissions from wrong cleans
       # for pre-ninja build envs
       echo "LOCAL_REQUIRED_MODULES := ${PKGS_SLINKS[@]-}" >> "$OUTMK"
     fi
@@ -511,8 +522,8 @@ gen_mk_for_bytecode() {
   cat "$VENDORMK" | sed '$s/ \\//' > "$VENDORMK.tmp"
   mv "$VENDORMK.tmp" "$VENDORMK"
 
-  # Update vendor mk again with softlink moodules if present
-  if [ $hasApkSymLinks = true ]; then 
+  # Update vendor mk again with symlink modules if present
+  if [ $hasApkSymLinks = true ]; then
     echo "" >> $VENDORMK
     echo "# Prebuilt APKs libs symlinks from '$RELROOT/$RELSUBROOT'" >> $VENDORMK
     echo 'PRODUCT_PACKAGES += \' >> $VENDORMK
@@ -599,7 +610,7 @@ mkdir -p $PROP_EXTRACT_BASE
 echo "[*] Copying files to '$OUTPUT_VENDOR' ..."
 extract_blobs $BLOBS_LIST $INPUT_DIR $OUTPUT_VENDOR
 
-# Generate $DEVICE-vendor-blobs.mk makefile (all pre-builts except APKs/JARs)
+# Generate $DEVICE-vendor-blobs.mk makefile (all prebuilts except APKs/JARs)
 echo "[*] Generating '$DEVICE-vendor-blobs.mk' makefile"
 gen_vendor_blobs_mk $BLOBS_LIST $OUTPUT_VENDOR $VENDOR
 

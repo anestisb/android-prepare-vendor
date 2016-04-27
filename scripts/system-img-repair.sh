@@ -1,25 +1,26 @@
 #!/usr/bin/env bash
 #
 # For latest Android Nexus devices (N5x, N6p, N9, etc.), Google is no longer
-# providing vendor tar archives to be included into AOSP build trees. Oficially
-# it is claimed that all vendor proprietary blobs have been moved to /vendor
-# partition. Unfortunately that is not true since a few vendor executables, DSOs
-# and APKs/JARs are present under /system although missing from AOSP public tree.
+# providing vendor tar archives to be included into AOSP build trees.
+# Officially it is claimed that all vendor proprietary blobs have been moved
+# to /vendor partition. Unfortunately that is not true since a few vendor
+# executables, DSOs and APKs/JARs are present under /system although missing from AOSP public tree.
 #
-# As such custom AOSP builds require to first extract such blobs from /system of
-# factory images and manually include them in vendor directory of AOSP tree.
+# As such custom AOSP builds require to first extract such blobs from /system
+# of factory images and manually include them in vendor directory of AOSP tree.
 # This process is going anal++ due to the fact that APKs/JARs under /system are
-# pre-optimized, requiring to reverse the process (de-optimize them) before being
-# capable to copy and include them in AOSP build trees.
+# pre-optimized, requiring to reverse the process (de-optimize them) before
+# being capable to copy and include them in AOSP build trees.
 #
-# This script aims to automate the de-optimization process by creating a copy of the
-# input system partition while repairing all optimized bytecode packages. Before using
-# this script you'll be required to perform the following steps:
+# This script aims to automate the de-optimization process by creating a copy
+# of the input system partition while repairing all optimized bytecode
+# packages. Before using this script you'll be required to perform the
+# following steps:
 #  a) Download matching factory image from Google developers website
-#  b) Extract downloaded archives & use simg2img tool to convert the system.img sparse
-#     image to raw linux image
-#  c) Mount system raw image to loopback interface and extract all directories while
-#     maintaining directory structure
+#  b) Extract downloaded archives & use simg2img tool to convert the system.
+#     img sparse image to raw Linux image
+#  c) Mount system raw image to loopback interface and extract all directories
+#     while maintaining directory structure
 #  d) Execute this script against the root of extracted system directory
 #
 
@@ -33,7 +34,8 @@ declare -a sysTools=("cp" "sed" "java" "zipinfo" "jar" "zip" "wc" "cut")
 abort() {
   # If debug keep work dir for bugs investigation
   if [[ "$-" == *x* ]]; then
-    echo "[*] Workspace available at '$TMP_WORK_DIR' - delete manually when done"
+    echo "[*] Workspace available at '$TMP_WORK_DIR' - delete manually \
+          when done"
   else
     rm -rf $TMP_WORK_DIR
   fi
@@ -48,7 +50,8 @@ cat <<_EOF
       -o|--output  : Path to save input partition with de-optimized odex files
       -t|--oat2dex : Path to SmaliEx oat2dex.jar
     INFO:
-      * Input path expected to be system root as extracted from factory system.img
+      * Input path expected to be system root as extracted from factory system
+        image
       * Download oat2dex.jar from 'https://github.com/testwhat/SmaliEx'
       * When creating vendor makefiles, extra care is needed for APKs signature type
 _EOF
@@ -56,7 +59,7 @@ _EOF
 }
 
 command_exists() {
-  type "$1" &> /dev/null ;
+  type "$1" &> /dev/null
 }
 
 print_expected_imgs_ver() {
@@ -125,7 +128,7 @@ fi
 
 # Verify input is an Android system partition
 if [ ! -f $INPUT_DIR/build.prop ]; then
-  echo "[-] '$INPUT_DIR' is not a valid system image parition"
+  echo "[-] '$INPUT_DIR' is not a valid system image partition"
   abort 1
 fi
 
@@ -193,7 +196,8 @@ do
   pkgName=$(basename $file .$fileExt)
   isMultiDex=false
 
-  # framework resources jar should be the only legitimate jar without matching bytecode 
+  # framework resources jar should be the only legitimate jar without matching 
+  # bytecode
   if [ "$pkgName" == "framework-res" ]; then
     echo "[*] Skipping "$pkgName" since it doesn't pair with bytecode"
     continue
@@ -203,12 +207,15 @@ do
   odexFound=0
   if [ -d $zipRoot/oat ]; then
     # Check if optimized code available at app's directory
-    odexFound=$(find $zipRoot/oat -type f -iname "$pkgName*.odex" | wc -l | tr -d ' ')
+    odexFound=$(find $zipRoot/oat -type f -iname "$pkgName*.odex" | \
+                wc -l | tr -d ' ')
   fi
   if [[ $odexFound -eq 0 && "$relFile" == "/framework/"* ]]; then
     # Boot classes have already been de-optimized. Just check against any ABI
-    # to verify that is present (not all jars under framework are part of boot.oat)
-    odexFound=$(find "$TMP_WORK_DIR/${ABIS[1]}/dex" -type f -iname "$pkgName*.dex" | wc -l | tr -d ' ')
+    # to verify that is present (not all jars under framework are part of
+    # boot.oat)
+    odexFound=$(find "$TMP_WORK_DIR/${ABIS[1]}/dex" -type f \
+                -iname "$pkgName*.dex" | wc -l | tr -d ' ')
   fi
   if [ $odexFound -eq 0 ]; then
     if ! zipinfo $file classes.dex &>/dev/null; then
@@ -218,13 +225,14 @@ do
       cp "$file" $OUTPUT_SYS/$relDir
     fi
   else
-    # If pre-compiled, de-optize to original DEX bytecode
+    # If pre-compiled, de-optimize to original DEX bytecode
     for abi in ${ABIS[@]}
     do
       curOdex="$zipRoot/oat/$abi/$pkgName.odex"
       if [ -f $curOdex ]; then
         # If odex present de-optimize it
-        if ! java -jar $OAT2DEX_JAR -o $TMP_WORK_DIR $curOdex "$TMP_WORK_DIR/$abi/dex" &>/dev/null; then
+        if ! java -jar $OAT2DEX_JAR -o $TMP_WORK_DIR $curOdex \
+             "$TMP_WORK_DIR/$abi/dex" &>/dev/null; then
           echo "[!] '$relFile/oat/$abi/$pkgName.odex' de-optimization failed"
           abort 1
         fi
@@ -235,13 +243,15 @@ do
           continue 2
         fi
       elif [ -f $TMP_WORK_DIR/$abi/dex/$pkgName.dex ]; then
-        # boot classes bytecode is available from boot.oat extracts - copy them with wildcard so
-        # following multi-dex detection logic can pick them up
-        cp $TMP_WORK_DIR/$abi/dex/$pkgName*.dex $TMP_WORK_DIR 
+        # boot classes bytecode is available from boot.oat extracts - copy
+        # them with wildcard so following multi-dex detection logic can pick
+        # them up
+        cp $TMP_WORK_DIR/$abi/dex/$pkgName*.dex $TMP_WORK_DIR
       fi
     done
 
-    # If bytecode compiled for more than one ABIs - only the last is kept (shouldn't make any difference)
+    # If bytecode compiled for more than one ABIs - only the last is kept
+    # (shouldn't make any difference)
     if [ ! -f $TMP_WORK_DIR/$pkgName.dex ]; then
       echo "[-] Something is wrong in expected dir structure - inspect manually"
       abort 1
@@ -250,8 +260,9 @@ do
     # Copy APK/jar to workspace for repair
     cp $file $TMP_WORK_DIR
 
-    # Add dex files back to zip archives (jar or APK) considering possible multi-dex case
-    # zipalign is not necessary since AOSP build rules will align them if not already
+    # Add dex files back to zip archives (jar or APK) considering possible
+    # multi-dex case zipalign is not necessary since AOSP build rules will
+    # align them if not already
     if [ -f "$TMP_WORK_DIR/$pkgName-classes2.dex" ]; then
       echo "[*] '$relFile' is multi-dex - adjusting recursive archive adds"
       counter=2
@@ -259,7 +270,8 @@ do
       while [ -f $curMultiDex ]
       do
         mv $curMultiDex "$TMP_WORK_DIR/classes$counter.dex"
-        if ! jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR "classes$counter.dex" &>/dev/null; then
+        if ! jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
+             "classes$counter.dex" &>/dev/null; then
           echo "[-] '$fileName' 'classes$counter.dex' append failed"
           abort 1
         fi
@@ -271,7 +283,8 @@ do
     fi
 
     mv $TMP_WORK_DIR/$pkgName.dex $TMP_WORK_DIR/classes.dex
-    if ! jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR classes.dex &>/dev/null; then
+    if ! jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
+         classes.dex &>/dev/null; then
       echo "[-] '$fileName' classes.dex append failed"
       abort 1
     fi
@@ -284,4 +297,5 @@ done <<< "$(find $INPUT_DIR -not -type d)"
 
 echo "[*] System partition successfully extracted & de-optimized at '$OUTPUT_DIR'"
 print_expected_imgs_ver $INPUT_DIR/build.prop
+
 abort 0

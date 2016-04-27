@@ -45,7 +45,9 @@ _EOF
 }
 
 command_exists() {
-  type "$1" &> /dev/null ;
+  type "$1" &> /dev/null
+}
+
 run_as_root() {
   if [[ $EUID -ne 0 ]]; then
     echo "[-] Script must run as root"
@@ -148,7 +150,7 @@ fi
 
 # Check if supported device
 deviceOK=false
-for devNm in "${availDevices[@]}"  
+for devNm in "${availDevices[@]}"
 do
   if [[ "$devNm" == "$DEVICE" ]]; then
     deviceOK=true
@@ -177,7 +179,8 @@ fi
 
 # Download images if not provided
 if [[ "$INPUT_IMGS_TAR" == "" ]]; then
-  if ! $DOWNLOAD_SCRIPT --device $DEVICE --alias $DEV_ALIAS --buildID $BUILDID --output "$OUT_BASE"; then
+  if ! $DOWNLOAD_SCRIPT --device $DEVICE --alias $DEV_ALIAS \
+       --buildID $BUILDID --output "$OUT_BASE"; then
     echo "[-] Images download failed"
     abort 1
   fi
@@ -204,14 +207,15 @@ if [ -d "$FACTORY_IMGS_R_DATA" ]; then
 else
   mkdir -p "$FACTORY_IMGS_R_DATA"
 fi
-if ! $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" --output "$FACTORY_IMGS_R_DATA" \
+if ! $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
+     --output "$FACTORY_IMGS_R_DATA" \
      --oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"; then
   echo "[-] System partition de-optimization failed"
   abort 1
 fi
 
 # Bytecode under vendor partition doesn't require de-opt for (up to now)
-# However, move it to repaired data directory to hava a single source for
+# However, move it to repaired data directory to have a single source for
 # next script
 mv "$FACTORY_IMGS_DATA/vendor" "$FACTORY_IMGS_R_DATA"
 

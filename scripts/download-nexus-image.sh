@@ -27,7 +27,7 @@ _EOF
 }
 
 command_exists() {
-  type "$1" &> /dev/null ;
+  type "$1" &> /dev/null
 }
 
 # Check that system tools exist
@@ -85,13 +85,14 @@ if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
   usage
 fi
 
-# If alias not provided assume same as device codename for simplicity
-# If wrong choice, later scripts will fail to find blobs list file
+# If alias not provided assume same as device codename for simplicity.
+# If wrong choice, later scripts will fail to find blobs list file.
 if [[ "$DEV_ALIAS" == "" ]]; then
   DEV_ALIAS="$DEVICE"
 fi
 
-url=$(curl --silent $GURL | grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | cut -d '"' -f2)
+url=$(curl --silent $GURL | grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | \
+      cut -d '"' -f2)
 if [ "$url" == "" ]; then
   echo "[-] Image URL not found"
   abort 1
@@ -99,6 +100,6 @@ fi
 
 echo "[*] Downloading image from '$url'"
 outFile=$OUTPUT_DIR/$(basename $url)
-wget -O $outFile "$url" 
+wget -O $outFile "$url"
 
 abort 0
