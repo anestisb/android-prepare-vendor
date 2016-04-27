@@ -1,14 +1,39 @@
 ## Introduction
 
-For latest Android Nexus devices (N5x, N6p, N9, etc.), Google is no longer providing vendor binary archives to be included into AOSP build tree. Officially it is claimed that all vendor proprietary blobs have been moved to `/vendor` partition, which allegedly doesn't need build from users. Unfortunately, that is not the case since quite a few vendor executables, DSOs and APKs/JARs required to have a fully functional set of images, are present under `/system` although missing from AOSP public tree. Additionally, if `vendor.img` is not generated when `system.img` is getting built, a few bits are broken that also require manual fixing (`/system/vendor` softlink, bytecode product packages, etc.). 
+For latest Android Nexus devices (N5x, N6p, N9, etc.), Google is no longer
+providing vendor binary archives to be included into AOSP build tree.
+Officially it is claimed that all vendor proprietary blobs have been moved to
+`/vendor` partition, which allegedly doesn't need build from users.
+Unfortunately, that is not the case since quite a few vendor executables, DSOs
+and APKs/JARs required to have a fully functional set of images, are present
+under `/system` although missing from AOSP public tree. Additionally, if
+`vendor.img` is not generated when `system.img` is getting built, a few bits
+are broken that also require manual fixing (`/system/vendor` symlink, bytecode
+product packages, etc.).
 
-Everyone's hope is that Google **will revise** this policy for Nexus devices. However until then, missing blobs need to be manually extracted from factory images, processed and included into AOSP tree. This processing is evolving into a total nightmare considering that all recent factory images have their bytecode (APKs, JARs) pre-optimized to reduce boot time. As such these missing pre-builts need to be de-optimized prior to be included since they might break otherwise (incompatibilities with original boot classes `boot.oat`).
+Everyone's hope is that Google **will revise** this policy for Nexus devices.
+However until then, missing blobs need to be manually extracted from factory
+images, processed and included into AOSP tree. This processing is evolving
+into a total nightmare considering that all recent factory images have their
+bytecode (APKs, JARs) pre-optimized to reduce boot time. As such these missing
+pre-builts need to be de-optimized prior to be included since they might break
+otherwise (incompatibilities with original boot classes `boot.oat`).
 
-Scripts & tools included in this repo aim to automate the extraction, processing and generation of vendor specific data using factory images as input. Data from vendor partition are mirrored to blob includes, so that `vendor.img` can be generated from AOSP builds while specially handling the vendor APKs with presigned certificates. If you have modified the build process (such as CyanogenMod) you might need to apply additional changes in device configurations.
+Scripts & tools included in this repo aim to automate the extraction,
+processing and generation of vendor specific data using factory images as
+input. Data from vendor partition are mirrored to blob includes, so that
+`vendor.img` can be generated from AOSP builds while specially handling the
+vendor APKs with presigned certificates. If you have modified the build
+process (such as CyanogenMod) you might need to apply additional changes in
+device configurations.
 
-The main concept of this toolset is to apply all required changes in vendor makefiles leaving the `$(BUILD_TREE)/build` makefiles untouched. Hacks in AOSP build tree (such as those applied by CyanogenMod) are painful to maintain and very fragile.
+The main concept of this toolset is to apply all required changes in vendor
+makefiles leaving the `$(BUILD_TREE)/build` makefiles untouched. Hacks in AOSP
+build tree (such as those applied by CyanogenMod) are painful to maintain and
+very fragile.
 
-Repo data are LICENSE free, use them as you want at your own risk. Feedback & patches are more than welcome though.
+Repo data are LICENSE free, use them as you want at your own risk. Feedback &
+patches are more than welcome though.
 
 
 ## Required steps summary
@@ -23,11 +48,20 @@ The process to extract and import vendor proprietary blobs requires to:
 4. Generate vendor proprietary includes & makefiles compatible with AOSP build tree (`scripts/generate-vendor.sh`)
   * Extra care in Makefile rules to not break compatibility between old & new build system (ninja)
 
-`execute-all.sh` runs all previous steps with required order. As an alternative to download images, script can also read factory images from filesystem location using the `-i|--imgs-tar` flag. `-k|--keep` flag can be used if you want to keep extracted intermediate files for further investigation.
+`execute-all.sh` runs all previous steps with required order. As an
+alternative to download images, script can also read factory images from
+filesystem location using the `-i|--imgs-tar` flag. `-k|--keep` flag can be
+used if you want to keep extracted intermediate files for further
+investigation. Scripts must run as root in order to maintain correct file
+permissions for generated proprietary blobs.
 
-All scripts except `scripts/extract-factory-images.sh` can be executed from both MAC & *unix systems. In case `execute-all.sh` is used, *unix host system is the only option. If you have ext4 support in your MAC you can edit the mount loopback commands.
+All scripts except `scripts/extract-factory-images.sh` can be executed from
+both MAC & *unix systems. In case `execute-all.sh` is used, *unix host system
+is the only option. If you have ext4 support in your MAC you can edit the
+mount loopback commands.
 
-Individual scripts include usage info with additional flags that be used for targeted actions and bugs investigation.
+Individual scripts include usage info with additional flags that be used for
+targeted actions and bugs investigation.
 
 
 ## Supported devices
@@ -36,17 +70,31 @@ Individual scripts include usage info with additional flags that be used for tar
 * flounder - Nexus 9
 * angler - Nexus 6p
 
-If you want to contribute to `proprietary-blobs.txt` files, please test against the target device before pull request. 
+If you want to contribute to `system-proprietary-blobs.txt` files, please test
+against the target device before pull request.
 
 
 ## Warnings
 
-* No binary vendor data against supported devices will be maintained in this repo. Scripts provide all necessary automation to generate them yourself.
-* No promises on how `proprietary-blobs.txt` lists will be maintained. Feel free to contribute if you detect that something is broken/missing or not required.
-* Host tool binaries are provided for convenience, although with no promises that will be updated. Prefer to adjust your env. with upstream versions and keep them updated (specially the SmalliEx).
+* No binary vendor data against supported devices will be maintained in this
+repo. Scripts provide all necessary automation to generate them yourself.
+* No promises on how `system-proprietary-blobs.txt` lists will be maintained.
+Feel free to contribute if you detect that something is broken/missing or not
+required.
+* Host tool binaries are provided for convenience, although with no promises
+that will be updated. Prefer to adjust your env. with upstream versions and
+keep them updated (specially the SmalliEx).
 * It's your responsibility to flash matching baseband & bootloader images
-* If you experience `already defined` type of errors when AOSP makefiles are included, you have other vendor makefiles that define the same packages (e.g. hammerhead vs bullhead from LGE). This issue is because the source of conflicted vendor makefiles didn't bother to wrap them with `ifeq ($(TARGET_DEVICE),<device_model>)`. Wrap conflicting makefiles with device matching clauses to resolve the issue.
-* Some might find a performance overkill to copy across & de-optimize the entire partition, while only a small subset of them is required. This will not change since same toolset is used to extract data for other purposes too. Feel free to edit them locally at your forks if you want to speed-up the process.
+* If you experience `already defined` type of errors when AOSP makefiles are
+included, you have other vendor makefiles that define the same packages (e.g.
+hammerhead vs bullhead from LGE). This issue is because the source of
+conflicted vendor makefiles didn't bother to wrap them with
+`ifeq ($TARGET_DEVICE),<device_model>)`. Wrap conflicting makefiles with
+device matching clauses to resolve the issue.
+* Some might find a performance overkill to copy across & de-optimize the
+entire partition, while only a small subset of them is required. This will not
+change since same toolset is used to extract data for other purposes too. Feel
+free to edit them locally at your forks if you want to speed-up the process.
 
 
 ## Example
