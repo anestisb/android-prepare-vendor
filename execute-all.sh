@@ -21,12 +21,10 @@ readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 # Helper script to generate vendor AOSP includes & makefiles
 readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
 
-export JAVA_HOME=/usr/local/java/jdk1.8.0_71/bin/java
-export PATH=/usr/local/java/jdk1.8.0_71/bin/:$PATH
+# Change this if you don't want to apply used Java version system-wide
+readonly LC_J_HOME="/usr/local/java/jdk1.8.0_71/bin/java"
 
-declare -a sysTools=("mkdir" "java")
-
-# angler is wip
+declare -a sysTools=("mkdir" "readlink" "dirname")
 declare -a availDevices=("bullhead" "flounder" "angler")
 
 abort() {
@@ -59,6 +57,23 @@ do
   fi
 done
 
+# Resolve Java location
+readonly JAVALINK=$(which java)
+if [[ "$JAVALINK" == "" ]]; then
+  echo "[!] Java binary not found in path, using hardcoded path"
+  if [ ! -f $LC_J_HOME ]; then
+    echo "[-] '$LC_J_HOME' not found in system"
+    abort 1
+  fi
+
+  export JAVA_HOME=$LC_J_HOME
+  export PATH=$(dirname $LC_J_HOME):$PATH
+else
+  readonly JAVAPATH=$(readlink -f $JAVALINK)
+  readonly JAVADIR=$(dirname $JAVAPATH)
+  export JAVA_HOME="$JAVAPATH"
+  export PATH="$JAVADIR":$PATH
+fi
 DEVICE=""
 BUILDID=""
 OUTPUT_DIR=""
