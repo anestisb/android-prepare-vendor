@@ -73,7 +73,7 @@ targeted actions and bugs investigation.
 If you want to contribute to `system-proprietary-blobs.txt` files, please test
 against the target device before pull request.
 
-# Work in progress
+## Work in progress
 
 * flounder - Nexus 9 LTE (volantisg)
 
