@@ -95,6 +95,7 @@ device matching clauses to resolve the issue.
 entire partition, while only a small subset of them is required. This will not
 change since same toolset is used to extract data for other purposes too. Feel
 free to edit them locally at your forks if you want to speed-up the process.
+* Java 8 is required for the bytecode de-optimization tool to work
 
 
 ## Example

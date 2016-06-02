@@ -4,7 +4,8 @@
 # providing vendor tar archives to be included into AOSP build trees.
 # Officially it is claimed that all vendor proprietary blobs have been moved
 # to /vendor partition. Unfortunately that is not true since a few vendor
-# executables, DSOs and APKs/JARs are present under /system although missing from AOSP public tree.
+# executables, DSOs and APKs/JARs are present under /system although missing
+# from AOSP public tree.
 #
 # As such custom AOSP builds require to first extract such blobs from /system
 # of factory images and manually include them in vendor directory of AOSP tree.
@@ -75,6 +76,19 @@ get_build_id() {
   echo $build_id
 }
 
+check_java_version() {
+  local JAVA_VER=$(java -version 2>&1 | \
+                   grep "java version" | \
+                   awk '{ print $3 }' | tr -d '"' | \
+                   awk '{ split($0, data, ".") } END{ print data[2] }')
+  if [[ $JAVA_VER -lt 8 ]]; then
+    echo "[-] Java version ('$JAVA_VER') is detected, while minimum required version is 8"
+    echo "[!] Consider exporting PATH like the following if a system-wide set is not desired"
+    echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
+    abort 1
+  fi
+}
+
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
@@ -83,6 +97,9 @@ do
     abort 1
   fi
 done
+
+# Verify Java version >= 8
+check_java_version
 
 INPUT_DIR=""
 OUTPUT_DIR=""
@@ -196,7 +213,7 @@ do
   pkgName=$(basename $file .$fileExt)
   isMultiDex=false
 
-  # framework resources jar should be the only legitimate jar without matching 
+  # framework resources jar should be the only legitimate jar without matching
   # bytecode
   if [ "$pkgName" == "framework-res" ]; then
     echo "[*] Skipping "$pkgName" since it doesn't pair with bytecode"
