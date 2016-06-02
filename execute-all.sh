@@ -39,6 +39,7 @@ cat <<_EOF
   Usage: $(basename $0) [options]
     OPTIONS:
       -d|--device   : Device codename (angler, bullhead, etc.)
+      -a|--alias    : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
       -b|--buildID  : BuildID string (e.g. MMB29P)
       -o|--output   : Path to save generated vendor data
       -i|--imgs-tar : Read factory tar from file instead of downloading (optional)
@@ -108,6 +109,10 @@ do
       DEVICE=$(echo $2 | tr '[:upper:]' '[:lower:]')
       shift
       ;;
+    -a|--alias)
+      DEV_ALIAS=$(echo $2 | tr '[:upper:]' '[:lower:]')
+      shift
+      ;;
     -b|--buildID)
       BUILDID=$(echo $2 | tr '[:upper:]' '[:lower:]')
       shift
@@ -173,15 +178,18 @@ FACTORY_IMGS_DATA="$OUT_BASE/factory_imgs_data"
 FACTORY_IMGS_R_DATA="$OUT_BASE/factory_imgs_repaired_data"
 echo "[*] Setting output base to '$OUT_BASE'"
 
-# Factory image alias for devices with naming incompatibilities with AOSP
-if [[ "$DEVICE" == "flounder" ]]; then
-  DEV_ALIAS="volantis"
-else
-  DEV_ALIAS="$DEVICE"
-fi
-
 # Download images if not provided
 if [[ "$INPUT_IMGS_TAR" == "" ]]; then
+
+  # Factory image alias for devices with naming incompatibilities with AOSP
+  if [[ "$DEVICE" == "flounder" && "$DEV_ALIAS" == "" ]]; then
+    echo "[-] Building for flounder requires setting the device alias option - 'volantis' or 'volantisg'"
+    abort 1
+  fi
+  if [[ "$DEV_ALIAS" == "" ]]; then
+    DEV_ALIAS="$DEVICE"
+  fi
+
   if ! $DOWNLOAD_SCRIPT --device $DEVICE --alias $DEV_ALIAS \
        --buildID $BUILDID --output "$OUT_BASE"; then
     echo "[-] Images download failed"

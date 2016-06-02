@@ -67,12 +67,15 @@ targeted actions and bugs investigation.
 ## Supported devices
 
 * bullhead - Nexus 5x
-* flounder - Nexus 9
+* flounder - Nexus 9 WiFi (volantis)
 * angler - Nexus 6p
 
 If you want to contribute to `system-proprietary-blobs.txt` files, please test
 against the target device before pull request.
 
+# Work in progress
+
+* flounder - Nexus 9 LTE (volantisg)
 
 ## Warnings
 
