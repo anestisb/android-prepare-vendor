@@ -78,20 +78,14 @@ get_build_id() {
 
 check_java_version() {
   local JAVA_VER=$(java -version 2>&1 | \
-                   grep "java version" | \
+                   grep -E "java version|openjdk verison" | \
                    awk '{ print $3 }' | tr -d '"' | \
                    awk '{ split($0, data, ".") } END{ print data[2] }')
   if [[ $JAVA_VER -lt 8 ]]; then
-    local JAVA_VER=$(java -version 2>&1 | \
-                     grep "openjdk version" | \
-                     awk '{ print $3 }' | tr -d '"' | \
-                     awk '{ split($0, data, ".") } END{ print data[2] }')
-    if [[ $JAVA_VER -lt 8 ]]; then
-      echo "[-] Java version ('$JAVA_VER') is detected, while minimum required version is 8"
-      echo "[!] Consider exporting PATH like the following if a system-wide set is not desired"
-      echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
-      abort 1
-    fi
+    echo "[-] Java version ('$JAVA_VER') is detected, while minimum required version is 8"
+    echo "[!] Consider exporting PATH like the following if a system-wide set is not desired"
+    echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
+    abort 1
   fi
 }
 
