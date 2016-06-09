@@ -78,7 +78,7 @@ get_build_id() {
 
 check_java_version() {
   local JAVA_VER=$(java -version 2>&1 | \
-                   grep -E "java version|openjdk verison" | \
+                   grep -E "java version|openjdk version" | \
                    awk '{ print $3 }' | tr -d '"' | \
                    awk '{ split($0, data, ".") } END{ print data[2] }')
   if [[ $JAVA_VER -lt 8 ]]; then
