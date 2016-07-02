@@ -387,6 +387,7 @@ gen_mk_for_bytecode() {
   local stem=""
   local lcMPath=""
   local appDir=""
+  local dsoRootBase=""
   local dsoRoot=""
   local dsoName=""
   local dsoMName=""
@@ -398,11 +399,11 @@ gen_mk_for_bytecode() {
   if [[ "$RELROOT" == "vendor" ]]; then
     origin="$INDIR/vendor/$RELSUBROOT"
     lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_VENDOR)/$RELSUBROOT"
-    dsoRoot="/vendor"
+    dsoRootBase="/vendor"
   elif [[ "$RELROOT" == "proprietary" ]]; then
     origin="$INDIR/system/$RELSUBROOT"
     lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_SYSTEM)/$RELSUBROOT"
-    dsoRoot="/system"
+    dsoRootBase="/system"
   else
     echo "[-] Invalid '$RELDIR' relative directory"
     abort 1
@@ -461,10 +462,10 @@ gen_mk_for_bytecode() {
         arch=$(dirname $lib | sed "s#$appDir/lib/##" | cut -d '/' -f1)
         if [[ $arch == *64 ]]; then
           dsoMName="$(basename $lib .so)_64.so"
-          dsoRoot="$dsoRoot/lib64"
+          dsoRoot="$dsoRootBase/lib64"
         else
           dsoMName="$(basename $lib .so)_32.so"
-          dsoRoot="$dsoRoot/lib"
+          dsoRoot="$dsoRootBase/lib"
         fi
 
         # Generate symlink fake rule & cache module_names to append later to
