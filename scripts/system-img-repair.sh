@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # For latest Android Nexus devices (N5x, N6p, N9, etc.), Google is no longer
-# providing vendor tar archives to be included into AOSP build trees.
+# providing vendor archives to be included into AOSP build trees.
 # Officially it is claimed that all vendor proprietary blobs have been moved
 # to /vendor partition. Unfortunately that is not true since a few vendor
 # executables, DSOs and APKs/JARs are present under /system although missing
@@ -161,7 +161,8 @@ fi
 
 # Verify image contains pre-optimized oat files
 if [ ! -d $INPUT_DIR/framework/oat ]; then
-  echo "[!] System partition doesn't contain any pre-optimized files - nothing to be done"
+  echo "[!] System partition doesn't contain any pre-optimized files - moving as is"
+  mv "$INPUT_DIR" "$OUTPUT_DIR" 
   abort 0
 fi
 
