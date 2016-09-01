@@ -71,7 +71,13 @@ targeted actions and bugs investigation.
 * flounder - Nexus 9 LTE (volantisg)
 * angler - Nexus 6p
 
-Android N preview images are not supported yet !
+## Android N Supported devices
+
+* flounder - Nexus 9 WiFi (volantis)
+
+Remaining devices are in the TODO list
+
+## Contributing
 
 If you want to contribute to `system-proprietary-blobs.txt` files, please test
 against the target device before pull request.
