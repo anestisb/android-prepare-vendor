@@ -25,8 +25,8 @@ usage() {
 cat <<_EOF
   Usage: $(basename $0) [options]
     OPTIONS:
-      -i|--input    : tar archive with factory images as downloaded from
-                      Nexus website
+      -i|--input    : archive with factory images as downloaded from
+                      Google Nexus images website
       -o|--output   : Path to save contents extracted from images
       -t|--simg2img : simg2img binary path to convert sparse images
 _EOF
@@ -35,6 +35,21 @@ _EOF
 
 command_exists() {
   type "$1" &> /dev/null
+}
+
+extract_archive() {
+  local readonly IN_ARCHIVE="$1"
+  local readonly OUT_DIR="$2"
+
+  local readonly F_EXT="${IN_ARCHIVE#*.}"
+  if [[ "$F_EXT" == "tar" || "$F_EXT" == "tar.gz" || "$F_EXT" == "tgz" ]]; then
+    tar -xf "$IN_ARCHIVE" -C "$OUT_DIR" || { echo "[-] tar extract failed"; abort 1; }
+  elif [[ "$F_EXT" == "zip" ]]; then
+    unzip -qq "$IN_ARCHIVE" -d "$OUT_DIR" || { echo "[-] zip extract failed"; abort 1; }
+  else
+    echo "[-] Unknown archive format '$F_EXT'"
+    abort 1
+  fi
 }
 
 extract_vendor_partition_size() {
@@ -78,7 +93,7 @@ fi
 # Check if script run as root
 run_as_root
 
-INPUT_TAR=""
+INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 SIMG2IMG=""
 
@@ -91,7 +106,7 @@ do
       shift
       ;;
     -i|--input)
-      INPUT_TAR=$2
+      INPUT_ARCHIVE=$2
       shift
       ;;
     -t|--simg2img)
@@ -106,8 +121,8 @@ do
   shift
 done
 
-if [[ "$INPUT_TAR" == "" || ! -f "$INPUT_TAR" ]]; then
-  echo "[-] Input tar archive file not found"
+if [[ "$INPUT_ARCHIVE" == "" || ! -f "$INPUT_ARCHIVE" ]]; then
+  echo "[-] Input archive file not found"
   usage
 fi
 if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
@@ -130,17 +145,14 @@ if [ -d "$VENDOR_DATA_OUT" ]; then
   rm -rf "$VENDOR_DATA_OUT"/*
 fi
 
-tarName="$(basename $INPUT_TAR)"
-fileExt="${tarName##*.}"
-archName="$(basename $tarName .$fileExt)"
+archiveName="$(basename $INPUT_ARCHIVE)"
+fileExt="${archiveName##*.}"
+archName="$(basename $archiveName .$fileExt)"
 extractDir="$TMP_WORK_DIR/$archName"
 mkdir -p $extractDir
 
-echo "[*] Extracting '$tarName'"
-if ! tar -xf $INPUT_TAR -C "$extractDir"; then
-  echo "[-] Extract failed"
-  abort 1
-fi
+# Extract archive
+extract_archive "$INPUT_ARCHIVE" "$extractDir"
 
 if [[ -f "$extractDir/system.img" && -f "$extractDir/vendor.img" ]]; then
   sysImg="$extractDir/system.img"

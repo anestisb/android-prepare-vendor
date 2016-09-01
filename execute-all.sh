@@ -38,12 +38,12 @@ usage() {
 cat <<_EOF
   Usage: $(basename $0) [options]
     OPTIONS:
-      -d|--device   : Device codename (angler, bullhead, etc.)
-      -a|--alias    : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
-      -b|--buildID  : BuildID string (e.g. MMB29P)
-      -o|--output   : Path to save generated vendor data
-      -i|--imgs-tar : Read factory tar from file instead of downloading (optional)
-      -k|--keep     : Keep all factory images extracted & de-optimized data (optional)
+      -d|--device  : Device codename (angler, bullhead, etc.)
+      -a|--alias   : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
+      -b|--buildID : BuildID string (e.g. MMB29P)
+      -o|--output  : Path to save generated vendor data
+      -i|--img     : Read factory image archive from file instead of downloading (optional)
+      -k|--keep    : Keep all factory images extracted & de-optimized data (optional)
 _EOF
   abort 1
 }
@@ -92,7 +92,7 @@ run_as_root
 DEVICE=""
 BUILDID=""
 OUTPUT_DIR=""
-INPUT_IMGS_TAR=""
+INPUT_IMG=""
 KEEP_DATA=false
 HOST_OS=""
 DEV_ALIAS=""
@@ -117,8 +117,8 @@ do
       BUILDID=$(echo $2 | tr '[:upper:]' '[:lower:]')
       shift
       ;;
-    -i|--imgs-tar)
-      INPUT_IMGS_TAR=$2
+    -i|--imgs)
+      INPUT_IMG=$2
       shift
       ;;
     -k|--keep)
@@ -144,8 +144,8 @@ if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
   echo "[-] Output directory not found"
   usage
 fi
-if [[ "$INPUT_IMGS_TAR" != "" && ! -f "$INPUT_IMGS_TAR" ]]; then
-  echo "[-] '$INPUT_IMGS_TAR' file not found"
+if [[ "$INPUT_IMG" != "" && ! -f "$INPUT_IMG" ]]; then
+  echo "[-] '$INPUT_IMG' file not found"
   abort 1
 fi
 
@@ -179,7 +179,7 @@ FACTORY_IMGS_R_DATA="$OUT_BASE/factory_imgs_repaired_data"
 echo "[*] Setting output base to '$OUT_BASE'"
 
 # Download images if not provided
-if [[ "$INPUT_IMGS_TAR" == "" ]]; then
+if [[ "$INPUT_IMG" == "" ]]; then
 
   # Factory image alias for devices with naming incompatibilities with AOSP
   if [[ "$DEVICE" == "flounder" && "$DEV_ALIAS" == "" ]]; then
@@ -195,9 +195,10 @@ if [[ "$INPUT_IMGS_TAR" == "" ]]; then
     echo "[-] Images download failed"
     abort 1
   fi
-  archName="$(find $OUT_BASE -iname "*$DEV_ALIAS*$BUILDID*.tgz" | head -1)"
+  archName="$(find $OUT_BASE -iname "*$DEV_ALIAS*$BUILDID*.tgz" -or \
+              -iname "*$DEV_ALIAS*$BUILDID*.zip" | head -1)"
 else
-  archName="$INPUT_IMGS_TAR"
+  archName="$INPUT_IMG"
 fi
 
 # Clear old data if present & extract data from factory images
