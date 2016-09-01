@@ -192,12 +192,12 @@ if [[ "$INPUT_IMG" == "" ]]; then
     DEV_ALIAS="$DEVICE"
   fi
 
-  if ! $DOWNLOAD_SCRIPT --device $DEVICE --alias $DEV_ALIAS \
-       --buildID $BUILDID --output "$OUT_BASE"; then
+ $DOWNLOAD_SCRIPT --device "$DEVICE" --alias "$DEV_ALIAS" \
+       --buildID "$BUILDID" --output "$OUT_BASE" || {
     echo "[-] Images download failed"
     abort 1
-  fi
-  archName="$(find $OUT_BASE -iname "*$DEV_ALIAS*$BUILDID*.tgz" -or \
+  }
+  archName="$(find "$OUT_BASE" -iname "*$DEV_ALIAS*$BUILDID*.tgz" -or \
               -iname "*$DEV_ALIAS*$BUILDID*.zip" | head -1)"
 else
   archName="$INPUT_IMG"
@@ -209,19 +209,19 @@ if [ -d "$FACTORY_IMGS_DATA" ]; then
 else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
-if ! $EXTRACT_SCRIPT --input "$archName" --output "$FACTORY_IMGS_DATA" \
-     --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/simg2img"; then
+$EXTRACT_SCRIPT --input "$archName" --output "$FACTORY_IMGS_DATA" \
+     --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/simg2img" || {
   echo "[-] Factory images data extract failed"
   abort 1
-fi
+}
 
 # Generate unified readonly "proprietary-blobs.txt"
-if ! $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
+$GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
      --output "$SCRIPTS_ROOT/$DEVICE" \
-     --sys-list "$SCRIPTS_ROOT/$DEVICE/system-proprietary-blobs.txt"; then
+     --sys-list "$SCRIPTS_ROOT/$DEVICE/system-proprietary-blobs.txt" || {
   echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
-fi
+}
 
 # De-optimize bytecode from system partition
 if [ -d "$FACTORY_IMGS_R_DATA" ]; then
@@ -229,12 +229,12 @@ if [ -d "$FACTORY_IMGS_R_DATA" ]; then
 else
   mkdir -p "$FACTORY_IMGS_R_DATA"
 fi
-if ! $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
+$REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
-     --oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"; then
+     --oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar" || {
   echo "[-] System partition de-optimization failed"
   abort 1
-fi
+}
 
 # Bytecode under vendor partition doesn't require de-opt for (up to now)
 # However, move it to repaired data directory to have a single source for
@@ -246,11 +246,11 @@ mv "$FACTORY_IMGS_DATA/vendor" "$FACTORY_IMGS_R_DATA"
 # file not found when parsing data
 cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 
-if ! $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
-  --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt"; then
+$VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
+  --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" || {
   echo "[-] Vendor generation failed"
   abort 1
-fi
+}
 
 if [ "$KEEP_DATA" = false ]; then
   rm -rf "$FACTORY_IMGS_DATA"

@@ -160,28 +160,27 @@ if [[ -f "$extractDir/system.img" && -f "$extractDir/vendor.img" ]]; then
   vImg="$extractDir/vendor.img"
 else
   updateArch=$(find "$extractDir" -iname "image-*.zip" | head -n 1)
-  echo "[*] Unzipping '$(basename $updateArch)'"
-  if ! unzip -qq "$updateArch" -d $extractDir/images; then
+  echo "[*] Unzipping '$(basename "$updateArch")'"
+  unzip -qq "$updateArch" -d "$extractDir/images" || {
     echo "[-] unzip failed"
     abort 1
-  else
-    sysImg="$extractDir/images/system.img"
-    vImg="$extractDir/images/vendor.img"
-  fi
+  }
+  sysImg="$extractDir/images/system.img"
+  vImg="$extractDir/images/vendor.img"
 fi
 
 # Convert from sparse to raw
 rawSysImg="$extractDir/images/system.img.raw"
 rawVImg="$extractDir/images/vendor.img.raw"
 
-if ! $SIMG2IMG $sysImg $rawSysImg; then
+$SIMG2IMG "$sysImg" "$rawSysImg" || {
   echo "[-] simg2img failed to convert system.img from sparse"
   abort 1
-fi
-if ! $SIMG2IMG $vImg $rawVImg; then
+}
+$SIMG2IMG "$vImg" "$rawVImg" || {
   echo "[-] simg2img failed to convert vendor.img from sparse"
   abort 1
-fi
+}
 
 # Save raw vendor img partition size
 extract_vendor_partition_size "$rawVImg" "$OUTPUT_DIR"
@@ -193,22 +192,22 @@ mountCmd="mount -t ext4 -o ro,loop $rawSysImg $sysImgData"
 umountCmd="umount $sysImgData"
 
 # Mount to loopback
-if ! $mountCmd; then
+$mountCmd || {
   echo "[-] '$mountCmd' failed"
   abort 1
-fi
+}
 
 # Copy files - it is very IMPORTANT that symbolic links are followed and copied
 echo "[*] Copying files from system partition ..."
-if ! rsync -aruz "$sysImgData/" "$SYSTEM_DATA_OUT"; then
+rsync -aruz "$sysImgData/" "$SYSTEM_DATA_OUT" || {
   echo "[-] system rsync failed"
   abort 1
-fi
+}
 
 # Unmount
-if ! $umountCmd; then
+$umountCmd || {
   echo "[-] '$umountCmd' failed"
-fi
+}
 
 # Same process for vendor image
 vImgData="$extractDir/factory.vendor"
@@ -218,24 +217,24 @@ mountCmd="mount -t ext4 -o ro,loop $rawVImg $vImgData"
 umountCmd="umount $vImgData"
 
 # Mount to loopback
-if ! $mountCmd; then
+$mountCmd || {
   echo "[-] '$mountCmd' failed"
   if [[ "$OS" == "Darwin" ]]; then
     echo "[!] Most probably your MAC doesn't support ext4"
   fi
   abort 1
-fi
+}
 
 # Copy files
 echo "[*] Copying files from vendor partition ..."
-if ! rsync -aruz "$vImgData/" "$VENDOR_DATA_OUT"; then
+rsync -aruz "$vImgData/" "$VENDOR_DATA_OUT" || {
   echo "[-] system rsync failed"
   abort 1
-fi
+}
 
 # Unmount
-if ! $umountCmd; then
+$umountCmd || {
   echo "[-] '$umountCmd' failed"
-fi
+}
 
 abort 0

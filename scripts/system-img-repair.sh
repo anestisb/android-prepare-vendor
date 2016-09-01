@@ -180,10 +180,10 @@ do
   workDir="$TMP_WORK_DIR/$abi"
   mkdir $workDir
   cp $INPUT_DIR/framework/$abi/boot.oat $workDir
-  if ! java -jar $OAT2DEX_JAR boot $workDir/boot.oat &>/dev/null; then
+  java -jar $OAT2DEX_JAR boot $workDir/boot.oat &>/dev/null || {
     echo "[!] Boot classes extraction failed"
     abort 1
-  fi
+  }
 done
 
 echo "[*] Start extracting system partition & de-optimize pre-compiled bytecode ..."
@@ -236,12 +236,12 @@ do
                 -iname "$pkgName*.dex" | wc -l | tr -d ' ')
   fi
   if [ $odexFound -eq 0 ]; then
-    if ! zipinfo $file classes.dex &>/dev/null; then
-      echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
-    else
+    zipinfo $file classes.dex &>/dev/null && {
       echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
       cp "$file" $OUTPUT_SYS/$relDir
-    fi
+    } || {
+      echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
+    }
   else
     # If pre-compiled, de-optimize to original DEX bytecode
     for abi in ${ABIS[@]}
@@ -249,11 +249,11 @@ do
       curOdex="$zipRoot/oat/$abi/$pkgName.odex"
       if [ -f $curOdex ]; then
         # If odex present de-optimize it
-        if ! java -jar $OAT2DEX_JAR -o $TMP_WORK_DIR $curOdex \
-             "$TMP_WORK_DIR/$abi/dex" &>/dev/null; then
+        java -jar $OAT2DEX_JAR -o $TMP_WORK_DIR $curOdex \
+             "$TMP_WORK_DIR/$abi/dex" &>/dev/null || {
           echo "[!] '$relFile/oat/$abi/$pkgName.odex' de-optimization failed"
           abort 1
-        fi
+        }
 
         # If DEX not created, oat2dex failed to resolve a dependency and skipped file
         if [ ! -f $TMP_WORK_DIR/$pkgName.dex ]; then
@@ -288,11 +288,11 @@ do
       while [ -f $curMultiDex ]
       do
         mv $curMultiDex "$TMP_WORK_DIR/classes$counter.dex"
-        if ! jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
-             "classes$counter.dex" &>/dev/null; then
+        jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
+             "classes$counter.dex" &>/dev/null || {
           echo "[-] '$fileName' 'classes$counter.dex' append failed"
           abort 1
-        fi
+        }
         rm "$TMP_WORK_DIR/classes$counter.dex"
 
         counter=$(( $counter + 1))
@@ -301,11 +301,11 @@ do
     fi
 
     mv $TMP_WORK_DIR/$pkgName.dex $TMP_WORK_DIR/classes.dex
-    if ! jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
-         classes.dex &>/dev/null; then
+    jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
+         classes.dex &>/dev/null || {
       echo "[-] '$fileName' classes.dex append failed"
       abort 1
-    fi
+    }
     rm $TMP_WORK_DIR/classes.dex
 
     mkdir -p $OUTPUT_SYS/$relDir
