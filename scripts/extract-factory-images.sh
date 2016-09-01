@@ -16,14 +16,14 @@ abort() {
   if [[ "$-" == *x* ]]; then
     echo "[*] Workspace available at '$TMP_WORK_DIR' - delete manually when done"
   else
-    rm -rf $TMP_WORK_DIR
+    rm -rf "$TMP_WORK_DIR"
   fi
-  exit $1
+  exit "$1"
 }
 
 usage() {
 cat <<_EOF
-  Usage: $(basename $0) [options]
+  Usage: $(basename "$0") [options]
     OPTIONS:
       -i|--input    : archive with factory images as downloaded from
                       Google Nexus images website
@@ -38,10 +38,10 @@ command_exists() {
 }
 
 extract_archive() {
-  local readonly IN_ARCHIVE="$1"
-  local readonly OUT_DIR="$2"
+  local IN_ARCHIVE="$1"
+  local OUT_DIR="$2"
 
-  local readonly F_EXT="${IN_ARCHIVE#*.}"
+  local F_EXT="${IN_ARCHIVE#*.}"
   if [[ "$F_EXT" == "tar" || "$F_EXT" == "tar.gz" || "$F_EXT" == "tgz" ]]; then
     tar -xf "$IN_ARCHIVE" -C "$OUT_DIR" || { echo "[-] tar extract failed"; abort 1; }
   elif [[ "$F_EXT" == "zip" ]]; then
@@ -66,7 +66,7 @@ extract_vendor_partition_size() {
 
   # Write to file so that 'generate-vendor.sh' can pick the value
   # for BoardConfigVendor makefile generation
-  echo $size > "$OUT_FILE"
+  echo "$size" > "$OUT_FILE"
 }
 
 run_as_root() {
@@ -79,7 +79,7 @@ run_as_root() {
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
-  if ! command_exists $i; then
+  if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
     abort 1
   fi
@@ -97,11 +97,12 @@ INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 SIMG2IMG=""
 
-while [[ $# > 1 ]]
+while [[ $# -gt 1 ]]
 do
   arg="$1"
   case $arg in
     -o|--output)
+      # shellcheck disable=SC2001
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
@@ -137,19 +138,19 @@ fi
 # Prepare output folders
 SYSTEM_DATA_OUT="$OUTPUT_DIR/system"
 if [ -d "$SYSTEM_DATA_OUT" ]; then
-  rm -rf "$SYSTEM_DATA_OUT"/*
+  rm -rf "${SYSTEM_DATA_OUT:?}"/*
 fi
 
 VENDOR_DATA_OUT="$OUTPUT_DIR/vendor"
 if [ -d "$VENDOR_DATA_OUT" ]; then
-  rm -rf "$VENDOR_DATA_OUT"/*
+  rm -rf "${VENDOR_DATA_OUT:?}"/*
 fi
 
-archiveName="$(basename $INPUT_ARCHIVE)"
+archiveName="$(basename "$INPUT_ARCHIVE")"
 fileExt="${archiveName##*.}"
-archName="$(basename $archiveName .$fileExt)"
+archName="$(basename "$archiveName" ".$fileExt")"
 extractDir="$TMP_WORK_DIR/$archName"
-mkdir -p $extractDir
+mkdir -p "$extractDir"
 
 # Extract archive
 extract_archive "$INPUT_ARCHIVE" "$extractDir"
@@ -183,7 +184,7 @@ if ! $SIMG2IMG $vImg $rawVImg; then
 fi
 
 # Save raw vendor img partition size
-extract_vendor_partition_size $rawVImg $OUTPUT_DIR
+extract_vendor_partition_size "$rawVImg" "$OUTPUT_DIR"
 
 sysImgData="$extractDir/factory.system"
 mkdir -p "$sysImgData"

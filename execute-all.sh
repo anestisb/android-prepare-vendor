@@ -31,12 +31,12 @@ declare -a sysTools=("mkdir" "readlink" "dirname")
 declare -a availDevices=("bullhead" "flounder" "angler")
 
 abort() {
-  exit $1
+  exit "$1"
 }
 
 usage() {
 cat <<_EOF
-  Usage: $(basename $0) [options]
+  Usage: $(basename "$0") [options]
     OPTIONS:
       -d|--device  : Device codename (angler, bullhead, etc.)
       -a|--alias   : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
@@ -62,7 +62,7 @@ run_as_root() {
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
-  if ! command_exists $i; then
+  if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
     abort 1
   fi
@@ -78,10 +78,11 @@ if [[ "$JAVALINK" == "" ]]; then
   fi
 
   export JAVA_HOME=$LC_J_HOME
-  export PATH=$(dirname $LC_J_HOME):$PATH
+  export PATH
+  PATH=$(dirname $LC_J_HOME):$PATH
 else
-  readonly JAVAPATH=$(readlink -f $JAVALINK)
-  readonly JAVADIR=$(dirname $JAVAPATH)
+  readonly JAVAPATH=$(readlink -f "$JAVALINK")
+  readonly JAVADIR=$(dirname "$JAVAPATH")
   export JAVA_HOME="$JAVAPATH"
   export PATH="$JAVADIR":$PATH
 fi
@@ -97,24 +98,25 @@ KEEP_DATA=false
 HOST_OS=""
 DEV_ALIAS=""
 
-while [[ $# > 0 ]]
+while [[ $# -gt 0 ]]
 do
   arg="$1"
   case $arg in
     -o|--output)
+      # shellcheck disable=SC2001
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
     -d|--device)
-      DEVICE=$(echo $2 | tr '[:upper:]' '[:lower:]')
+      DEVICE=$(echo "$2" | tr '[:upper:]' '[:lower:]')
       shift
       ;;
     -a|--alias)
-      DEV_ALIAS=$(echo $2 | tr '[:upper:]' '[:lower:]')
+      DEV_ALIAS=$(echo "$2" | tr '[:upper:]' '[:lower:]')
       shift
       ;;
     -b|--buildID)
-      BUILDID=$(echo $2 | tr '[:upper:]' '[:lower:]')
+      BUILDID=$(echo "$2" | tr '[:upper:]' '[:lower:]')
       shift
       ;;
     -i|--imgs)
@@ -152,7 +154,7 @@ fi
 # Adjust hosts tools based on OS
 HOST_OS=$(uname)
 if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
-  echo '[-] '$HOST_OS' OS is not supported'
+  echo "[-] '$HOST_OS' OS is not supported"
   abort 1
 fi
 
@@ -172,7 +174,7 @@ fi
 # Prepare output dir structure
 OUT_BASE="$OUTPUT_DIR/$DEVICE/$BUILDID"
 if [ ! -d "$OUT_BASE" ]; then
-  mkdir -p $OUT_BASE
+  mkdir -p "$OUT_BASE"
 fi
 FACTORY_IMGS_DATA="$OUT_BASE/factory_imgs_data"
 FACTORY_IMGS_R_DATA="$OUT_BASE/factory_imgs_repaired_data"
@@ -203,7 +205,7 @@ fi
 
 # Clear old data if present & extract data from factory images
 if [ -d "$FACTORY_IMGS_DATA" ]; then
-  rm -rf "$FACTORY_IMGS_DATA"/*
+  rm -rf "${FACTORY_IMGS_DATA:?}"/*
 else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
@@ -223,7 +225,7 @@ fi
 
 # De-optimize bytecode from system partition
 if [ -d "$FACTORY_IMGS_R_DATA" ]; then
-  rm -rf "$FACTORY_IMGS_R_DATA"/*
+  rm -rf "${FACTORY_IMGS_R_DATA:?}"/*
 else
   mkdir -p "$FACTORY_IMGS_R_DATA"
 fi
@@ -256,6 +258,6 @@ if [ "$KEEP_DATA" = false ]; then
 fi
 
 echo "[*] All actions completed successfully"
-echo "[*] Import "$OUT_BASE/vendor" to AOSP root"
+echo "[*] Import '$OUT_BASE/vendor' to AOSP root"
 
 abort 0

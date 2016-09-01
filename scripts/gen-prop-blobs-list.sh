@@ -14,12 +14,12 @@ set -u # fail on undefined variable
 declare -a sysTools=("find" "sed" "sort")
 
 abort() {
-  exit $1
+  exit "$1"
 }
 
 usage() {
 cat <<_EOF
-  Usage: $(basename $0) [options]
+  Usage: $(basename "$0") [options]
     OPTIONS:
       -i|--input    : Root path of /vendor partition
       -s|--sys-list : File list with proprietary blobs in /system partition
@@ -42,7 +42,7 @@ verify_input() {
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
-  if ! command_exists $i; then
+  if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
     abort 1
   fi
@@ -52,15 +52,17 @@ INPUT_DIR=""
 IN_SYS_FILE=""
 OUTPUT_DIR=""
 
-while [[ $# > 1 ]]
+while [[ $# -gt 1 ]]
 do
   arg="$1"
   case $arg in
     -o|--output)
+      # shellcheck disable=SC2001
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
     -i|--input)
+      # shellcheck disable=SC2001
       INPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
@@ -90,13 +92,13 @@ if [[ "$IN_SYS_FILE" == "" || ! -f "$IN_SYS_FILE" ]]; then
 fi
 
 # Verify input directory structure
-verify_input $INPUT_DIR
+verify_input "$INPUT_DIR"
 
 readonly OUT_BLOBS_FILE_TMP="$OUTPUT_DIR/_proprietary-blobs.txt"
 readonly OUT_BLOBS_FILE="$OUTPUT_DIR/proprietary-blobs.txt"
 
 # First add system-proprietary-blobs to
-cat "$IN_SYS_FILE" > $OUT_BLOBS_FILE_TMP
+cat "$IN_SYS_FILE" > "$OUT_BLOBS_FILE_TMP"
 
 # Then add all regular files from /vendor partition
 find "$INPUT_DIR" -type f | sed "s#^$INPUT_DIR/##" | while read -r FILE
@@ -109,7 +111,7 @@ do
 done
 
 # Sort & delete tmp
-cat "$OUT_BLOBS_FILE_TMP" | sort > "$OUT_BLOBS_FILE"
+sort "$OUT_BLOBS_FILE_TMP" > "$OUT_BLOBS_FILE"
 rm -f "$OUT_BLOBS_FILE_TMP"
 
 abort 0
