@@ -41,6 +41,8 @@ extract_archive() {
   local IN_ARCHIVE="$1"
   local OUT_DIR="$2"
 
+  echo "[*] Extracting '$IN_ARCHIVE'"
+
   local F_EXT="${IN_ARCHIVE#*.}"
   if [[ "$F_EXT" == "tar" || "$F_EXT" == "tar.gz" || "$F_EXT" == "tgz" ]]; then
     tar -xf "$IN_ARCHIVE" -C "$OUT_DIR" || { echo "[-] tar extract failed"; abort 1; }
