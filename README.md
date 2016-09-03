@@ -109,23 +109,22 @@ free to edit them locally at your forks if you want to speed-up the process.
 ## Example
 
 ```
-root@aosp_b_server:prepare_vendor_blobs# ./execute-all.sh -d bullhead -b MMB29P -o $(pwd)
-[*] Setting output base to '/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p'
-[*] Downloading image from 'https://dl.google.com/dl/android/aosp/bullhead-mmb29p-factory-b3dae7eb.tgz'
---2016-01-29 19:31:38--  https://dl.google.com/dl/android/aosp/bullhead-mmb29p-factory-b3dae7eb.tgz
-Resolving dl.google.com (dl.google.com)... 64.233.167.91, 64.233.167.136, 64.233.167.190, ...
-Connecting to dl.google.com (dl.google.com)|64.233.167.91|:443... connected.
+root@aosp_b_server:prepare_vendor_blobs# ./execute-all.sh -d bullhead -b MTC20F -o $(pwd) -k
+[*] Setting output base to '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f'
+[*] Downloading image from 'https://dl.google.com/dl/android/aosp/bullhead-mtc20f-factory-fa466167.zip'
+--2016-09-01 22:32:58--  https://dl.google.com/dl/android/aosp/bullhead-mtc20f-factory-fa466167.zip
+Resolving dl.google.com (dl.google.com)... 62.75.10.35, 62.75.10.34, 62.75.10.45, ...
+Connecting to dl.google.com (dl.google.com)|62.75.10.35|:443... connected.
 HTTP request sent, awaiting response... 200 OK
-Length: 962206340 (918M) [application/x-tar]
-Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/bullhead-mmb29p-factory-b3dae7eb.tgz’
+Length: 964936069 (920M) [application/zip]
+Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/bullhead-mtc20f-factory-fa466167.zip’
 
-/aosp_b_prod/prepare_vendor_blobs/bull 100%[==============================================================================>] 917.63M  1.23MB/s   in 12m 26ss
+/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/ 100%[=================================================================================================================>] 920.23M  1.20MB/s   in 12m 46ss
 
-2016-01-29 19:44:04 (1.23 MB/s) - ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/bullhead-mmb29p-factory-b3dae7eb.tgz’ saved [962206340/962206340]
+2016-09-01 22:45:45 (1.20 MB/s) - ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/bullhead-mtc20f-factory-fa466167.zip’ saved [964936069/964936069]
 
-[*] Extracting 'bullhead-mmb29p-factory-b3dae7eb.tgz'
-[*] Unzipping 'image-bullhead-mmb29p.zip'
-[*] Copying files from system parition ...
+[*] Unzipping 'image-bullhead-mtc20f.zip'
+[*] Copying files from system partition ...
 [*] Copying files from vendor partition ...
 [*] Preparing environment for 'arm' ABI
 [*] Preparing environment for 'arm64' ABI
@@ -138,23 +137,23 @@ Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/bullhead-mmb29p-
 [*] '/priv-app/GoogleServicesFramework/GoogleServicesFramework.apk' not pre-optimized with sanity checks passed - copying without changes
 [*] '/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk' is multi-dex - adjusting recursive archive adds
 [*] '/app/Music2/Music2.apk' is multi-dex - adjusting recursive archive adds
-[*] '/app/Maps/Maps.apk' is multi-dex - adjusting recursive archive adds
+[-] '/app/PlayGames/PlayGames.apk' de-optimization failed consider manual inspection - skipping archive
 [-] '/app/PrebuiltExchange3Google/PrebuiltExchange3Google.apk' de-optimization failed consider manual inspection - skipping archive
 [*] '/app/Photos/Photos.apk' is multi-dex - adjusting recursive archive adds
-[*] System partition successfully extracted & de-optimized at '/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/factory_imgs_repaired_data'
+[*] System partition successfully extracted & de-optimized at '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/factory_imgs_repaired_data'
 [!] Target device expects to have following img versions when using output system img
- [*] Booatloder:BHZ10k
- [*] Baseband:M8994F-2.6.30.0.68
+ [*] Booatloder:BHZ10r
+ [*] Baseband:M8994F-2.6.32.1.13
 [*] Generating blobs for vendor/lge/bullhead
-[*] Copying files to '/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/vendor/lge/bullhead' ...
+[*] Copying files to '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/vendor/lge/bullhead' ...
 [*] Generating 'bullhead-vendor-blobs.mk' makefile
 [*] Generating 'device-vendor.mk'
 [*] Generating 'BoardConfigVendor.mk'
 [*] Generating 'Android.mk' ...
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/vendor/lge/bullhead/vendor/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/vendor/lge/bullhead/proprietary/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/vendor/lge/bullhead/proprietary/framework' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/vendor/lge/bullhead/proprietary/priv-app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/vendor/lge/bullhead/vendor/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/vendor/lge/bullhead/proprietary/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/vendor/lge/bullhead/proprietary/framework' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/vendor/lge/bullhead/proprietary/priv-app' APK/JAR pre-builts
 [*] All actions completed successfully
-[*] Import /aosp_b_prod/prepare_vendor_blobs/bullhead/mmb29p/vendor to AOSP root
+[*] Import '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/vendor' to AOSP root
 ```
