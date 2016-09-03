@@ -30,6 +30,8 @@ command_exists() {
   type "$1" &> /dev/null
 }
 
+trap "abort 1" SIGINT SIGTERM
+
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do

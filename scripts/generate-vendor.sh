@@ -536,6 +536,8 @@ gen_mk_for_bytecode() {
   fi
 }
 
+trap "abort 1" SIGINT SIGTERM
+
 INPUT_DIR=""
 OUTPUT_DIR=""
 BLOBS_LIST=""

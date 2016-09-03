@@ -89,6 +89,8 @@ check_java_version() {
   fi
 }
 
+trap "abort 1" SIGINT SIGTERM
+
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
