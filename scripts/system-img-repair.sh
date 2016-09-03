@@ -38,14 +38,14 @@ abort() {
     echo "[*] Workspace available at '$TMP_WORK_DIR' - delete manually \
           when done"
   else
-    rm -rf $TMP_WORK_DIR
+    rm -rf "$TMP_WORK_DIR"
   fi
-  exit $1
+  exit "$1"
 }
 
 usage() {
 cat <<_EOF
-  Usage: $(basename $0) [options]
+  Usage: $(basename "$0") [options]
     OPTIONS:
       -i|--input   : Root path of extracted factory image system partition
       -o|--output  : Path to save input partition with de-optimized odex files
@@ -64,16 +64,16 @@ command_exists() {
 }
 
 print_expected_imgs_ver() {
-  bootloader=$(cat $1 | grep 'ro.build.expect.bootloader' | cut -d '=' -f2)
-  baseband=$(cat $1 | grep 'ro.build.expect.baseband' | cut -d '=' -f2)
+  bootloader=$(grep 'ro.build.expect.bootloader' "$1" | cut -d '=' -f2)
+  baseband=$(grep 'ro.build.expect.baseband' "$1" | cut -d '=' -f2)
   echo "[!] Target device expects to have following img versions when using output system img"
   echo " [*] Booatloder:$bootloader"
   echo " [*] Baseband:$baseband"
 }
 
 get_build_id() {
-  local build_id=$(cat $1 | grep 'ro.build.id=' | cut -d "=" -f2)
-  echo $build_id
+  local build_id=$(grep 'ro.build.id=' "$1" | cut -d "=" -f2)
+  echo "$build_id"
 }
 
 check_java_version() {
@@ -94,7 +94,7 @@ trap "abort 1" SIGINT SIGTERM
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
-  if ! command_exists $i; then
+  if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
     abort 1
   fi
@@ -108,7 +108,7 @@ OUTPUT_DIR=""
 OAT2DEX_JAR=""
 declare -a ABIS
 
-while [[ $# > 1 ]]
+while [[ $# -gt 1 ]]
 do
   arg="$1"
   case $arg in
@@ -121,7 +121,7 @@ do
       shift
       ;;
     -t|--oat2dex)
-      OAT2DEX_JAR=$2
+      OAT2DEX_JAR="$2"
       shift
       ;;
     *)
@@ -146,32 +146,31 @@ if [[ "$OAT2DEX_JAR" == "" || ! -f "$OAT2DEX_JAR" ]]; then
 fi
 
 # Verify input is an Android system partition
-if [ ! -f $INPUT_DIR/build.prop ]; then
+if [ ! -f "$INPUT_DIR/build.prop" ]; then
   echo "[-] '$INPUT_DIR' is not a valid system image partition"
   abort 1
 fi
 
 # Output directory should be empty to avoid merge races with old extracts
-BUILD_ID=$(get_build_id $INPUT_DIR/build.prop)
-OUTPUT_SYS=$OUTPUT_DIR/system
-if [[ -d $OUTPUT_SYS && "$(ls -A $OUTPUT_SYS | grep -v '^\.')" ]]; then
+OUTPUT_SYS="$OUTPUT_DIR/system"
+if [[ -d "$OUTPUT_SYS" && $(ls -A "$OUTPUT_SYS" | grep -v '^\.') ]]; then
   echo "[!] Output directory should be empty to avoid merge problems with old extracts"
   abort 1
 else
-  mkdir -p $OUTPUT_SYS
+  mkdir -p "$OUTPUT_SYS"
 fi
 
 # Verify image contains pre-optimized oat files
-if [ ! -d $INPUT_DIR/framework/oat ]; then
+if [ ! -d "$INPUT_DIR/framework/oat" ]; then
   echo "[!] System partition doesn't contain any pre-optimized files - moving as is"
-  mv "$INPUT_DIR" "$OUTPUT_DIR" 
+  mv "$INPUT_DIR" "$OUTPUT_DIR"
   abort 0
 fi
 
 # Identify supported ABI(s) - extra work for 64bit ABIs
 for type in "arm" "arm64" "x86" "x86_64"
 do
-  if [ -f $INPUT_DIR/framework/$type/boot.art ]; then
+  if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
     ABIS=("${ABIS[@]-}" "$type")
   fi
 done
@@ -180,9 +179,9 @@ for abi in ${ABIS[@]}
 do
   echo "[*] Preparing environment for '$abi' ABI"
   workDir="$TMP_WORK_DIR/$abi"
-  mkdir $workDir
-  cp $INPUT_DIR/framework/$abi/boot.oat $workDir
-  java -jar $OAT2DEX_JAR boot $workDir/boot.oat &>/dev/null || {
+  mkdir "$workDir"
+  cp "$INPUT_DIR/framework/$abi/boot.oat" "$workDir"
+  java -jar "$OAT2DEX_JAR" boot "$workDir/boot.oat" &>/dev/null || {
     echo "[!] Boot classes extraction failed"
     abort 1
   }
@@ -191,10 +190,10 @@ done
 echo "[*] Start extracting system partition & de-optimize pre-compiled bytecode ..."
 while read -r file
 do
-  relFile=$(echo $file | sed "s#^$INPUT_DIR##")
-  relDir=$(dirname $relFile)
+  relFile=$(echo "$file" | sed "s#^$INPUT_DIR##")
+  relDir=$(dirname "$relFile")
   fileExt="${file##*.}"
-  fileName=$(basename $relFile)
+  fileName=$(basename "$relFile")
 
   # Skip special files
   if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
@@ -202,32 +201,31 @@ do
   fi
 
   # Maintain dir structure
-  mkdir -p $OUTPUT_SYS/$relDir
+  mkdir -p "$OUTPUT_SYS/$relDir"
 
   # If not APK/jar file, copy as is
   if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
-    cp -a $file $OUTPUT_SYS/$relDir/
+    cp -a "$file" "$OUTPUT_SYS/$relDir/"
     continue
   fi
 
   # For APK/jar files apply de-optimization
   #echo "[*] De-optimizing '$relFile'"
-  zipRoot=$(dirname $file)
-  pkgName=$(basename $file .$fileExt)
-  isMultiDex=false
+  zipRoot=$(dirname "$file")
+  pkgName=$(basename "$file" ".$fileExt")
 
   # framework resources jar should be the only legitimate jar without matching
   # bytecode
   if [ "$pkgName" == "framework-res" ]; then
-    echo "[*] Skipping "$pkgName" since it doesn't pair with bytecode"
+    echo "[*] Skipping '$pkgName' since it doesn't pair with bytecode"
     continue
   fi
 
   # Check if APK/jar bytecode is pre-optimized
   odexFound=0
-  if [ -d $zipRoot/oat ]; then
+  if [ -d "$zipRoot/oat" ]; then
     # Check if optimized code available at app's directory
-    odexFound=$(find $zipRoot/oat -type f -iname "$pkgName*.odex" | \
+    odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
                 wc -l | tr -d ' ')
   fi
   if [[ $odexFound -eq 0 && "$relFile" == "/framework/"* ]]; then
@@ -238,9 +236,10 @@ do
                 -iname "$pkgName*.dex" | wc -l | tr -d ' ')
   fi
   if [ $odexFound -eq 0 ]; then
-    zipinfo $file classes.dex &>/dev/null && {
+    # shellcheck disable=SC2015
+    zipinfo "$file" classes.dex &>/dev/null && {
       echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-      cp "$file" $OUTPUT_SYS/$relDir
+      cp "$file" "$OUTPUT_SYS/$relDir"
     } || {
       echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
     }
@@ -249,36 +248,36 @@ do
     for abi in ${ABIS[@]}
     do
       curOdex="$zipRoot/oat/$abi/$pkgName.odex"
-      if [ -f $curOdex ]; then
+      if [ -f "$curOdex" ]; then
         # If odex present de-optimize it
-        java -jar $OAT2DEX_JAR -o $TMP_WORK_DIR $curOdex \
+        java -jar "$OAT2DEX_JAR" -o "$TMP_WORK_DIR" "$curOdex" \
              "$TMP_WORK_DIR/$abi/dex" &>/dev/null || {
           echo "[!] '$relFile/oat/$abi/$pkgName.odex' de-optimization failed"
           abort 1
         }
 
         # If DEX not created, oat2dex failed to resolve a dependency and skipped file
-        if [ ! -f $TMP_WORK_DIR/$pkgName.dex ]; then
+        if [ ! -f "$TMP_WORK_DIR/$pkgName.dex" ]; then
           echo "[-] '$relFile' de-optimization failed consider manual inspection - skipping archive"
           continue 2
         fi
-      elif [ -f $TMP_WORK_DIR/$abi/dex/$pkgName.dex ]; then
+      elif [ -f "$TMP_WORK_DIR/$abi/dex/$pkgName.dex" ]; then
         # boot classes bytecode is available from boot.oat extracts - copy
         # them with wildcard so following multi-dex detection logic can pick
         # them up
-        cp $TMP_WORK_DIR/$abi/dex/$pkgName*.dex $TMP_WORK_DIR
+        cp "$TMP_WORK_DIR/$abi/dex/$pkgName"*.dex "$TMP_WORK_DIR"
       fi
     done
 
     # If bytecode compiled for more than one ABIs - only the last is kept
     # (shouldn't make any difference)
-    if [ ! -f $TMP_WORK_DIR/$pkgName.dex ]; then
+    if [ ! -f "$TMP_WORK_DIR/$pkgName.dex" ]; then
       echo "[-] Something is wrong in expected dir structure - inspect manually"
       abort 1
     fi
 
     # Copy APK/jar to workspace for repair
-    cp $file $TMP_WORK_DIR
+    cp "$file" "$TMP_WORK_DIR"
 
     # Add dex files back to zip archives (jar or APK) considering possible
     # multi-dex case zipalign is not necessary since AOSP build rules will
@@ -287,35 +286,35 @@ do
       echo "[*] '$relFile' is multi-dex - adjusting recursive archive adds"
       counter=2
       curMultiDex="$TMP_WORK_DIR/$pkgName-classes$counter.dex"
-      while [ -f $curMultiDex ]
+      while [ -f "$curMultiDex" ]
       do
-        mv $curMultiDex "$TMP_WORK_DIR/classes$counter.dex"
-        jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
+        mv "$curMultiDex" "$TMP_WORK_DIR/classes$counter.dex"
+        jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
              "classes$counter.dex" &>/dev/null || {
           echo "[-] '$fileName' 'classes$counter.dex' append failed"
           abort 1
         }
         rm "$TMP_WORK_DIR/classes$counter.dex"
 
-        counter=$(( $counter + 1))
+        counter=$(( counter + 1))
         curMultiDex="$TMP_WORK_DIR/$pkgName-classes$counter.dex"
       done
     fi
 
-    mv $TMP_WORK_DIR/$pkgName.dex $TMP_WORK_DIR/classes.dex
-    jar -uf $TMP_WORK_DIR/$fileName -C $TMP_WORK_DIR \
+    mv "$TMP_WORK_DIR/$pkgName.dex" "$TMP_WORK_DIR/classes.dex"
+    jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
          classes.dex &>/dev/null || {
       echo "[-] '$fileName' classes.dex append failed"
       abort 1
     }
-    rm $TMP_WORK_DIR/classes.dex
+    rm "$TMP_WORK_DIR/classes.dex"
 
-    mkdir -p $OUTPUT_SYS/$relDir
-    cp $TMP_WORK_DIR/$fileName $OUTPUT_SYS/$relDir
+    mkdir -p "$OUTPUT_SYS/$relDir"
+    cp "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
   fi
-done <<< "$(find $INPUT_DIR -not -type d)"
+done <<< "$(find "$INPUT_DIR" -not -type d)"
 
 echo "[*] System partition successfully extracted & de-optimized at '$OUTPUT_DIR'"
-print_expected_imgs_ver $INPUT_DIR/build.prop
+print_expected_imgs_ver "$INPUT_DIR/build.prop"
 
 abort 0

@@ -28,14 +28,14 @@ abort() {
   if [[ "$-" == *x* ]]; then
     echo "[*] Workspace available at '$TMP_WORK_DIR' - delete manually when done"
   else
-    rm -rf $TMP_WORK_DIR
+    rm -rf "$TMP_WORK_DIR"
   fi
-  exit $1
+  exit "$1"
 }
 
 usage() {
 cat <<_EOF
-  Usage: $(basename $0) [options]
+  Usage: $(basename "$0") [options]
     OPTIONS:
       -i|--input      : Root path of extracted /system & /vendor partitions
       -o|--output     : Path to save vendor blobs & makefiles in AOSP
@@ -53,29 +53,29 @@ command_exists() {
 
 verify_input() {
   if [[ ! -d "$1/vendor" || ! -d "$1/system" || ! -f "$1/system/build.prop" ]]; then
-    echo "[-] Invalid input directory structure."
+    echo "[-] Invalid input directory structure"
     usage
   fi
 }
 
 get_device_codename() {
-  local device=$(cat $1 | grep 'ro.product.device=' | \
-                 cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
+  local device=$(grep 'ro.product.device=' "$1" | cut -d '=' -f2 | \
+                 tr '[:upper:]' '[:lower:]')
   if [[ "$device" == "" ]]; then
     echo "[-] Device string not found"
     abort 1
   fi
-  echo $device
+  echo "$device"
 }
 
 get_vendor() {
-  local vendor=$(cat $1 | grep 'ro.product.manufacturer=' | \
+  local vendor=$(grep 'ro.product.manufacturer=' "$1" | \
                  cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
   if [[ "$vendor" == "" ]]; then
     echo "[-] Device codename string not found"
     abort 1
   fi
-  echo $vendor
+  echo "$vendor"
 }
 
 has_vendor_size() {
@@ -90,6 +90,7 @@ has_vendor_size() {
 read_invalid_symlink() {
   local INBASE="$1"
   local RELTARGET="$2"
+  # shellcheck disable=SC2012
   ls -l "$INBASE/$RELTARGET" | awk '{ print $11 }'
 }
 
@@ -110,11 +111,11 @@ extract_blobs() {
   local dstDir=""
   local outBase=""
 
-  for file in $(cat $BLOBS_LIST | grep -Ev '(^#|^$)')
+  while read -r file
   do
     # Input format is following AOSP spec allowing optional save into different path
-    src=$(echo $file | cut -d ":" -f1)
-    dst=$(echo $file | cut -d ":" -f2)
+    src=$(echo "$file" | cut -d ":" -f1)
+    dst=$(echo "$file" | cut -d ":" -f2)
     if [[ "$dst" == "" ]]; then
       dst=$src
     fi
@@ -126,7 +127,7 @@ extract_blobs() {
         echo "[-] Symlink paths cannot have their destination altered"
         abort 1
       fi
-      symLinkSrc="$(read_invalid_symlink $INDIR $src | sed 's#^/##')"
+      symLinkSrc="$(read_invalid_symlink "$INDIR" "$src" | sed 's#^/##')"
       S_SLINKS_SRC=("${S_SLINKS_SRC[@]-}" "$symLinkSrc")
       S_SLINKS_DST=("${S_SLINKS_DST[@]-}" "$src")
       hasStandAloneSymLinks=true
@@ -137,10 +138,10 @@ extract_blobs() {
     # to $OUTDIR_VENDOR
     if [[ $src == system/* ]]; then
       outBase=$OUTDIR_PROP
-      dst=$(echo $dst | sed 's#^system/##')
+      dst=$(echo "$dst" | sed 's#^system/##')
     elif [[ $src == vendor/* ]]; then
       outBase=$OUTDIR_VENDOR
-      dst=$(echo $dst | sed 's#^vendor/##')
+      dst=$(echo "$dst" | sed 's#^vendor/##')
     else
       echo "[-] Invalid path detected at '$BLOBS_LIST' ($src)"
       abort 1
@@ -156,13 +157,13 @@ extract_blobs() {
     # Some vendor xml's don't satisfy xmllint running from AOSP.
     # Better apply fix-up here
     if [[ "${file##*.}" == "xml" ]]; then
-      local openTag=$(cat $outBase/$dst | grep '^<?xml version')
-      cat $outBase/$dst | grep -v '^<?xml version' > "$TMP_WORK_DIR/xml_fixup.tmp"
+      local openTag=$(grep '^<?xml version' "$outBase/$dst")
+      grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp"
       echo "$openTag" > "$outBase/$dst"
       cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
       rm "$TMP_WORK_DIR/xml_fixup.tmp"
     fi
-  done
+  done <<< "$(grep -Ev '(^#|^$)' "$BLOBS_LIST")"
 }
 
 gen_vendor_blobs_mk() {
@@ -180,11 +181,13 @@ gen_vendor_blobs_mk() {
   local dstRelDir=""
   local fileExt=""
 
-  echo "# Auto-generated file, do not edit" > "$OUTMK"
-  echo "" >> "$OUTMK"
-  echo 'PRODUCT_COPY_FILES += \' >> "$OUTMK"
+  {
+    echo "# Auto-generated file, do not edit"
+    echo ""
+    echo 'PRODUCT_COPY_FILES += \'
+  } > "$OUTMK"
 
-  for file in $(cat $BLOBS_LIST | grep -Ev '(^#|^$)')
+  while read -r file
   do
     # Skip APKs & JARs
     fileExt="${file##*.}"
@@ -194,14 +197,14 @@ gen_vendor_blobs_mk() {
 
     # Skip standalone symbolic links if available
     if [ $hasStandAloneSymLinks = true ]; then
-      if array_contains $file "${S_SLINKS_DST[@]}"; then
+      if array_contains "$file" "${S_SLINKS_DST[@]}"; then
         continue
       fi
     fi
 
     # Split the file from the destination (format is "file[:destination]")
-    src=$(echo $file | cut -d ":" -f1)
-    dst=$(echo $file | cut -d ":" -f2)
+    src=$(echo "$file" | cut -d ":" -f1)
+    dst=$(echo "$file" | cut -d ":" -f2)
     if [[ "$dst" == "" ]]; then
       dst=$src
     fi
@@ -209,30 +212,30 @@ gen_vendor_blobs_mk() {
     # Adjust prefixes for relative dirs of src & dst files
     if [[ $src == system/* ]]; then
       srcRelDir=$RELDIR_PROP
-      src=$(echo $src | sed 's#^system/##')
+      src=$(echo "$src" | sed 's#^system/##')
     elif [[ $src == vendor/* ]]; then
       srcRelDir=$RELDIR_VENDOR
-      src=$(echo $src | sed 's#^vendor/##')
+      src=$(echo "$src" | sed 's#^vendor/##')
     else
       echo "[-] Invalid src path detected at '$BLOBS_LIST'"
       abort 1
     fi
     if [[ $dst == system/* ]]; then
       dstRelDir='$(TARGET_COPY_OUT_SYSTEM)'
-      dst=$(echo $dst | sed 's#^system/##')
+      dst=$(echo "$dst" | sed 's#^system/##')
     elif [[ $dst == vendor/* ]]; then
       dstRelDir='$(TARGET_COPY_OUT_VENDOR)'
-      dst=$(echo $dst | sed 's#^vendor/##')
+      dst=$(echo "$dst" | sed 's#^vendor/##')
     else
       echo "[-] Invalid dst path detected at '$BLOBS_LIST'"
       abort 1
     fi
 
     echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$OUTMK"
-  done
+  done <<< "$(grep -Ev '(^#|^$)' "$BLOBS_LIST")"
 
   # Trim last backslash
-  cat "$OUTMK" | sed '$s/ \\//' > "$OUTMK.tmp"
+  sed '$s/ \\//' "$OUTMK" > "$OUTMK.tmp"
   mv "$OUTMK.tmp" "$OUTMK"
 }
 
@@ -253,7 +256,7 @@ gen_board_cfg_mk() {
 
   # First lets check if vendor partition size has been extracted from
   # previous data extraction script
-  local v_img_sz="$(has_vendor_size $INDIR)"
+  local v_img_sz="$(has_vendor_size "$INDIR")"
 
   # If not found, fail over to last known value from hardcoded entries
   if [[ "$v_img_sz" == "" ]]; then
@@ -269,15 +272,17 @@ gen_board_cfg_mk() {
     fi
   fi
 
-  echo "# Auto-generated file, do not edit" > "$OUTMK"
-  echo "" >> "$OUTMK"
-  echo 'BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4' >> "$OUTMK"
-  echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz" >> "$OUTMK"
+  {
+    echo "# Auto-generated file, do not edit"
+    echo ""
+    echo 'BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4'
+    echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz"
+  } > "$OUTMK"
 }
 
 zip_needs_resign() {
   local INFILE="$1"
-  local output=$(jarsigner -verify $INFILE 2>&1 || abort 1)
+  local output=$(jarsigner -verify "$INFILE" 2>&1 || abort 1)
   if [[ "$output" =~ .*"contains unsigned entries".* ]]; then
     return 0
   else
@@ -332,34 +337,38 @@ gen_standalone_symlinks() {
     pkgName=$(basename $link)
     PKGS_SSLINKS=("${PKGS_SSLINKS[@]-}" "$pkgName")
 
-    echo -e "\ninclude \$(CLEAR_VARS)" >> $OUTMK
-    echo -e "LOCAL_MODULE := $pkgName" >> $OUTMK
-    echo -e "LOCAL_MODULE_CLASS := FAKE" >> $OUTMK
-    echo -e "LOCAL_MODULE_TAGS := optional" >> $OUTMK
-    echo -e "LOCAL_MODULE_OWNER := $VENDOR" >> $OUTMK
-    echo -e 'include $(BUILD_SYSTEM)/base_rules.mk' >> $OUTMK
-    echo -e "\$(LOCAL_BUILT_MODULE): TARGET := /${S_SLINKS_SRC[$cnt]}" >> $OUTMK
-    echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}" >> $OUTMK
-    echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk" >> $OUTMK
-    echo -e "\$(LOCAL_BUILT_MODULE):" >> $OUTMK
-    echo -e "\t\$(hide) mkdir -p \$(dir \$@)" >> $OUTMK
-    echo -e "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))" >> $OUTMK
-    echo -e "\t\$(hide) rm -rf \$@" >> $OUTMK
-    echo -e "\t\$(hide) rm -rf \$(SYMLINK)" >> $OUTMK
-    echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)" >> $OUTMK
-    echo -e "\t\$(hide) touch \$@" >> $OUTMK
+    {
+      echo -e "\ninclude \$(CLEAR_VARS)"
+      echo -e "LOCAL_MODULE := $pkgName"
+      echo -e "LOCAL_MODULE_CLASS := FAKE"
+      echo -e "LOCAL_MODULE_TAGS := optional"
+      echo -e "LOCAL_MODULE_OWNER := $VENDOR"
+      echo -e 'include $(BUILD_SYSTEM)/base_rules.mk'
+      echo -e "\$(LOCAL_BUILT_MODULE): TARGET := /${S_SLINKS_SRC[$cnt]}"
+      echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}"
+      echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
+      echo -e "\$(LOCAL_BUILT_MODULE):"
+      echo -e "\t\$(hide) mkdir -p \$(dir \$@)"
+      echo -e "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
+      echo -e "\t\$(hide) rm -rf \$@"
+      echo -e "\t\$(hide) rm -rf \$(SYMLINK)"
+      echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
+      echo -e "\t\$(hide) touch \$@"
+    } >> "$OUTMK"
 
     let cnt=cnt+1
   done
 
-  echo "" >> $VENDORMK
-  echo "# Standalone symbolic links" >> $VENDORMK
-  echo 'PRODUCT_PACKAGES += \' >> $VENDORMK
-  for module in ${PKGS_SSLINKS[@]}
-  do
-    echo "    $module \\" >> $VENDORMK
-  done
-  cat "$VENDORMK" | sed '$s/ \\//' > "$VENDORMK.tmp"
+  {
+    echo ""
+    echo "# Standalone symbolic links"
+    echo 'PRODUCT_PACKAGES += \'
+    for module in ${PKGS_SSLINKS[@]}
+    do
+      echo "    $module \\"
+    done
+  } >> "$VENDORMK"
+  sed '$s/ \\//' "$VENDORMK" > "$VENDORMK.tmp"
   mv "$VENDORMK.tmp" "$VENDORMK"
 }
 
@@ -409,12 +418,11 @@ gen_mk_for_bytecode() {
     abort 1
   fi
 
-  for file in $(find $OUTBASE/$RELROOT/$RELSUBROOT -maxdepth 2 \
-                -type f -iname '*.apk' -o -iname '*.jar')
+  while read -r file
   do
-    zipName=$(basename $file)
+    zipName=$(basename "$file")
     fileExt="${zipName##*.}"
-    pkgName=$(basename $file .$fileExt)
+    pkgName=$(basename "$file" ".$fileExt")
     appDir="$origin/$pkgName"
     apk_lib_slinks=""
 
@@ -455,83 +463,89 @@ gen_mk_for_bytecode() {
     # same file twice.
     if [ -d "$appDir/lib" ]; then
       hasApkSymLinks=true
-      for lib in $(find -L "$appDir/lib" -type l -iname '*.so')
+      while read -r lib
       do
         # We don't expect a depth bigger than 1 here
-        dsoName=$(basename $lib)
-        arch=$(dirname $lib | sed "s#$appDir/lib/##" | cut -d '/' -f1)
+        dsoName=$(basename "$lib")
+        arch=$(dirname "$lib" | sed "s#$appDir/lib/##" | cut -d '/' -f1)
         if [[ $arch == *64 ]]; then
-          dsoMName="$(basename $lib .so)_64.so"
+          dsoMName="$(basename "$lib" .so)_64.so"
           dsoRoot="$dsoRootBase/lib64"
         else
-          dsoMName="$(basename $lib .so)_32.so"
+          dsoMName="$(basename "$lib" .so)_32.so"
           dsoRoot="$dsoRootBase/lib"
         fi
 
         # Generate symlink fake rule & cache module_names to append later to
         # vendor mk
         PKGS_SLINKS=("${PKGS_SLINKS[@]-}" "$dsoMName")
-        apk_lib_slinks="$apk_lib_slinks\n$(gen_apk_dso_symlink $dsoName \
-                        $dsoMName $dsoRoot "$lcMPath/$pkgName" $arch $VENDOR)"
-      done
+        apk_lib_slinks="$apk_lib_slinks\n$(gen_apk_dso_symlink "$dsoName" \
+                        "$dsoMName" "$dsoRoot" "$lcMPath/$pkgName" "$arch" "$VENDOR")"
+      done <<< "$(find -L "$appDir/lib" -type l -iname '*.so')"
     fi
 
-    echo "" >> "$OUTMK"
-    echo 'include $(CLEAR_VARS)' >> "$OUTMK"
-    echo "LOCAL_MODULE := $pkgName" >> "$OUTMK"
-    echo 'LOCAL_MODULE_TAGS := optional' >> "$OUTMK"
-    if [[ "$stem" != "" ]]; then
-      echo "LOCAL_BUILT_MODULE_STEM := $stem" >> "$OUTMK"
-    fi
-    echo "LOCAL_MODULE_OWNER := $VENDOR" >> "$OUTMK"
-    echo "LOCAL_MODULE_PATH := $lcMPath" >> "$OUTMK"
-    echo "LOCAL_SRC_FILES := $src" >> "$OUTMK"
-    if [[ "$apk_lib_slinks" != "" ]]; then
-      # Force symlink modules dependencies to avoid omissions from wrong cleans
-      # for pre-ninja build envs
-      echo "LOCAL_REQUIRED_MODULES := ${PKGS_SLINKS[@]-}" >> "$OUTMK"
-    fi
-    echo "LOCAL_CERTIFICATE := $cert" >> "$OUTMK"
-    echo "LOCAL_MODULE_CLASS := $class" >> "$OUTMK"
-    if [[ "$priv" != "" ]]; then
-      echo "$priv" >> "$OUTMK"
-    fi
-    echo "LOCAL_MODULE_SUFFIX := $suffix" >> "$OUTMK"
-    if [[ "$opt" != "" ]]; then
-      echo "$opt" >> "$OUTMK"
-    fi
-    echo 'include $(BUILD_PREBUILT)' >> "$OUTMK"
+    {
+      echo ""
+      echo 'include $(CLEAR_VARS)'
+      echo "LOCAL_MODULE := $pkgName"
+      echo 'LOCAL_MODULE_TAGS := optional'
+      if [[ "$stem" != "" ]]; then
+        echo "LOCAL_BUILT_MODULE_STEM := $stem"
+      fi
+      echo "LOCAL_MODULE_OWNER := $VENDOR"
+      echo "LOCAL_MODULE_PATH := $lcMPath"
+      echo "LOCAL_SRC_FILES := $src"
+      if [[ "$apk_lib_slinks" != "" ]]; then
+        # Force symlink modules dependencies to avoid omissions from wrong cleans
+        # for pre-ninja build envs
+        echo "LOCAL_REQUIRED_MODULES := ${PKGS_SLINKS[@]-}"
+      fi
+      echo "LOCAL_CERTIFICATE := $cert"
+      echo "LOCAL_MODULE_CLASS := $class"
+      if [[ "$priv" != "" ]]; then
+        echo "$priv"
+      fi
+      echo "LOCAL_MODULE_SUFFIX := $suffix"
+      if [[ "$opt" != "" ]]; then
+        echo "$opt"
+      fi
+      echo 'include $(BUILD_PREBUILT)'
 
-    # Append rules for APK lib symlinks if present
-    if [[ "$apk_lib_slinks" != "" ]]; then
-      echo -e "$apk_lib_slinks" >> "$OUTMK"
-    fi
+      # Append rules for APK lib symlinks if present
+      if [[ "$apk_lib_slinks" != "" ]]; then
+        echo -e "$apk_lib_slinks"
+      fi
+    } >> "$OUTMK"
 
     # Also add pkgName to runtime array update at the end the vendor mk
     PKGS=("${PKGS[@]-}" "$pkgName")
-  done
+  done <<< "$(find "$OUTBASE/$RELROOT/$RELSUBROOT" -maxdepth 2 -type f -iname '*.apk' -o -iname '*.jar')"
 
   # Update vendor mk
-  echo "" >> $VENDORMK
-  echo "# Prebuilt APKs/JARs from '$RELROOT/$RELSUBROOT'" >> $VENDORMK
-  echo 'PRODUCT_PACKAGES += \' >> $VENDORMK
-  for pkg in ${PKGS[@]}
-  do
-    echo "    $pkg \\" >> $VENDORMK
-  done
-  cat "$VENDORMK" | sed '$s/ \\//' > "$VENDORMK.tmp"
+  {
+    echo ""
+    echo "# Prebuilt APKs/JARs from '$RELROOT/$RELSUBROOT'"
+    echo 'PRODUCT_PACKAGES += \'
+    for pkg in ${PKGS[@]}
+    do
+      echo "    $pkg \\"
+    done
+  }  >> "$VENDORMK"
+  sed '$s/ \\//' "$VENDORMK" > "$VENDORMK.tmp"
   mv "$VENDORMK.tmp" "$VENDORMK"
 
   # Update vendor mk again with symlink modules if present
   if [ $hasApkSymLinks = true ]; then
-    echo "" >> $VENDORMK
-    echo "# Prebuilt APKs libs symlinks from '$RELROOT/$RELSUBROOT'" >> $VENDORMK
-    echo 'PRODUCT_PACKAGES += \' >> $VENDORMK
-    for module in ${PKGS_SLINKS[@]}
-    do
-      echo "    $module \\" >> $VENDORMK
-    done
-    cat "$VENDORMK" | sed '$s/ \\//' > "$VENDORMK.tmp"
+    {
+      echo ""
+      echo "# Prebuilt APKs libs symlinks from '$RELROOT/$RELSUBROOT'"
+      echo 'PRODUCT_PACKAGES += \'
+      for module in ${PKGS_SLINKS[@]}
+      do
+        echo "    $module \\"
+      done
+    } >> "$VENDORMK"
+    sed '$s/ \\//' "$VENDORMK" > "$VENDORMK.tmp"
     mv "$VENDORMK.tmp" "$VENDORMK"
   fi
 }
@@ -548,13 +562,13 @@ VENDOR=""
 # Check that system tools exist
 for i in "${sysTools[@]}"
 do
-  if ! command_exists $i; then
+  if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
     abort 1
   fi
 done
 
-while [[ $# > 1 ]]
+while [[ $# -gt 1 ]]
 do
   arg="$1"
   case $arg in
@@ -567,7 +581,7 @@ do
       shift
       ;;
     -b|--blobs-list)
-      BLOBS_LIST=$2
+      BLOBS_LIST="$2"
       shift
       ;;
     *)
@@ -592,11 +606,11 @@ if [[ "$BLOBS_LIST" == "" || ! -f "$BLOBS_LIST" ]]; then
 fi
 
 # Verify input directory structure
-verify_input $INPUT_DIR
+verify_input "$INPUT_DIR"
 
 # Get device details
-DEVICE=$(get_device_codename $INPUT_DIR/system/build.prop)
-VENDOR=$(get_vendor $INPUT_DIR/system/build.prop)
+DEVICE=$(get_device_codename "$INPUT_DIR/system/build.prop")
+VENDOR=$(get_vendor "$INPUT_DIR/system/build.prop")
 
 echo "[*] Generating blobs for vendor/$VENDOR/$DEVICE"
 
@@ -606,47 +620,49 @@ PROP_EXTRACT_BASE="$OUTPUT_VENDOR/proprietary"
 if [ -d "$OUTPUT_VENDOR" ]; then
   rm -rf "$OUTPUT_VENDOR"/*
 fi
-mkdir -p $PROP_EXTRACT_BASE
+mkdir -p "$PROP_EXTRACT_BASE"
 
 # Copy device specific files from input
 echo "[*] Copying files to '$OUTPUT_VENDOR' ..."
-extract_blobs $BLOBS_LIST $INPUT_DIR $OUTPUT_VENDOR
+extract_blobs "$BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
 
 # Generate $DEVICE-vendor-blobs.mk makefile (all prebuilts except APKs/JARs)
 echo "[*] Generating '$DEVICE-vendor-blobs.mk' makefile"
-gen_vendor_blobs_mk $BLOBS_LIST $OUTPUT_VENDOR $VENDOR
+gen_vendor_blobs_mk "$BLOBS_LIST" "$OUTPUT_VENDOR" "$VENDOR"
 
 # Generate device-vendor.mk makefile (will be updated later)
 echo "[*] Generating 'device-vendor.mk'"
-gen_dev_vendor_mk $OUTPUT_VENDOR
+gen_dev_vendor_mk "$OUTPUT_VENDOR"
 
 # Generate BoardConfigVendor.mk (vendor partition type)
 echo "[*] Generating 'BoardConfigVendor.mk'"
-gen_board_cfg_mk $INPUT_DIR $OUTPUT_VENDOR $DEVICE
+gen_board_cfg_mk "$INPUT_DIR" "$OUTPUT_VENDOR" "$DEVICE"
 
 # Iterate over directories with bytecode & generate a unified Android.mk file
 echo "[*] Generating 'Android.mk' ..."
 
 OUTMK="$OUTPUT_VENDOR/Android.mk"
-echo "# Auto-generated file, do not edit" > "$OUTMK"
-echo "" >> "$OUTMK"
-echo 'LOCAL_PATH := $(call my-dir)' >> "$OUTMK"
-echo "ifeq (\$(TARGET_DEVICE),$DEVICE)" >> "$OUTMK"
+{
+  echo "# Auto-generated file, do not edit"
+  echo ""
+  echo 'LOCAL_PATH := $(call my-dir)'
+  echo "ifeq (\$(TARGET_DEVICE),$DEVICE)"
+} > "$OUTMK"
 
 for root in "vendor" "proprietary"
 do
-  for path in ${dirsWithBC[@]}
+  for path in "${dirsWithBC[@]}"
   do
     if [ -d "$OUTPUT_VENDOR/$root/$path" ]; then
       echo "[*] Gathering data from '$OUTPUT_VENDOR/$root/$path' APK/JAR pre-builts"
-      gen_mk_for_bytecode $INPUT_DIR $root $path $OUTPUT_VENDOR $VENDOR $OUTMK
+      gen_mk_for_bytecode "$INPUT_DIR" "$root" "$path" "$OUTPUT_VENDOR" "$VENDOR" "$OUTMK"
     fi
   done
 done
 
 if [ $hasStandAloneSymLinks = true ]; then
   echo "[*] Processing standalone symlinks"
-  gen_standalone_symlinks $INPUT_DIR $OUTPUT_VENDOR $VENDOR $OUTMK
+  gen_standalone_symlinks "$INPUT_DIR" "$OUTPUT_VENDOR" "$VENDOR" "$OUTMK"
 fi
 
 echo "" >> "$OUTMK"
