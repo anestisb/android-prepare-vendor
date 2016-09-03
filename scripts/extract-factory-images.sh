@@ -71,6 +71,33 @@ extract_vendor_partition_size() {
   echo "$size" > "$OUT_FILE"
 }
 
+mount_loop_and_copy() {
+  local IMAGE_FILE="$1"
+  local MOUNT_DIR="$2"
+  local COPY_DST_DIR="$3"
+
+  # Mount to loopback
+  mount -t ext4 -o ro,loop "$IMAGE_FILE" "$MOUNT_DIR" || {
+    echo "[-] '$IMAGE_FILE' mount to loopback failed"
+    if [[ "$OS" == "Darwin" ]]; then
+      echo "[!] Most probably your MAC doesn't support ext4"
+    fi
+    abort 1
+  }
+
+  # Copy files - it is very IMPORTANT that symbolic links are followed and copied
+  echo "[*] Copying files from system partition ..."
+  rsync -aruz "$MOUNT_DIR/" "$COPY_DST_DIR" || {
+    echo "[-] rsync from '$MOUNT_DIR' to '$COPY_DST_DIR' failed"
+    abort 1
+  }
+
+  # Unmount
+  umount "$MOUNT_DIR" || {
+    echo "[-] '$MOUNT_DIR' umount failed"
+  }
+}
+
 run_as_root() {
   if [[ $EUID -ne 0 ]]; then
     echo "[-] Script must run as root"
@@ -186,56 +213,14 @@ $SIMG2IMG "$vImg" "$rawVImg" || {
 # Save raw vendor img partition size
 extract_vendor_partition_size "$rawVImg" "$OUTPUT_DIR"
 
+# Mount raw system image to loopback and copy files
 sysImgData="$extractDir/factory.system"
 mkdir -p "$sysImgData"
+mount_loop_and_copy "$rawSysImg" "$sysImgData" "$SYSTEM_DATA_OUT"
 
-mountCmd="mount -t ext4 -o ro,loop $rawSysImg $sysImgData"
-umountCmd="umount $sysImgData"
-
-# Mount to loopback
-$mountCmd || {
-  echo "[-] '$mountCmd' failed"
-  abort 1
-}
-
-# Copy files - it is very IMPORTANT that symbolic links are followed and copied
-echo "[*] Copying files from system partition ..."
-rsync -aruz "$sysImgData/" "$SYSTEM_DATA_OUT" || {
-  echo "[-] system rsync failed"
-  abort 1
-}
-
-# Unmount
-$umountCmd || {
-  echo "[-] '$umountCmd' failed"
-}
-
-# Same process for vendor image
+# Same process for vendor raw image
 vImgData="$extractDir/factory.vendor"
 mkdir -p "$vImgData"
-
-mountCmd="mount -t ext4 -o ro,loop $rawVImg $vImgData"
-umountCmd="umount $vImgData"
-
-# Mount to loopback
-$mountCmd || {
-  echo "[-] '$mountCmd' failed"
-  if [[ "$OS" == "Darwin" ]]; then
-    echo "[!] Most probably your MAC doesn't support ext4"
-  fi
-  abort 1
-}
-
-# Copy files
-echo "[*] Copying files from vendor partition ..."
-rsync -aruz "$vImgData/" "$VENDOR_DATA_OUT" || {
-  echo "[-] system rsync failed"
-  abort 1
-}
-
-# Unmount
-$umountCmd || {
-  echo "[-] '$umountCmd' failed"
-}
+mount_loop_and_copy "$rawVImg" "$vImgData" "$VENDOR_DATA_OUT"
 
 abort 0
