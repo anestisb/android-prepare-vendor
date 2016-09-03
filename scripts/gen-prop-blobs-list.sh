@@ -37,6 +37,12 @@ verify_input() {
     echo "[-] Invalid input directory structure"
     usage
   fi
+
+  # Also check that we don't have any pre-optimized apps in vendor image
+  if [[ "$(find "$1" -name "*.odex" | wc -l | tr -d " ")" -ne 0 ]]; then
+    echo "[!] Vendor partition contains pre-optimized bytecode - not supported yet"
+    abort 1
+  fi
 }
 
 trap "abort 1" SIGINT SIGTERM
