@@ -57,12 +57,10 @@ do
   arg="$1"
   case $arg in
     -o|--output)
-      # shellcheck disable=SC2001
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
     -i|--input)
-      # shellcheck disable=SC2001
       INPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;

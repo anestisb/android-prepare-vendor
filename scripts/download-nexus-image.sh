@@ -49,7 +49,6 @@ do
   arg="$1"
   case $arg in
     -o|--output)
-      # shellcheck disable=SC2001
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
@@ -92,7 +91,7 @@ if [[ "$DEV_ALIAS" == "" ]]; then
   DEV_ALIAS="$DEVICE"
 fi
 
-url=$(curl --silent $GURL | grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | \
+url=$(curl --silent "$GURL" | grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | \
       cut -d '"' -f2)
 if [ "$url" == "" ]; then
   echo "[-] Image URL not found"

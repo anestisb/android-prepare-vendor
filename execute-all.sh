@@ -72,14 +72,14 @@ done
 readonly JAVALINK=$(which java)
 if [[ "$JAVALINK" == "" ]]; then
   echo "[!] Java binary not found in path, using hardcoded path"
-  if [ ! -f $LC_J_HOME ]; then
+  if [ ! -f "$LC_J_HOME" ]; then
     echo "[-] '$LC_J_HOME' not found in system"
     abort 1
   fi
 
   export JAVA_HOME=$LC_J_HOME
   export PATH
-  PATH=$(dirname $LC_J_HOME):$PATH
+  PATH=$(dirname "$LC_J_HOME"):$PATH
 else
   readonly JAVAPATH=$(readlink -f "$JAVALINK")
   readonly JAVADIR=$(dirname "$JAVAPATH")
@@ -103,7 +103,6 @@ do
   arg="$1"
   case $arg in
     -o|--output)
-      # shellcheck disable=SC2001
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
