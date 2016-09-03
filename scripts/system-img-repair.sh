@@ -187,7 +187,7 @@ do
   }
 done
 
-echo "[*] Start extracting system partition & de-optimize pre-compiled bytecode ..."
+echo "[*] Start processing system partition & de-optimize pre-compiled bytecode ..."
 while read -r file
 do
   relFile=$(echo "$file" | sed "s#^$INPUT_DIR##")
