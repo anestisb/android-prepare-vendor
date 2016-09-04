@@ -47,14 +47,17 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input   : Root path of extracted factory image system partition
-      -o|--output  : Path to save input partition with de-optimized odex files
-      -t|--oat2dex : Path to SmaliEx oat2dex.jar
+      -i|--input      : Root path of extracted factory image system partition
+      -o|--output     : Path to save input partition with de-optimized odex files
+      -t|--oat2dex    : Path to SmaliEx oat2dex.jar
+      -b|--blobs-list : [OPTIONAL] list with blobs that need to be included in master
+                        makefile. When provided only required bytecode is repaired.
     INFO:
       * Input path expected to be system root as extracted from factory system
         image
       * Download oat2dex.jar from 'https://github.com/testwhat/SmaliEx'
       * When creating vendor makefiles, extra care is needed for APKs signature type
+      * '-b' flag is provided to speed up things in case only specific files are wanted
 _EOF
   abort 1
 }
@@ -89,6 +92,12 @@ check_java_version() {
   fi
 }
 
+array_contains() {
+  local element
+  for element in "${@:2}"; do [[ "$element" =~ "$1" ]] && return 0; done
+  return 1
+}
+
 trap "abort 1" SIGINT SIGTERM
 
 # Check that system tools exist
@@ -106,7 +115,10 @@ check_java_version
 INPUT_DIR=""
 OUTPUT_DIR=""
 OAT2DEX_JAR=""
+BLOBS_LIST_FILE=""
 declare -a ABIS
+declare -a APKS_LIST
+hasAPKSList=false
 
 while [[ $# -gt 1 ]]
 do
@@ -122,6 +134,10 @@ do
       ;;
     -t|--oat2dex)
       OAT2DEX_JAR="$2"
+      shift
+      ;;
+    -b|--blobs-list)
+      BLOBS_LIST_FILE="$2"
       shift
       ;;
     *)
@@ -142,6 +158,10 @@ if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
 fi
 if [[ "$OAT2DEX_JAR" == "" || ! -f "$OAT2DEX_JAR" ]]; then
   echo "[-] oat2dex.jar not found"
+  usage
+fi
+if [[ "$BLOBS_LIST_FILE" != "" && ! -f "$BLOBS_LIST_FILE" ]]; then
+  echo "[-] '$BLOBS_LIST_FILE' file not found"
   usage
 fi
 
@@ -188,6 +208,17 @@ do
 done
 
 echo "[*] Start processing system partition & de-optimize pre-compiled bytecode ..."
+
+# Check if blobs list is set so that only selected APKs will be de-optimized for speed
+# JARs under /system/framework are always de-optimized for safety
+if [[ "$BLOBS_LIST_FILE" != "" ]]; then
+  readarray -t APKS_LIST < <(grep -i "system/.*.apk" "$BLOBS_LIST_FILE")
+  echo "[*] '${#APKS_LIST[@]}' APKs will be decompiled along with framework jars"
+  hasAPKSList=true
+else
+  echo "[*] All bytecode files under system partition will be de-optimized"
+fi
+
 while read -r file
 do
   relFile=$(echo "$file" | sed "s#^$INPUT_DIR##")
@@ -209,8 +240,14 @@ do
     continue
   fi
 
+  # If APKs selection enabled, skip if not in list
+  if [[ "$hasAPKSList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
+    if ! array_contains "$relFile" "${APKS_LIST[@]}"; then
+      continue
+    fi
+  fi
+
   # For APK/jar files apply de-optimization
-  #echo "[*] De-optimizing '$relFile'"
   zipRoot=$(dirname "$file")
   pkgName=$(basename "$file" ".$fileExt")
 
