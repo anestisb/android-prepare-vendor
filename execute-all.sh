@@ -99,6 +99,7 @@ INPUT_IMG=""
 KEEP_DATA=false
 HOST_OS=""
 DEV_ALIAS=""
+API_LEVEL=""
 
 while [[ $# -gt 0 ]]
 do
@@ -210,6 +211,22 @@ if [[ "$factoryImgArchive" == "" ]]; then
   abort 1
 fi
 
+# Define API level from first char of build tag
+magicChar=$(echo "${BUILDID:0:1}" | tr '[:upper:]' '[:lower:]')
+case "$magicChar" in
+  "m")
+    API_LEVEL=23
+    ;;
+  "n")
+    API_LEVEL=24
+    ;;
+  *)
+    echo "[-] Unsupported API level for magic '$magicChar'"
+    abort 1
+    ;;
+esac
+echo "[*] Processing with 'API-$API_LEVEL' configuration"
+
 # Clear old data if present & extract data from factory images
 if [ -d "$FACTORY_IMGS_DATA" ]; then
   rm -rf "${FACTORY_IMGS_DATA:?}"/*
@@ -225,7 +242,7 @@ $EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
 # Generate unified readonly "proprietary-blobs.txt"
 $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
      --output "$SCRIPTS_ROOT/$DEVICE" \
-     --sys-list "$SCRIPTS_ROOT/$DEVICE/system-proprietary-blobs.txt" || {
+     --sys-list "$SCRIPTS_ROOT/$DEVICE/system-proprietary-blobs-api""$API_LEVEL"".txt" || {
   echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
 }
