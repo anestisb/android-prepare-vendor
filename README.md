@@ -123,23 +123,20 @@ Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/bullhead-mtc20f-
 
 2016-09-01 22:45:45 (1.20 MB/s) - ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/bullhead-mtc20f-factory-fa466167.zip’ saved [964936069/964936069]
 
+[*] Processing with 'API-23' configuration
+[*] Extracting 'bullhead/mtc20f/bullhead-mtc20f-factory-fa466167.zip'
 [*] Unzipping 'image-bullhead-mtc20f.zip'
-[*] Copying files from system partition ...
-[*] Copying files from vendor partition ...
+[*] Copying files from 'system.img.raw' image ...
+[*] Copying files from 'vendor.img.raw' image ...
 [*] Preparing environment for 'arm' ABI
 [*] Preparing environment for 'arm64' ABI
-[*] Start extracting system partition & de-optimize pre-compiled bytecode ...
-[*] Skipping framework-res since it doesn't pair with bytecode
+[*] Start processing system partition & de-optimize pre-compiled bytecode ...
+[*] '15' APKs will be decompiled along with framework jars
+[*] Skipping 'framework-res' since it doesn't pair with bytecode
 [*] '/framework/framework.jar' is multi-dex - adjusting recursive archive adds
 [*] '/framework/rcsimssettings.jar' not pre-optimized with sanity checks passed - copying without changes
 [*] '/framework/rcsservice.jar' not pre-optimized with sanity checks passed - copying without changes
 [*] '/framework/cneapiclient.jar' not pre-optimized with sanity checks passed - copying without changes
-[*] '/priv-app/GoogleServicesFramework/GoogleServicesFramework.apk' not pre-optimized with sanity checks passed - copying without changes
-[*] '/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk' is multi-dex - adjusting recursive archive adds
-[*] '/app/Music2/Music2.apk' is multi-dex - adjusting recursive archive adds
-[-] '/app/PlayGames/PlayGames.apk' de-optimization failed consider manual inspection - skipping archive
-[-] '/app/PrebuiltExchange3Google/PrebuiltExchange3Google.apk' de-optimization failed consider manual inspection - skipping archive
-[*] '/app/Photos/Photos.apk' is multi-dex - adjusting recursive archive adds
 [*] System partition successfully extracted & de-optimized at '/aosp_b_prod/prepare_vendor_blobs/bullhead/mtc20f/factory_imgs_repaired_data'
 [!] Target device expects to have following img versions when using output system img
  [*] Booatloder:BHZ10r
