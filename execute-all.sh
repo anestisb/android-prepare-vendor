@@ -255,7 +255,8 @@ else
 fi
 $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
-     --oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar" || {
+     --oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar" \
+     --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" || {
   echo "[-] System partition de-optimization failed"
   abort 1
 }
