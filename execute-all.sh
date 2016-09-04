@@ -182,6 +182,7 @@ FACTORY_IMGS_R_DATA="$OUT_BASE/factory_imgs_repaired_data"
 echo "[*] Setting output base to '$OUT_BASE'"
 
 # Download images if not provided
+factoryImgArchive=""
 if [[ "$INPUT_IMG" == "" ]]; then
 
   # Factory image alias for devices with naming incompatibilities with AOSP
@@ -198,10 +199,15 @@ if [[ "$INPUT_IMG" == "" ]]; then
     echo "[-] Images download failed"
     abort 1
   }
-  archName="$(find "$OUT_BASE" -iname "*$DEV_ALIAS*$BUILDID*.tgz" -or \
-              -iname "*$DEV_ALIAS*$BUILDID*.zip" | head -1)"
+  factoryImgArchive="$(find "$OUT_BASE" -iname "*$DEV_ALIAS*$BUILDID*.tgz" -or \
+                       -iname "*$DEV_ALIAS*$BUILDID*.zip" | head -1)"
 else
-  archName="$INPUT_IMG"
+  factoryImgArchive="$INPUT_IMG"
+fi
+
+if [[ "$factoryImgArchive" == "" ]]; then
+  echo "[-] Failed to locate factory image archive"
+  abort 1
 fi
 
 # Clear old data if present & extract data from factory images
@@ -210,7 +216,7 @@ if [ -d "$FACTORY_IMGS_DATA" ]; then
 else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
-$EXTRACT_SCRIPT --input "$archName" --output "$FACTORY_IMGS_DATA" \
+$EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
      --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/simg2img" || {
   echo "[-] Factory images data extract failed"
   abort 1
