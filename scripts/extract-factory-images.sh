@@ -86,7 +86,7 @@ mount_loop_and_copy() {
   }
 
   # Copy files - it is very IMPORTANT that symbolic links are followed and copied
-  echo "[*] Copying files from '$(basename $IMAGE_FILE)' image ..."
+  echo "[*] Copying files from '$(basename $IMAGE_FILE)' image"
   rsync -aruz "$MOUNT_DIR/" "$COPY_DST_DIR" || {
     echo "[-] rsync from '$MOUNT_DIR' to '$COPY_DST_DIR' failed"
     abort 1

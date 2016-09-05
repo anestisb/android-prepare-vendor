@@ -517,7 +517,7 @@ gen_mk_for_bytecode() {
       fi
     } >> "$OUTMK"
 
-    # Also add pkgName to runtime array update at the end the vendor mk
+    # Also add pkgName to runtime array to append later the vendor mk
     PKGS=("${PKGS[@]-}" "$pkgName")
   done <<< "$(find "$OUTBASE/$RELROOT/$RELSUBROOT" -maxdepth 2 -type f -iname '*.apk' -o -iname '*.jar')"
 
@@ -623,10 +623,10 @@ fi
 mkdir -p "$PROP_EXTRACT_BASE"
 
 # Copy device specific files from input
-echo "[*] Copying files to '$OUTPUT_VENDOR' ..."
+echo "[*] Copying files to '$OUTPUT_VENDOR'"
 extract_blobs "$BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
 
-# Generate $DEVICE-vendor-blobs.mk makefile (all prebuilts except APKs/JARs)
+# Generate $DEVICE-vendor-blobs.mk makefile (plain files that don't require a target module)
 echo "[*] Generating '$DEVICE-vendor-blobs.mk' makefile"
 gen_vendor_blobs_mk "$BLOBS_LIST" "$OUTPUT_VENDOR" "$VENDOR"
 
@@ -638,8 +638,8 @@ gen_dev_vendor_mk "$OUTPUT_VENDOR"
 echo "[*] Generating 'BoardConfigVendor.mk'"
 gen_board_cfg_mk "$INPUT_DIR" "$OUTPUT_VENDOR" "$DEVICE"
 
-# Iterate over directories with bytecode & generate a unified Android.mk file
-echo "[*] Generating 'Android.mk' ..."
+# Iterate over directories with bytecode and generate a unified Android.mk file
+echo "[*] Generating 'Android.mk'"
 
 OUTMK="$OUTPUT_VENDOR/Android.mk"
 {
