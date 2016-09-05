@@ -103,8 +103,6 @@ array_contains() {
 
 oat2dex_repair() {
   local -a ABIS
-  local -a APKS_LIST
-  hasAPKSList=false
 
   # Identify supported ABI(s) - extra work for 64bit ABIs
   for type in "arm" "arm64" "x86" "x86_64"
@@ -118,7 +116,7 @@ oat2dex_repair() {
   do
     echo "[*] Preparing environment for '$abi' ABI"
     workDir="$TMP_WORK_DIR/$abi"
-    mkdir "$workDir"
+    mkdir -p "$workDir"
     cp "$INPUT_DIR/framework/$abi/boot.oat" "$workDir"
     java -jar "$OAT2DEX_JAR" boot "$workDir/boot.oat" &>/dev/null || {
       echo "[!] Boot classes extraction failed"
@@ -127,16 +125,6 @@ oat2dex_repair() {
   done
 
   echo "[*] Start processing system partition & de-optimize pre-compiled bytecode"
-
-  # Check if blobs list is set so that only selected APKs will be de-optimized for speed
-  # JARs under /system/framework are always de-optimized for safety
-  if [[ "$BLOBS_LIST_FILE" != "" ]]; then
-    readarray -t APKS_LIST < <(grep -i "system/.*.apk" "$BLOBS_LIST_FILE")
-    echo "[*] '${#APKS_LIST[@]}' APKs will be decompiled along with framework jars"
-    hasAPKSList=true
-  else
-    echo "[*] All bytecode files under system partition will be de-optimized"
-  fi
 
   while read -r file
   do
@@ -301,6 +289,10 @@ OAT2DEX_JAR=""
 OATDUMP_BIN=""
 DEXREPAIR_BIN=""
 
+# Global variables accessible from sub-routines
+declare -a APKS_LIST
+hasAPKSList=false
+
 while [[ $# -gt 1 ]]
 do
   arg="$1"
@@ -397,6 +389,16 @@ if [[ "$REPAIR_METHOD" == "NONE" ]]; then
   echo "[*] No repairing enabled - moving partition as is"
   mv "$INPUT_DIR" "$OUTPUT_DIR"
   abort 0
+fi
+
+# Check if blobs list is set so that only selected APKs will be de-optimized for speed
+# JARs under /system/framework are always de-optimized for safety
+if [[ "$BLOBS_LIST_FILE" != "" ]]; then
+  readarray -t APKS_LIST < <(grep -i "system/.*.apk" "$BLOBS_LIST_FILE")
+  echo "[*] '${#APKS_LIST[@]}' APKs will be decompiled along with framework jars"
+  hasAPKSList=true
+else
+  echo "[*] All bytecode files under system partition will be de-optimized"
 fi
 
 # oat2dex repairing
