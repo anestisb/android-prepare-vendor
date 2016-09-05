@@ -189,9 +189,9 @@ gen_vendor_blobs_mk() {
 
   while read -r file
   do
-    # Skip APKs & JARs
+    # Skip files that have dedicated target module (APKs, JARs & shared libraries)
     fileExt="${file##*.}"
-    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
+    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" || "$fileExt" == "so" ]]; then
       continue
     fi
 
@@ -550,6 +550,122 @@ gen_mk_for_bytecode() {
   fi
 }
 
+gen_mk_for_shared_libs() {
+  local INDIR="$1"
+  local RELROOT="$2"
+  local OUTBASE="$3"
+  local VENDOR="$4"
+  local OUTMK="$5"
+
+  local VENDORMK="$OUTBASE/device-vendor.mk"
+  local -a PKGS
+  local -a MULTIDSO
+  local hasMultiDSO=false
+
+  # If target is multi-lib we first iterate the 64bit libs to detect possible
+  # dual target modules
+  if [ -d "$OUTBASE/$RELROOT/lib64" ]; then
+    echo "[*] Multi-lib target - scanning for dual targets"
+
+    while read -r file
+    do
+      local dsoRelRoot=""
+      local dso32RelRoot=""
+      local dsoFile=""
+      local dsoName=""
+      local dsoSrc=""
+      local dso32Src=""
+
+      dsoRelRoot=$(dirname "$file" | sed "s#$OUTBASE/##")
+      dsoFile=$(basename "$file")
+      dsoName=$(basename "$file" ".so")
+      dsoSrc="$dsoRelRoot/$dsoFile"
+
+      dso32RelRoot=$(echo "$dsoRelRoot" | sed "s#lib64#lib#")
+      dso32Src="$dso32RelRoot/$dsoFile"
+
+      {
+        echo ""
+        echo 'include $(CLEAR_VARS)'
+        echo "LOCAL_MODULE := $dsoName"
+        echo 'LOCAL_MODULE_TAGS := optional'
+        echo "LOCAL_MODULE_OWNER := $VENDOR"
+        echo "LOCAL_SRC_FILES := $dsoSrc"
+        echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
+        echo "LOCAL_MODULE_SUFFIX := .so"
+
+        # In case 32bit version present - upgrade to dual target
+        if [ -f "$OUTBASE/$dso32Src" ]; then
+          echo "LOCAL_MULTILIB := both"
+          echo "LOCAL_SRC_FILES_32 := $dso32Src"
+
+          # Cache dual-targets so that we don't include again when searching for
+          # 32bit only libs under a 64bit system
+          MULTIDSO=("${MULTIDSO[@]-}" "$dso32Src")
+          hasMultiDSO=true
+        else
+          echo "LOCAL_MULTILIB := first"
+        fi
+
+        echo 'include $(BUILD_PREBUILT)'
+      } >> "$OUTMK"
+
+      # Also add pkgName to runtime array to append later the vendor mk
+      PKGS=("${PKGS[@]-}" "$dsoName")
+    done <<< "$(find "$OUTBASE/$RELROOT/lib64" -maxdepth 1 -type f -iname 'lib*.so')"
+  fi
+
+  # Then iterate the 32bit libs excluding the ones already included as dual targets
+  echo "[*] Processing 32-bit shared libraries"
+  while read -r file
+  do
+    local dsoRelRoot=""
+    local dsoFile=""
+    local dsoName=""
+    local dsoSrc=""
+
+    dsoRelRoot=$(dirname "$file" | sed "s#$OUTBASE/##")
+    dsoFile=$(basename "$file")
+    dsoName=$(basename "$file" ".so")
+    dsoSrc="$dsoRelRoot/$dsoFile"
+
+    if [ $hasMultiDSO = true ]; then
+      if array_contains "$dsoSrc" "${MULTIDSO[@]}"; then
+        continue
+      fi
+    fi
+
+    {
+      echo ""
+      echo 'include $(CLEAR_VARS)'
+      echo "LOCAL_MODULE := $dsoName"
+      echo 'LOCAL_MODULE_TAGS := optional'
+      echo "LOCAL_MODULE_OWNER := $VENDOR"
+      echo "LOCAL_SRC_FILES := $dsoSrc"
+      echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
+      echo "LOCAL_MODULE_SUFFIX := .so"
+      echo "LOCAL_MULTILIB := 32"
+      echo 'include $(BUILD_PREBUILT)'
+    } >> "$OUTMK"
+
+    # Also add pkgName to runtime array to append later the vendor mk
+    PKGS=("${PKGS[@]-}" "$dsoName")
+  done <<< "$(find "$OUTBASE/$RELROOT/lib" -maxdepth 1 -type f -iname 'lib*.so')"
+
+  # Update vendor mk
+  {
+    echo ""
+    echo "# Prebuilt shared libraries from '$RELROOT'"
+    echo 'PRODUCT_PACKAGES += \'
+    for pkg in ${PKGS[@]}
+    do
+      echo "    $pkg \\"
+    done
+  }  >> "$VENDORMK"
+  sed '$s/ \\//' "$VENDORMK" > "$VENDORMK.tmp"
+  mv "$VENDORMK.tmp" "$VENDORMK"
+}
+
 trap "abort 1" SIGINT SIGTERM
 
 INPUT_DIR=""
@@ -664,6 +780,13 @@ if [ $hasStandAloneSymLinks = true ]; then
   echo "[*] Processing standalone symlinks"
   gen_standalone_symlinks "$INPUT_DIR" "$OUTPUT_VENDOR" "$VENDOR" "$OUTMK"
 fi
+
+# Iterate over directories with shared libraries and update the unified Android.mk file
+for root in "vendor" "proprietary"
+do
+  echo "[*] Gathering data for shared library (.so) pre-built modules"
+  gen_mk_for_shared_libs "$INPUT_DIR" "$root" "$OUTPUT_VENDOR" "$VENDOR" "$OUTMK"
+done
 
 echo "" >> "$OUTMK"
 echo "endif" >> "$OUTMK"
