@@ -103,10 +103,11 @@ verify_input "$INPUT_DIR"
 readonly OUT_BLOBS_FILE_TMP="$OUTPUT_DIR/_proprietary-blobs.txt"
 readonly OUT_BLOBS_FILE="$OUTPUT_DIR/proprietary-blobs.txt"
 
-# First add system-proprietary-blobs to
-cat "$IN_SYS_FILE" > "$OUT_BLOBS_FILE_TMP"
+# Clean copy from previous runs
+> "$OUT_BLOBS_FILE"
+> "$OUT_BLOBS_FILE_TMP"
 
-# Then add all regular files from /vendor partition
+# First add all regular files from /vendor partition
 find "$INPUT_DIR" -type f | sed "s#^$INPUT_DIR/##" | while read -r FILE
 do
   # Skip "build.prop" since it will be re-generated at build time
@@ -116,8 +117,13 @@ do
   echo "vendor/$FILE" >> "$OUT_BLOBS_FILE_TMP"
 done
 
-# Sort & delete tmp
+# Sort vendor files
 sort "$OUT_BLOBS_FILE_TMP" > "$OUT_BLOBS_FILE"
+
+# Then append sorted system-proprietary-blobs
+cat "$IN_SYS_FILE" > "$OUT_BLOBS_FILE_TMP"
+sort "$OUT_BLOBS_FILE_TMP" >> "$OUT_BLOBS_FILE"
+
 rm -f "$OUT_BLOBS_FILE_TMP"
 
 abort 0
