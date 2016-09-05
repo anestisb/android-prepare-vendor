@@ -258,11 +258,26 @@ if [ -d "$FACTORY_IMGS_R_DATA" ]; then
 else
   mkdir -p "$FACTORY_IMGS_R_DATA"
 fi
+
+# Adjust repair method based on API level or skip flag
+if [ $SKIP_SYSDEOPT = true ]; then
+  REPAIR_SCRIPT_ARG="--method NONE"
+elif [ $API_LEVEL -le 23 ]; then
+  REPAIR_SCRIPT_ARG="--method OAT2DEX \
+                     --oat2dex $SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"
+elif [ $API_LEVEL -ge 24 ]; then
+  REPAIR_SCRIPT_ARG="--method OATDUMP \
+                     --oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/oatdump \
+                     --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/dexrepair"
+else
+  echo "[-] Non expected /system repair method"
+  abort 1
+fi
+
 $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
-     --oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar" \
      --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
-     --skip-deopt $SKIP_SYSDEOPT || {
+     $REPAIR_SCRIPT_ARG || {
   echo "[-] System partition de-optimization failed"
   abort 1
 }
