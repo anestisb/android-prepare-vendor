@@ -67,7 +67,6 @@ system/lib64/hw/gps.msm8992.so
 system/lib64/hw/lights.bullhead.so
 system/lib64/hw/nfc_nci.bullhead.so
 system/lib64/lib_fpc_tac_shared.so
-system/lib64/libgps.utils.so
 system/lib64/libloc_api_v02.so
 system/lib64/libloc_core.so
 system/lib64/libloc_ds_api.so
@@ -82,7 +81,6 @@ system/lib/hw/nfc_nci.bullhead.so
 system/lib/libdmengine.so
 system/lib/libdmjavaplugin.so
 system/lib/lib_fpc_tac_shared.so
-system/lib/libgps.utils.so
 system/lib/libloc_api_v02.so
 system/lib/libloc_core.so
 system/lib/libloc_ds_api.so
