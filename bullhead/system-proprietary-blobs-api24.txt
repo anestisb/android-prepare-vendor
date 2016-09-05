@@ -68,7 +68,6 @@ system/lib64/hw/lights.bullhead.so
 system/lib64/hw/nfc_nci.bullhead.so
 system/lib64/lib_fpc_tac_shared.so
 system/lib64/libloc_core.so
-system/lib64/libloc_eng.so
 system/lib/hw/audio.primary.msm8992.so
 system/lib/hw/camera.msm8992.so
 system/lib/hw/fingerprint.bullhead.so
@@ -80,7 +79,6 @@ system/lib/libdmengine.so
 system/lib/libdmjavaplugin.so
 system/lib/lib_fpc_tac_shared.so
 system/lib/libloc_core.so
-system/lib/libloc_eng.so
 system/lib/libmmcamera_interface.so
 system/lib/libmmjpeg_interface.so
 system/lib/libqomx_core.so
