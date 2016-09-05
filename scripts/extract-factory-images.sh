@@ -43,7 +43,8 @@ extract_archive() {
 
   echo "[*] Extracting '$IN_ARCHIVE'"
 
-  local F_EXT="${IN_ARCHIVE#*.}"
+  local archiveFile="$(basename "$IN_ARCHIVE")"
+  local F_EXT="${archiveFile#*.}"
   if [[ "$F_EXT" == "tar" || "$F_EXT" == "tar.gz" || "$F_EXT" == "tgz" ]]; then
     tar -xf "$IN_ARCHIVE" -C "$OUT_DIR" || { echo "[-] tar extract failed"; abort 1; }
   elif [[ "$F_EXT" == "zip" ]]; then
