@@ -44,6 +44,7 @@ cat <<_EOF
       -o|--output  : Path to save generated vendor data
       -i|--img     : Read factory image archive from file instead of downloading (optional)
       -k|--keep    : Keep all factory images extracted & de-optimized data (optional)
+      -s|--skip    : Skip /system de-optimization since some targets are broken (optional)
 _EOF
   abort 1
 }
@@ -100,6 +101,7 @@ KEEP_DATA=false
 HOST_OS=""
 DEV_ALIAS=""
 API_LEVEL=""
+SKIP_SYSDEOPT=false
 
 while [[ $# -gt 0 ]]
 do
@@ -127,6 +129,9 @@ do
       ;;
     -k|--keep)
       KEEP_DATA=true
+      ;;
+    -s|--skip)
+      SKIP_SYSDEOPT=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -256,7 +261,8 @@ fi
 $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
      --oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar" \
-     --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" || {
+     --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
+     --skip-deopt $SKIP_SYSDEOPT || {
   echo "[-] System partition de-optimization failed"
   abort 1
 }

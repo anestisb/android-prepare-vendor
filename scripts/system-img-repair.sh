@@ -52,6 +52,7 @@ cat <<_EOF
       -t|--oat2dex    : Path to SmaliEx oat2dex.jar
       -b|--blobs-list : [OPTIONAL] list with blobs that need to be included in master
                         makefile. When provided only required bytecode is repaired.
+      -s|--skip-deopt : [OPTIONAL] skip de-optimization so we can debug rest of scripts
     INFO:
       * Input path expected to be system root as extracted from factory system
         image
@@ -116,6 +117,7 @@ INPUT_DIR=""
 OUTPUT_DIR=""
 OAT2DEX_JAR=""
 BLOBS_LIST_FILE=""
+SKIP_DEOPT="false"
 declare -a ABIS
 declare -a APKS_LIST
 hasAPKSList=false
@@ -139,6 +141,9 @@ do
     -b|--blobs-list)
       BLOBS_LIST_FILE="$2"
       shift
+      ;;
+    -s|--skip-deopt)
+      SKIP_DEOPT="$2"
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -183,6 +188,13 @@ fi
 # Verify image contains pre-optimized oat files
 if [ ! -d "$INPUT_DIR/framework/oat" ]; then
   echo "[!] System partition doesn't contain any pre-optimized files - moving as is"
+  mv "$INPUT_DIR" "$OUTPUT_DIR"
+  abort 0
+fi
+
+# User requested skip
+if [[ "$SKIP_DEOPT" != "false" ]]; then
+  echo "[!] User requested repair override - moving partition as is"
   mv "$INPUT_DIR" "$OUTPUT_DIR"
   abort 0
 fi
