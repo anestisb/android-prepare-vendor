@@ -607,11 +607,6 @@ gen_mk_for_shared_libs() {
           echo "LOCAL_MULTILIB := first"
         fi
 
-        # If DSO part of /vendor, override potential conflicts from AOSP
-        if [[ "$RELROOT" == "vendor" ]]; then
-          echo "LOCAL_OVERRIDES_PACKAGES := $dsoName"
-        fi
-
         echo 'include $(BUILD_PREBUILT)'
       } >> "$OUTMK"
 
@@ -650,12 +645,6 @@ gen_mk_for_shared_libs() {
       echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
       echo "LOCAL_MODULE_SUFFIX := .so"
       echo "LOCAL_MULTILIB := 32"
-
-      # If DSO part of /vendor, override potential conflicts from AOSP
-      if [[ "$RELROOT" == "vendor" ]]; then
-        echo "LOCAL_OVERRIDES_PACKAGES := $dsoName"
-      fi
-
       echo 'include $(BUILD_PREBUILT)'
     } >> "$OUTMK"
 
