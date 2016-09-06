@@ -293,7 +293,8 @@ mv "$FACTORY_IMGS_DATA/vendor" "$FACTORY_IMGS_R_DATA"
 cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
-  --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" || {
+  --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
+  --so-list "$SCRIPTS_ROOT/$DEVICE/shared-proprietary-blobs-api$API_LEVEL.txt" || {
   echo "[-] Vendor generation failed"
   abort 1
 }

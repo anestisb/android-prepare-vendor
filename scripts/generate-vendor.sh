@@ -23,6 +23,11 @@ declare -a S_SLINKS_SRC
 declare -a S_SLINKS_DST
 hasStandAloneSymLinks=false
 
+# Some shared libraries under are required as dependencies so we need to create
+# individual modules for them
+declare -a DSO_MODULES
+hasDsoModules=false
+
 abort() {
   # If debug keep work directory for bugs investigation
   if [[ "$-" == *x* ]]; then
@@ -41,6 +46,8 @@ cat <<_EOF
       -o|--output     : Path to save vendor blobs & makefiles in AOSP
                         compatible structure
       -b|--blobs-list : Text file with list of propriatery blobs to copy
+      -s|--so-list    : Text file with list of shared libraries that required to
+                        included as a separate module
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -189,10 +196,15 @@ gen_vendor_blobs_mk() {
 
   while read -r file
   do
-    # Skip files that have dedicated target module (APKs, JARs & shared libraries)
+    # Skip files that have dedicated target module (APKs, JARs & selected shared libraries)
     fileExt="${file##*.}"
-    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" || "$fileExt" == "so" ]]; then
+    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
       continue
+    fi
+    if [[ $hasDsoModules = true && "$fileExt" == "so" ]]; then
+      if array_contains "$file" "${DSO_MODULES[@]}"; then
+        continue
+      fi
     fi
 
     # Skip standalone symbolic links if available
@@ -584,6 +596,21 @@ gen_mk_for_shared_libs() {
       dso32RelRoot=$(echo "$dsoRelRoot" | sed "s#lib64#lib#")
       dso32Src="$dso32RelRoot/$dsoFile"
 
+      # TODO: Instead of iterate all and skip, go with the whitelist array
+      # directly. This is a temporarily hack to ensure that approach is working
+      # as expected before finalizing
+      if [[ "$RELROOT" == "proprietary" ]]; then
+        dsoRealRel="$(echo "$dsoSrc" | sed "s#proprietary/#system/#")"
+      else
+        dsoRealRel="$dsoSrc"
+      fi
+
+      if [ $hasDsoModules = true ]; then
+        if ! array_contains "$dsoRealRel" "${DSO_MODULES[@]}"; then
+          continue
+        fi
+      fi
+
       {
         echo ""
         echo 'include $(CLEAR_VARS)'
@@ -629,6 +656,21 @@ gen_mk_for_shared_libs() {
     dsoName=$(basename "$file" ".so")
     dsoSrc="$dsoRelRoot/$dsoFile"
 
+    # TODO: Instead of iterate all and skip, go with the whitelist array
+    # directly. This is a temporarily hack to ensure that approach is working
+    # as expected before finalizing
+    if [[ "$RELROOT" == "proprietary" ]]; then
+      dsoRealRel="$(echo "$dsoSrc" | sed "s#proprietary/#system/#")"
+    else
+      dsoRealRel="$dsoSrc"
+    fi
+
+    if [ $hasDsoModules = true ]; then
+      if ! array_contains "$dsoRealRel" "${DSO_MODULES[@]}"; then
+        continue
+      fi
+    fi
+
     if [ $hasMultiDSO = true ]; then
       if array_contains "$dsoSrc" "${MULTIDSO[@]}"; then
         continue
@@ -671,6 +713,7 @@ trap "abort 1" SIGINT SIGTERM
 INPUT_DIR=""
 OUTPUT_DIR=""
 BLOBS_LIST=""
+SO_BLOBS_LIST=""
 
 DEVICE=""
 VENDOR=""
@@ -700,6 +743,10 @@ do
       BLOBS_LIST="$2"
       shift
       ;;
+    -s|--so-list)
+      SO_BLOBS_LIST="$2"
+      shift
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -720,6 +767,10 @@ if [[ "$BLOBS_LIST" == "" || ! -f "$BLOBS_LIST" ]]; then
   echo "[-] Vendor proprietary blobs list file not found"
   usage
 fi
+if [[ "$SO_BLOBS_LIST" == "" || ! -f "$SO_BLOBS_LIST" ]]; then
+  echo "[-] Vendor shared libraries proprietary blobs list file not found"
+  usage
+fi
 
 # Verify input directory structure
 verify_input "$INPUT_DIR"
@@ -734,9 +785,16 @@ echo "[*] Generating blobs for vendor/$VENDOR/$DEVICE"
 OUTPUT_VENDOR="$OUTPUT_DIR/vendor/$VENDOR/$DEVICE"
 PROP_EXTRACT_BASE="$OUTPUT_VENDOR/proprietary"
 if [ -d "$OUTPUT_VENDOR" ]; then
-  rm -rf "$OUTPUT_VENDOR"/*
+  rm -rf "${OUTPUT_VENDOR:?}"/*
 fi
 mkdir -p "$PROP_EXTRACT_BASE"
+
+# Update from DSO_MODULES array from SO_BLOBS_LIST file
+entries=$(grep -Ev '(^#|^$)' "$SO_BLOBS_LIST" | wc -l | tr -d ' ')
+if [ $entries -gt 0 ]; then
+  readarray -t DSO_MODULES < <(grep -Ev '(^#|^$)' "$SO_BLOBS_LIST")
+  hasDsoModules=true
+fi
 
 # Copy device specific files from input
 echo "[*] Copying files to '$OUTPUT_VENDOR'"
@@ -782,9 +840,9 @@ if [ $hasStandAloneSymLinks = true ]; then
 fi
 
 # Iterate over directories with shared libraries and update the unified Android.mk file
+echo "[*] Gathering data for shared library (.so) pre-built modules"
 for root in "vendor" "proprietary"
 do
-  echo "[*] Gathering data for shared library (.so) pre-built modules"
   gen_mk_for_shared_libs "$INPUT_DIR" "$root" "$OUTPUT_VENDOR" "$VENDOR" "$OUTMK"
 done
 
