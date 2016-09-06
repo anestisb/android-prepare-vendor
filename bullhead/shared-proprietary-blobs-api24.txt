@@ -2,9 +2,13 @@
 # copying across via PRODUCT_COPY_FILES
 system/lib/libloc_core.so
 system/lib64/libloc_core.so
+vendor/lib/libdsi_netctrl.so
 vendor/lib/libqmi_cci.so
 vendor/lib/libqmi_common_so.so
 vendor/lib/libqmi_csi.so
+vendor/lib/libqmiservices.so
+vendor/lib64/libdsi_netctrl.so
 vendor/lib64/libqmi_cci.so
 vendor/lib64/libqmi_common_so.so
 vendor/lib64/libqmi_csi.so
+vendor/lib64/libqmiservices.so
