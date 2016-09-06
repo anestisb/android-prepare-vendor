@@ -410,7 +410,7 @@ if [[ "$REPAIR_METHOD" == "OAT2DEX" ]]; then
 
   echo "[*] Repairing bytecode under /system partition using oat2dex method"
   oat2dex_repair
-elif [[ "$REPAIR_METHOD" == "OAT2DUMP" ]]; then
+elif [[ "$REPAIR_METHOD" == "OATDUMP" ]]; then
   if [[ "$OATDUMP_BIN" == "" || "$DEXREPAIR_BIN" == "" ]]; then
     echo "[-] Missing oatdump and/or dexrepair external tool(s)"
     abort 1
