@@ -239,7 +239,7 @@ else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
 $EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
-     --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/simg2img" || {
+     --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img" || {
   echo "[-] Factory images data extract failed"
   abort 1
 }
@@ -267,8 +267,8 @@ elif [ $API_LEVEL -le 23 ]; then
                      --oat2dex $SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"
 elif [ $API_LEVEL -ge 24 ]; then
   REPAIR_SCRIPT_ARG="--method OATDUMP \
-                     --oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/oatdump \
-                     --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/dexrepair"
+                     --oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/oatdump \
+                     --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/dexrepair"
 else
   echo "[-] Non expected /system repair method"
   abort 1
