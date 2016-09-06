@@ -260,9 +260,140 @@ oat2dex_repair() {
 }
 
 oatdump_repair() {
-  # TODO: To be implemented
-  echo "[-] Missing implementation"
-  abort 1
+  local -a ABIS
+
+  # Identify supported ABI(s) - extra work for 64bit ABIs
+  for type in "arm" "arm64" "x86" "x86_64"
+  do
+    if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
+      ABIS=("${ABIS[@]-}" "$type")
+    fi
+  done
+
+  while read -r file
+  do
+    relFile=$(echo "$file" | sed "s#^$INPUT_DIR##")
+    relDir=$(dirname "$relFile")
+    fileExt="${file##*.}"
+    fileName=$(basename "$relFile")
+
+    odexFound=0
+    dexsExported=0
+
+    # Skip special files
+    if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
+      continue
+    fi
+
+    # Maintain dir structure
+    mkdir -p "$OUTPUT_SYS/$relDir"
+
+    # If not APK/jar file, copy as is
+    if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
+      cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      continue
+    fi
+
+    # If APKs selection enabled, skip if not in list
+    if [[ "$hasAPKSList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
+      if ! array_contains "$relFile" "${APKS_LIST[@]}"; then
+        continue
+      fi
+    fi
+
+    # For APK/jar files apply repair method without de-optimizing
+    zipRoot=$(dirname "$file")
+    pkgName=$(basename "$file" ".$fileExt")
+
+    # framework resources jar should be the only legitimate jar without matching bytecode
+    if [ "$pkgName" == "framework-res" ]; then
+      echo "[*] Skipping '$pkgName' since it doesn't pair with bytecode"
+      continue
+    fi
+
+    # Check if APK/jar bytecode is pre-optimized
+    if [ -d "$zipRoot/oat" ]; then
+      # Check if optimized code available at app's directory for all ABIs
+      odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
+                  wc -l | tr -d ' ')
+    fi
+    if [ $odexFound -eq 0 ]; then
+      # shellcheck disable=SC2015
+      zipinfo "$file" classes.dex &>/dev/null && {
+        echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
+        cp "$file" "$OUTPUT_SYS/$relDir"
+      } || {
+        echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
+      }
+    else
+      # If pre-compiled, dump bytecode from oat .rodata section
+      # If bytecode compiled for more than one ABIs - only the first is kept
+      # (shouldn't make any difference)
+      for abi in ${ABIS[@]}
+      do
+        curOdex="$zipRoot/oat/$abi/$pkgName.odex"
+        if [ -f "$curOdex" ]; then
+          $OATDUMP_BIN --oat-file="$curOdex" \
+               --export-dex-to="$TMP_WORK_DIR" &>/dev/null || {
+            echo "[!] DEX dump from '$curOdex' failed"
+            abort 1
+          }
+
+          # If DEX not created, oat2dex failed to resolve a dependency and skipped file
+          dexsExported=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_export.dex" | wc -l | tr -d ' ')
+          if [ $dexsExported -eq 0 ]; then
+            echo "[-] '$relFile' de-optimization failed consider manual inspection - skipping archive"
+            continue 2
+          else
+            # Abort inner loop on first match
+            continue
+          fi
+        fi
+      done
+
+      # Repair CRC for all dex files & remove un-repaired original dumps
+      $DEXREPAIR_BIN -I "$TMP_WORK_DIR" &>/dev/null
+      rm -f "$TMP_WORK_DIR/"*_export.dex
+
+      # Copy APK/jar to workspace for repair
+      cp "$file" "$TMP_WORK_DIR"
+
+      # Normalize names & add dex files back to zip archives (jar or APK)
+      # considering possible multi-dex cases. zipalign is not necessary since
+      # AOSP build rules will align them if not already
+      if [ $dexsExported -gt 1 ]; then
+        # multi-dex file
+        echo "[*] '$relFile' is multi-dex - adjusting recursive archive adds"
+        counter=2
+        curMultiDex="$(find "$TMP_WORK_DIR" -type f -maxdepth 1 "*$counter*_repaired.dex")"
+        while [ "$curMultiDex" != "" ]
+        do
+          mv "$curMultiDex" "$TMP_WORK_DIR/classes$counter.dex"
+          jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
+               "classes$counter.dex" &>/dev/null || {
+            echo "[-] '$fileName' 'classes$counter.dex' append failed"
+            abort 1
+          }
+          rm "$TMP_WORK_DIR/classes$counter.dex"
+
+          counter=$(( counter + 1))
+          curMultiDex="$(find "$TMP_WORK_DIR" -type f -maxdepth 1 "*$counter*_repaired.dex")"
+        done
+      fi
+
+      # All archives have at least one "classes.dex"
+      mv "$TMP_WORK_DIR/"*_repaired.dex "$TMP_WORK_DIR/classes.dex"
+      jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
+         classes.dex &>/dev/null || {
+        echo "[-] '$fileName' classes.dex append failed"
+        abort 1
+      }
+      rm "$TMP_WORK_DIR/classes.dex"
+
+      mkdir -p "$OUTPUT_SYS/$relDir"
+      mv "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
+    fi
+  done <<< "$(find "$INPUT_DIR" -not -type d)"
 }
 
 trap "abort 1" SIGINT SIGTERM
