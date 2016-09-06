@@ -840,11 +840,13 @@ if [ $hasStandAloneSymLinks = true ]; then
 fi
 
 # Iterate over directories with shared libraries and update the unified Android.mk file
-echo "[*] Gathering data for shared library (.so) pre-built modules"
-for root in "vendor" "proprietary"
-do
-  gen_mk_for_shared_libs "$INPUT_DIR" "$root" "$OUTPUT_VENDOR" "$VENDOR" "$OUTMK"
-done
+if [ $hasDsoModules = true ]; then
+  echo "[*] Gathering data for shared library (.so) pre-built modules"
+  for root in "vendor" "proprietary"
+  do
+    gen_mk_for_shared_libs "$INPUT_DIR" "$root" "$OUTPUT_VENDOR" "$VENDOR" "$OUTMK"
+  done
+fi
 
 echo "" >> "$OUTMK"
 echo "endif" >> "$OUTMK"
