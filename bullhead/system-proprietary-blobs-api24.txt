@@ -68,7 +68,6 @@ system/framework/rcsservice.jar
 system/lib64/hw/audio.primary.msm8992.so
 system/lib64/hw/fingerprint.bullhead.so
 system/lib64/hw/gps.msm8992.so
-system/lib64/hw/lights.bullhead.so
 system/lib64/hw/nfc_nci.bullhead.so
 system/lib64/lib_fpc_tac_shared.so
 system/lib64/libloc_core.so
@@ -76,7 +75,6 @@ system/lib/hw/audio.primary.msm8992.so
 system/lib/hw/camera.msm8992.so
 system/lib/hw/fingerprint.bullhead.so
 system/lib/hw/gps.msm8992.so
-system/lib/hw/lights.bullhead.so
 system/lib/hw/local_time.default.so
 system/lib/hw/nfc_nci.bullhead.so
 system/lib/libdmengine.so
