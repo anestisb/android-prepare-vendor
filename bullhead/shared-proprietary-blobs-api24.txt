@@ -1,7 +1,5 @@
 # List of shared libraries (*.so) that require individual modules instead of
 # copying across via PRODUCT_COPY_FILES
-system/lib/libloc_core.so
-system/lib64/libloc_core.so
 vendor/lib/libdsi_netctrl.so
 vendor/lib/libqmi_cci.so
 vendor/lib/libqmi_common_so.so
