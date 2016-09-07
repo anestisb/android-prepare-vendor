@@ -175,10 +175,10 @@ oat2dex_repair() {
     if [ $odexFound -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[*] '$file' not pre-optimized with sanity checks passed - copying without changes"
+        echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
         cp "$file" "$OUTPUT_SYS/$relDir"
       } || {
-        echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
+        echo "[-] '$relFile' not pre-optimized & without 'classes.dex' - skipping"
       }
     else
       # If pre-compiled, de-optimize to original DEX bytecode
@@ -324,10 +324,10 @@ oatdump_repair() {
     if [ $odexFound -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[*] '$file' not pre-optimized with sanity checks passed - copying without changes"
+        echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
         cp "$file" "$OUTPUT_SYS/$relDir"
       } || {
-        echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
+        echo "[-] '$relFile' not pre-optimized & without 'classes.dex' - skipping"
       }
     else
       # If pre-compiled, dump bytecode from oat .rodata section
