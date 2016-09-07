@@ -571,6 +571,7 @@ gen_mk_for_shared_libs() {
 
   local VENDORMK="$OUTBASE/device-vendor.mk"
   local -a PKGS
+  local hasPKGS=false
   local -a MULTIDSO
   local hasMultiDSO=false
 
@@ -639,6 +640,7 @@ gen_mk_for_shared_libs() {
 
       # Also add pkgName to runtime array to append later the vendor mk
       PKGS=("${PKGS[@]-}" "$dsoName")
+      hasPKGS=true
     done <<< "$(find "$OUTBASE/$RELROOT/lib64" -maxdepth 1 -type f -iname 'lib*.so')"
   fi
 
@@ -692,20 +694,23 @@ gen_mk_for_shared_libs() {
 
     # Also add pkgName to runtime array to append later the vendor mk
     PKGS=("${PKGS[@]-}" "$dsoName")
+    hasPKGS=true
   done <<< "$(find "$OUTBASE/$RELROOT/lib" -maxdepth 1 -type f -iname 'lib*.so')"
 
   # Update vendor mk
-  {
-    echo ""
-    echo "# Prebuilt shared libraries from '$RELROOT'"
-    echo 'PRODUCT_PACKAGES += \'
-    for pkg in ${PKGS[@]}
-    do
-      echo "    $pkg \\"
-    done
-  }  >> "$VENDORMK"
-  sed '$s/ \\//' "$VENDORMK" > "$VENDORMK.tmp"
-  mv "$VENDORMK.tmp" "$VENDORMK"
+  if [ $hasPKGS = true ]; then
+    {
+      echo ""
+      echo "# Prebuilt shared libraries from '$RELROOT'"
+      echo 'PRODUCT_PACKAGES += \'
+      for pkg in ${PKGS[@]}
+      do
+        echo "    $pkg \\"
+      done
+    }  >> "$VENDORMK"
+    sed '$s/ \\//' "$VENDORMK" > "$VENDORMK.tmp"
+    mv "$VENDORMK.tmp" "$VENDORMK"
+  fi
 }
 
 trap "abort 1" SIGINT SIGTERM
