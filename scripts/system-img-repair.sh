@@ -69,6 +69,21 @@ command_exists() {
   type "$1" &> /dev/null
 }
 
+# Print RAM size memory warning when using oat2dex.jar tool
+check_ram_size() {
+  local HOST_OS=$(uname)
+  local RAM_SIZE=0
+  if [[ "$HOST_OS" == "Darwin" ]]; then
+    RAM_SIZE=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
+  else
+    RAM_SIZE=$(grep MemTotal /proc/meminfo | awk '{print $2}'  | awk '{$1=$1/(1024^2); print int($1);}')
+  fi
+
+  if [ $RAM_SIZE -le 2 ]; then
+    echo "[!] Host RAM size >= 2GB - oat2jex.jar might crash due to low memory"
+  fi
+}
+
 print_expected_imgs_ver() {
   bootloader=$(grep 'ro.build.expect.bootloader' "$1" | cut -d '=' -f2)
   baseband=$(grep 'ro.build.expect.baseband' "$1" | cut -d '=' -f2)
@@ -103,6 +118,9 @@ array_contains() {
 
 oat2dex_repair() {
   local -a ABIS
+
+  # oat2dex.jar is memory hungry
+  check_ram_size
 
   # Identify supported ABI(s) - extra work for 64bit ABIs
   for type in "arm" "arm64" "x86" "x86_64"
