@@ -49,7 +49,7 @@ generate rules for prebuilt packages' JNI libs not embedded into APKs
   * All vendor partition data are mirror in order to generate a production identical `vendor.img`
 3. Repair bytecode (APKs/JARs) from factory system image (`scripts/system-img-repair.sh`)
   * Use oatdump ART host tool to extract DEX from OAT ELF .rodata section & dexRepair
-to fix signatures (API >= 24 - **EXPERIMENTAL**)
+to fix signatures (API >= 24 - **EXPERIMENTAL** more info [here](https://github.com/anestisb/android-prepare-vendor/issues/22))
   * Use SmaliEx to de-odex bytecode (API == 23)
 4. Generate vendor proprietary includes & makefiles compatible with AOSP build tree
 (`scripts/generate-vendor.sh`)
@@ -76,17 +76,18 @@ targeted advanced actions, bugs investigation & development of new features.
 
 ## Android M (API-23) supported devices
 
+* angler - Nexus 6p
 * bullhead - Nexus 5x
 * flounder - Nexus 9 WiFi (volantis)
 * flounder - Nexus 9 LTE (volantisg)
-* angler - Nexus 6p
 
 ## Android N (API-24) supported devices
 
+* bullhead - Nexus 5x
 * flounder - Nexus 9 WiFi (volantis)
 * flounder - Nexus 9 LTE (volantisg)
 
-`Remaining devices are in the TODO list`
+`Nexus 6p will be supported as soon as Google releases Nougat factory images`
 
 
 ## Contributing
