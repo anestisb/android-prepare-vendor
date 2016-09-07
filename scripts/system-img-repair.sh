@@ -158,13 +158,6 @@ oat2dex_repair() {
     zipRoot=$(dirname "$file")
     pkgName=$(basename "$file" ".$fileExt")
 
-    # framework resources jar should be the only legitimate jar without matching
-    # bytecode
-    if [ "$pkgName" == "framework-res" ]; then
-      echo "[*] Skipping '$pkgName' since it doesn't pair with bytecode"
-      continue
-    fi
-
     # Check if APK/jar bytecode is pre-optimized
     odexFound=0
     if [ -d "$zipRoot/oat" ]; then
@@ -182,7 +175,7 @@ oat2dex_repair() {
     if [ $odexFound -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
+        echo "[*] '$file' not pre-optimized with sanity checks passed - copying without changes"
         cp "$file" "$OUTPUT_SYS/$relDir"
       } || {
         echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
@@ -322,12 +315,6 @@ oatdump_repair() {
     zipRoot=$(dirname "$file")
     pkgName=$(basename "$file" ".$fileExt")
 
-    # framework resources jar should be the only legitimate jar without matching bytecode
-    if [ "$pkgName" == "framework-res" ]; then
-      echo "[*] Skipping '$pkgName' since it doesn't pair with bytecode"
-      continue
-    fi
-
     # Check if APK/jar bytecode is pre-optimized
     if [ -d "$zipRoot/oat" ]; then
       # Check if optimized code available at app's directory for all ABIs
@@ -337,7 +324,7 @@ oatdump_repair() {
     if [ $odexFound -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
+        echo "[*] '$file' not pre-optimized with sanity checks passed - copying without changes"
         cp "$file" "$OUTPUT_SYS/$relDir"
       } || {
         echo "[-] '$file' not pre-optimized & without 'classes.dex' - skipping"
