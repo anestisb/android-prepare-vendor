@@ -80,7 +80,7 @@ check_ram_size() {
   fi
 
   if [ $RAM_SIZE -le 2 ]; then
-    echo "[!] Host RAM size >= 2GB - oat2jex.jar might crash due to low memory"
+    echo "[!] Host RAM size <= 2GB - oat2jex.jar might crash due to low memory"
   fi
 }
 
