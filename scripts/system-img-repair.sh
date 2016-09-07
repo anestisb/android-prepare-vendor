@@ -264,6 +264,7 @@ oat2dex_repair() {
 
 oatdump_repair() {
   local -a ABIS
+  local -a BOOTJARS
 
   # Identify supported ABI(s) - extra work for 64bit ABIs
   for cpu in "arm" "arm64" "x86" "x86_64"
@@ -272,6 +273,15 @@ oatdump_repair() {
       ABIS=("${ABIS[@]-}" "$cpu")
     fi
   done
+
+  # Cache boot jars so that we can skip them so that we don't have to increase
+  # the repair complexity due to them following different naming/dir conventions
+  while read -r file
+  do
+    jarFile="$(basename "$file" | cut -d '-' -f2 | sed 's#.oat#.jar#')"
+    echo "Adding '$jarFile"
+    BOOTJARS=("${BOOTJARS[@]-}" "$jarFile")
+  done <<< "$(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot-*.oat")"
 
   while read -r file
   do
@@ -294,6 +304,11 @@ oatdump_repair() {
     # If not APK/jar file, copy as is
     if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
       cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      continue
+    fi
+
+    # If boot jar skip
+    if array_contains "$fileName" "${BOOTJARS[@]}"; then
       continue
     fi
 
