@@ -254,7 +254,7 @@ oat2dex_repair() {
       rm "$TMP_WORK_DIR/classes.dex"
 
       # Remove old signature so that we don't create problems with V2 sign format
-      zip -d "$TMP_WORK_DIR/$fileName" META-INF/\*
+      zip -d "$TMP_WORK_DIR/$fileName" META-INF/\* &>/dev/null
 
       mkdir -p "$OUTPUT_SYS/$relDir"
       cp "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
@@ -408,7 +408,7 @@ oatdump_repair() {
       rm "$TMP_WORK_DIR/classes.dex"
 
       # Remove old signature so that we don't create problems with V2 sign format
-      zip -d "$TMP_WORK_DIR/$fileName" META-INF/\*
+      zip -d "$TMP_WORK_DIR/$fileName" META-INF/\* &>/dev/null
 
       mkdir -p "$OUTPUT_SYS/$relDir"
       mv "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
