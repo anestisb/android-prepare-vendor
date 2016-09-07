@@ -266,10 +266,10 @@ oatdump_repair() {
   local -a ABIS
 
   # Identify supported ABI(s) - extra work for 64bit ABIs
-  for type in "arm" "arm64" "x86" "x86_64"
+  for cpu in "arm" "arm64" "x86" "x86_64"
   do
-    if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
-      ABIS=("${ABIS[@]-}" "$type")
+    if [ -f "$INPUT_DIR/framework/$cpu/boot.art" ]; then
+      ABIS=("${ABIS[@]-}" "$cpu")
     fi
   done
 
