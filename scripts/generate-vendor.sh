@@ -578,8 +578,6 @@ gen_mk_for_shared_libs() {
   # If target is multi-lib we first iterate the 64bit libs to detect possible
   # dual target modules
   if [ -d "$OUTBASE/$RELROOT/lib64" ]; then
-    echo "[*] Multi-lib target - scanning for dual targets"
-
     while read -r file
     do
       local dsoRelRoot=""
@@ -645,7 +643,6 @@ gen_mk_for_shared_libs() {
   fi
 
   # Then iterate the 32bit libs excluding the ones already included as dual targets
-  echo "[*] Processing 32-bit shared libraries"
   while read -r file
   do
     local dsoRelRoot=""
