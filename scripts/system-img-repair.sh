@@ -533,7 +533,7 @@ fi
 # JARs under /system/framework are always de-optimized for safety
 if [[ "$BLOBS_LIST_FILE" != "" ]]; then
   readarray -t APKS_LIST < <(grep -i "system/.*.apk" "$BLOBS_LIST_FILE")
-  echo "[*] '${#APKS_LIST[@]}' APKs will be decompiled along with framework jars"
+  echo "[*] '${#APKS_LIST[@]}' APKs will be repaired along with framework jars"
   hasAPKSList=true
 else
   echo "[*] All bytecode files under system partition will be de-optimized"
