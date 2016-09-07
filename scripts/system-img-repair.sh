@@ -278,7 +278,7 @@ oatdump_repair() {
   # the repair complexity due to them following different naming/dir conventions
   while read -r file
   do
-    jarFile="$(basename "$file" | cut -d '-' -f2 | sed 's#.oat#.jar#')"
+    jarFile="$(basename "$file" | cut -d '-' -f2- | sed 's#.oat#.jar#')"
     BOOTJARS=("${BOOTJARS[@]-}" "$jarFile")
   done <<< "$(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot-*.oat")"
 
