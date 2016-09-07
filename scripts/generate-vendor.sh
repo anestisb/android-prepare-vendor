@@ -404,7 +404,6 @@ gen_mk_for_bytecode() {
   local suffix=""
   local priv=""
   local cert=""
-  local opt=""
   local stem=""
   local lcMPath=""
   local appDir=""
@@ -459,16 +458,12 @@ gen_mk_for_bytecode() {
     # PRESIGNED cert
     if [[ "$fileExt" == "apk" && "$RELROOT" == "vendor" ]]; then
       cert="PRESIGNED"
-      opt="false"
     elif [[ "$fileExt" == "apk" ]]; then
-      # All other APKs have been repaired (de-optimized from oat) & thus
-      # need resign
+      # All other APKs have been repaired & thus need resign
       cert="platform"
-      opt="true"
     else
       # Framework JAR's don't contain signatures, so annotate to skip signing
       cert="PRESIGNED"
-      opt="true"
     fi
 
     # Some prebuilt APKs have also prebuilt JNI libs that are stored under
@@ -520,7 +515,7 @@ gen_mk_for_bytecode() {
         echo "$priv"
       fi
       echo "LOCAL_MODULE_SUFFIX := $suffix"
-      echo "LOCAL_DEX_PREOPT := $opt"
+      echo "LOCAL_DEX_PREOPT := false"
       echo 'include $(BUILD_PREBUILT)'
 
       # Append rules for APK lib symlinks if present
