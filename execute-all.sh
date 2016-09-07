@@ -24,10 +24,13 @@ readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 # Helper script to generate vendor AOSP includes & makefiles
 readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
 
+# oatdump dependencies
+readonly LINUX_OATDUMP_BIN_URL='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21467&authkey=ADsdFhslWvJwuO8'
+
 # Change this if you don't want to apply used Java version system-wide
 readonly LC_J_HOME="/usr/local/java/jdk1.8.0_71/bin/java"
 
-declare -a sysTools=("mkdir" "readlink" "dirname")
+declare -a sysTools=("mkdir" "readlink" "dirname" "wget")
 declare -a availDevices=("bullhead" "flounder" "angler")
 
 abort() {
@@ -58,6 +61,24 @@ run_as_root() {
     echo "[-] Script must run as root"
     abort 1
   fi
+}
+
+oatdump_prepare_env() {
+  if [[ "$HOST_OS" != "Linux" ]]; then
+    echo "[-] For now only Linux platform is supporting oatdump repair method"
+    abort 1
+  fi
+  local OUT_FILE="$SCRIPTS_ROOT/hostTools/$HOST_OS/oatdump_deps.zip"
+
+  wget -O "$OUT_FILE" "$LINUX_OATDUMP_BIN_URL" || {
+    echo "[-] oatdump dependencies download failed"
+    abort 1
+  }
+
+  unzip -qq "$OUT_FILE" -d "$SCRIPTS_ROOT/hostTools/$HOST_OS" || {
+    echo "[-] oatdump dependencies unzip failed"
+    abort 1
+  }
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -266,6 +287,10 @@ elif [ $API_LEVEL -le 23 ]; then
   REPAIR_SCRIPT_ARG="--method OAT2DEX \
                      --oat2dex $SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"
 elif [ $API_LEVEL -ge 24 ]; then
+  if [ ! -f "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/oatdump" ]; then
+    echo "[*] First run detected - downloading oatdump host bin & lib dependencies"
+    oatdump_prepare_env
+  fi
   REPAIR_SCRIPT_ARG="--method OATDUMP \
                      --oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/oatdump \
                      --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/dexrepair"
