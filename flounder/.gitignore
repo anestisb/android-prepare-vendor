@@ -1,7 +1,0 @@
-# Ignore everything
-*
-
-# Except
-!.gitignore
-!system-proprietary-blobs*
-!shared-proprietary-blobs*

@@ -1,1 +1,23 @@
 .DS_Store
+
+# Ignore merged / intermediate files & generated data
+bullhead/*
+!bullhead/system-proprietary-blobs*
+!bullhead/shared-proprietary-blobs*
+
+angler/*
+!angler/system-proprietary-blobs*
+!angler/shared-proprietary-blobs*
+
+flounder/*
+!flounder/system-proprietary-blobs*
+!flounder/shared-proprietary-blobs*
+
+# Due to large files they're downloaded at manual step
+# and not part of git files
+hostTools/Linux/*.zip
+hostTools/Linux/bin/oatdump
+hostTools/Linux/lib64
+hostTools/Darwin/*.zip
+hostTools/Darwin/bin/oatdump
+hostTools/Darwin/lib64
