@@ -100,8 +100,10 @@ system/lib/libdmengine.so
 system/lib/libdmjavaplugin.so
 system/lib/libfilterpack_facedetect.so
 system/lib/libgps.utils.so
+system/lib/libloc_api_v02.so
 system/lib/libloc_core.so
 system/lib/libloc_eng.so
+system/lib/libloc_ds_api.so
 system/lib/libmm-qcamera.so
 system/lib/libmmcamera_interface.so
 system/lib/libmmjpeg_interface.so
@@ -116,7 +118,9 @@ system/lib64/libManufacture.so
 system/lib64/libfacelock_jni.so
 system/lib64/libfilterpack_facedetect.so
 system/lib64/libgps.utils.so
+system/lib64/libloc_api_v02.so
 system/lib64/libloc_core.so
+system/lib64/libloc_ds_api.so
 system/lib64/libloc_eng.so
 system/lib64/libspeexwrapper.so
 system/lib64/libtinyxml.so
