@@ -85,9 +85,8 @@ targeted advanced actions, bugs investigation & development of new features.
 
 * bullhead - Nexus 5x
 * flounder - Nexus 9 WiFi (volantis)
-* flounder - Nexus 9 LTE (volantisg)
 
-`Nexus 6p will be supported as soon as Google releases Nougat factory images`
+`Nexus 6p & 9 LTE will be supported as soon as Google releases Nougat factory images`
 
 
 ## Contributing
