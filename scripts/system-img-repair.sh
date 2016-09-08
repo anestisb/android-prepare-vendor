@@ -13,7 +13,7 @@
 # pre-optimized, requiring to reverse the process (de-optimize them) before
 # being capable to copy and include them in AOSP build trees.
 #
-# This script aims to automate the de-optimization process by creating a copy
+# This script aims to automate the archive reconstruct process by creating a copy
 # of the input system partition while repairing all optimized bytecode
 # packages. Before using this script you'll be required to perform the
 # following steps:
@@ -48,7 +48,7 @@ cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
       -i|--input   : Root path of extracted factory image system partition
-      -o|--output  : Path to save input partition with de-optimized odex files
+      -o|--output  : Path to save input partition with repaired bytecode
       -m|--method  : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP')
       --oat2dex    : [OPTIONAL] Path to SmaliEx oat2dex.jar (when 'OAT2DEX' method)
       --oatdump    : [OPTIONAL] Path to ART oatdump executable (when 'OATDUMP' method)
@@ -329,7 +329,7 @@ oatdump_repair() {
       fi
     fi
 
-    # For APK/jar files apply repair method without de-optimizing
+    # For APK/jar files apply bytecode repair
     zipRoot=$(dirname "$file")
     pkgName=$(basename "$file" ".$fileExt")
 
@@ -364,7 +364,7 @@ oatdump_repair() {
           # If DEX not created, oat2dex failed to resolve a dependency and skipped file
           dexsExported=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_export.dex" | wc -l | tr -d ' ')
           if [ $dexsExported -eq 0 ]; then
-            echo "[-] '$relFile' de-optimization failed consider manual inspection - skipping archive"
+            echo "[-] '$relFile' DEX export failed consider manual inspection - skipping archive"
             continue 2
           else
             # Abort inner loop on first match
@@ -547,14 +547,14 @@ if [[ "$REPAIR_METHOD" == "NONE" ]]; then
   abort 0
 fi
 
-# Check if blobs list is set so that only selected APKs will be de-optimized for speed
-# JARs under /system/framework are always de-optimized for safety
+# Check if blobs list is set so that only selected APKs will be repaired for speed
+# JARs under /system/framework are always repaired for safety
 if [[ "$BLOBS_LIST_FILE" != "" ]]; then
   readarray -t APKS_LIST < <(grep -i "system/.*.apk" "$BLOBS_LIST_FILE")
   echo "[*] '${#APKS_LIST[@]}' APKs will be repaired along with framework jars"
   hasAPKSList=true
 else
-  echo "[*] All bytecode files under system partition will be de-optimized"
+  echo "[*] All bytecode files under system partition will be repaired"
 fi
 
 # oat2dex repairing

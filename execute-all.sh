@@ -18,7 +18,7 @@ readonly EXTRACT_SCRIPT="$SCRIPTS_ROOT/scripts/extract-factory-images.sh"
 # Helper script to generate "proprietary-blobs.txt" file
 readonly GEN_BLOBS_LIST_SCRIPT="$SCRIPTS_ROOT/scripts/gen-prop-blobs-list.sh"
 
-# Helper script to de-optimize bytecode prebuilts
+# Helper script to repair bytecode prebuilt archives
 readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 
 # Helper script to generate vendor AOSP includes & makefiles
@@ -273,7 +273,7 @@ $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
   abort 1
 }
 
-# De-optimize bytecode from system partition
+# Repair bytecode from system partition
 if [ -d "$FACTORY_IMGS_R_DATA" ]; then
   rm -rf "${FACTORY_IMGS_R_DATA:?}"/*
 else
@@ -303,11 +303,11 @@ $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
      --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
      $REPAIR_SCRIPT_ARG || {
-  echo "[-] System partition de-optimization failed"
+  echo "[-] System partition bytecode repair failed"
   abort 1
 }
 
-# Bytecode under vendor partition doesn't require de-opt for (up to now)
+# Bytecode under vendor partition doesn't require repair (at least for now)
 # However, move it to repaired data directory to have a single source for
 # next script
 mv "$FACTORY_IMGS_DATA/vendor" "$FACTORY_IMGS_R_DATA"
