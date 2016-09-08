@@ -628,7 +628,6 @@ gen_mk_for_shared_libs() {
           echo "LOCAL_MULTILIB := first"
         fi
 
-        echo "LOCAL_OVERRIDES_PACKAGES := $dsoName"
         echo 'include $(BUILD_PREBUILT)'
       } >> "$OUTMK"
 
@@ -682,7 +681,6 @@ gen_mk_for_shared_libs() {
       echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
       echo "LOCAL_MODULE_SUFFIX := .so"
       echo "LOCAL_MULTILIB := 32"
-      echo "LOCAL_OVERRIDES_PACKAGES := $dsoName"
       echo 'include $(BUILD_PREBUILT)'
     } >> "$OUTMK"
 
