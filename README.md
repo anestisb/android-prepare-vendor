@@ -74,6 +74,25 @@ Individual scripts include usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
 
 
+## Configuration files explained
+### **system-proprietary-blobs-apiXX.txt**
+List of files to be appended at the `PRODUCT_COPY_FILES` list. These files are
+effectively copied across as is from source vendor directory to configured AOSP
+build output directory.
+
+### **shared-proprietary-blobs-apiXX.txt**
+Pre-built shared libraries (*.so) extracted from factory images that are included
+as a separate local module. Multi-lib support & paths are automatically generated
+based on the evidence collected while crawling factory images extracted partitions.
+Files enlisted here will excluded from `PRODUCT_COPY_FILES` and instead added to
+the `PRODUCT_PACKAGES` list.
+
+### **vendor-config-apiXX.txt**
+Additional makefile flags to be appended at the dynamically generated `BoardConfigVendor.mk`
+These flags are useful in case we want to override some default values set at
+original `BoardConfig.mk` without editing the source file.
+
+
 ## Android M (API-23) supported devices
 
 * angler - Nexus 6p
@@ -161,6 +180,40 @@ Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/bullhead-nrd90s-
 [*] Gathering data for shared library (.so) pre-built modules
 [*] All actions completed successfully
 [*] Import '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/vendor' to AOSP root
+```
+
+```
+root@aosp-build:prepare_vendor_blobs# ./execute-all.sh -d bullhead -b nrd90m -o $(pwd) -i bullhead/nrd90m/bullhead-nrd90m-factory-61495c8b.zip
+[*] Setting output base to '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m'
+[*] Processing with 'API-24' configuration
+[*] Extracting 'bullhead/nrd90m/bullhead-nrd90m-factory-61495c8b.zip'
+[*] Unzipping 'image-bullhead-nrd90m.zip'
+[*] Copying files from 'system.img.raw' image
+[*] Copying files from 'vendor.img.raw' image
+[*] '15' APKs will be repaired along with framework jars
+[*] Repairing bytecode under /system partition using oatdump method
+[-] '/framework/framework-res.apk' not pre-optimized & without 'classes.dex' - skipping
+[-] '/framework/core-oj.jar' not pre-optimized & without 'classes.dex' - skipping
+[*] '/framework/rcsimssettings.jar' not pre-optimized with sanity checks passed - copying without changes
+[*] '/framework/rcsservice.jar' not pre-optimized with sanity checks passed - copying without changes
+[*] '/framework/cneapiclient.jar' not pre-optimized with sanity checks passed - copying without changes
+[*] System partition successfully extracted & repaired at '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/factory_imgs_repaired_data'
+[!] Target device expects to have following img versions when using output system img
+ [*] Booatloder:BHZ11e
+ [*] Baseband:M8994F-2.6.33.2.14
+[*] Generating blobs for vendor/lge/bullhead
+[*] Copying files to '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead'
+[*] Generating 'bullhead-vendor-blobs.mk' makefile
+[*] Generating 'device-vendor.mk'
+[*] Generating 'BoardConfigVendor.mk'
+[*] Generating 'Android.mk'
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/vendor/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/proprietary/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/proprietary/framework' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/proprietary/priv-app' APK/JAR pre-builts
+[*] Gathering data for shared library (.so) pre-built modules
+[*] All actions completed successfully
+[*] Import '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor' to AOSP root
 ```
 
 ```
