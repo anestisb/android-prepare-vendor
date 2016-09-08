@@ -47,7 +47,9 @@ cat <<_EOF
                         compatible structure
       -b|--blobs-list : Text file with list of propriatery blobs to copy
       -s|--so-list    : Text file with list of shared libraries that required to
-                        included as a separate module
+                        be included as a separate module
+      -f|--flags-list : Text file with list of Makefile flags to be appended at
+                        'BoardConfigVendor.mk'
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -289,6 +291,8 @@ gen_board_cfg_mk() {
     echo ""
     echo 'BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4'
     echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz"
+    # Update with user selected extra flags
+    grep -Ev '(^#|^$)' "$MK_FLAGS_LIST"
   } > "$OUTMK"
 }
 
@@ -711,6 +715,7 @@ INPUT_DIR=""
 OUTPUT_DIR=""
 BLOBS_LIST=""
 SO_BLOBS_LIST=""
+MK_FLAGS_LIST=""
 
 DEVICE=""
 VENDOR=""
@@ -744,6 +749,10 @@ do
       SO_BLOBS_LIST="$2"
       shift
       ;;
+    -f|--flags-list)
+      MK_FLAGS_LIST="$2"
+      shift
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -766,6 +775,10 @@ if [[ "$BLOBS_LIST" == "" || ! -f "$BLOBS_LIST" ]]; then
 fi
 if [[ "$SO_BLOBS_LIST" == "" || ! -f "$SO_BLOBS_LIST" ]]; then
   echo "[-] Vendor shared libraries proprietary blobs list file not found"
+  usage
+fi
+if [[ "$MK_FLAGS_LIST" == "" || ! -f "$MK_FLAGS_LIST" ]]; then
+  echo "[-] Vendor makefile flags list file not found"
   usage
 fi
 

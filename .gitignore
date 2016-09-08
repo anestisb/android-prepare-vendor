@@ -1,17 +1,20 @@
 .DS_Store
 
 # Ignore merged / intermediate files & generated data
-bullhead/*
-!bullhead/system-proprietary-blobs*
-!bullhead/shared-proprietary-blobs*
-
 angler/*
-!angler/system-proprietary-blobs*
-!angler/shared-proprietary-blobs*
+!angler/system-proprietary-blobs-api*
+!angler/shared-proprietary-blobs-api*
+!angler/vendor-config-api*
+
+bullhead/*
+!bullhead/system-proprietary-blobs-api*
+!bullhead/shared-proprietary-blobs-api*
+!bullhead/vendor-config-api*
 
 flounder/*
-!flounder/system-proprietary-blobs*
-!flounder/shared-proprietary-blobs*
+!flounder/system-proprietary-blobs-api*
+!flounder/shared-proprietary-blobs-api*
+!flounder/vendor-config-api*
 
 # Due to large files they're downloaded at manual step
 # and not part of git files
