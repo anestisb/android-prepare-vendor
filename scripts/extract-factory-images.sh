@@ -101,7 +101,7 @@ extract_from_img() {
   }
 
   # Remove special directory with journal metadata
-  rm -rf "$COPY_DST_DIR/\[SYS\]"
+  rm -rf "$COPY_DST_DIR/[SYS]"
 }
 
 trap "abort 1" SIGINT SIGTERM
