@@ -619,6 +619,10 @@ gen_mk_for_shared_libs() {
         echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
         echo "LOCAL_MODULE_SUFFIX := .so"
 
+        if [[ "$RELROOT" == "vendor" ]]; then
+          echo "LOCAL_PROPRIETARY_MODULE := true"
+        fi
+
         # In case 32bit version present - upgrade to dual target
         if [ -f "$OUTBASE/$dso32Src" ]; then
           echo "LOCAL_MULTILIB := both"
@@ -684,6 +688,11 @@ gen_mk_for_shared_libs() {
       echo "LOCAL_SRC_FILES := $dsoSrc"
       echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
       echo "LOCAL_MODULE_SUFFIX := .so"
+
+      if [[ "$RELROOT" == "vendor" ]]; then
+        echo "LOCAL_PROPRIETARY_MODULE := true"
+      fi
+
       echo "LOCAL_MULTILIB := 32"
       echo 'include $(BUILD_PREBUILT)'
     } >> "$OUTMK"
