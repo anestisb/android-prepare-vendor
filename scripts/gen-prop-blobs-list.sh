@@ -21,9 +21,11 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input    : Root path of /vendor partition
-      -s|--sys-list : File list with proprietary blobs in /system partition
-      -o|--output   : Path to save generated "proprietary-blobs.txt" file
+      -i|--input      : Root path of /vendor partition
+      -o|--output     : Path to save generated "proprietary-blobs.txt" file
+      --sys-list      : File list with proprietary blobs in /system partition
+      --bytecode-list : File list with proprietary bytecode archive files
+      --dep-dso-list  : File list with DSO files with individual targets
 _EOF
   abort 1
 }
@@ -57,23 +59,33 @@ do
 done
 
 INPUT_DIR=""
-IN_SYS_FILE=""
 OUTPUT_DIR=""
+IN_SYS_FILE=""
+IN_BYTECODE_FILE=""
+IN_DEP_DSO_FILE=""
 
 while [[ $# -gt 1 ]]
 do
   arg="$1"
   case $arg in
     -o|--output)
-      OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
+      OUTPUT_DIR="$(echo "$2" | sed 's:/*$::')"
       shift
       ;;
     -i|--input)
-      INPUT_DIR=$(echo "$2" | sed 's:/*$::')
+      INPUT_DIR="$(echo "$2" | sed 's:/*$::')"
       shift
       ;;
-    -s|--sys-list)
-      IN_SYS_FILE=$2
+    --sys-list)
+      IN_SYS_FILE="$2"
+      shift
+      ;;
+    --bytecode-list)
+      IN_BYTECODE_FILE="$2"
+      shift
+      ;;
+    --dep-dso-list)
+      IN_DEP_DSO_FILE="$2"
       shift
       ;;
     *)
@@ -94,6 +106,14 @@ if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
 fi
 if [[ "$IN_SYS_FILE" == "" || ! -f "$IN_SYS_FILE" ]]; then
   echo "[-] system-proprietary-blobs file not found"
+  usage
+fi
+if [[ "$IN_BYTECODE_FILE" == "" || ! -f "$IN_BYTECODE_FILE" ]]; then
+  echo "[-] bytecode-proprietary-blobs file not found"
+  usage
+fi
+if [[ "$IN_DEP_DSO_FILE" == "" || ! -f "$IN_DEP_DSO_FILE" ]]; then
+  echo "[-] dep-dso-proprietary-blobs file not found"
   usage
 fi
 
@@ -117,13 +137,19 @@ do
   echo "vendor/$FILE" >> "$OUT_BLOBS_FILE_TMP"
 done
 
-# Sort vendor files
-sort "$OUT_BLOBS_FILE_TMP" > "$OUT_BLOBS_FILE"
+# Then append system-proprietary-blobs
+cat "$IN_SYS_FILE" >> "$OUT_BLOBS_FILE_TMP"
 
-# Then append sorted system-proprietary-blobs
-cat "$IN_SYS_FILE" > "$OUT_BLOBS_FILE_TMP"
-sort "$OUT_BLOBS_FILE_TMP" >> "$OUT_BLOBS_FILE"
+# Then append dep-dso-proprietary-blobs
+cat "$IN_DEP_DSO_FILE" >> "$OUT_BLOBS_FILE_TMP"
 
+# Then append bytecode-proprietary
+cat "$IN_BYTECODE_FILE" >> "$OUT_BLOBS_FILE_TMP"
+
+# Sort merged file with all lists
+sort -u "$OUT_BLOBS_FILE_TMP" > "$OUT_BLOBS_FILE_TMP"
+
+# Clean-up
 rm -f "$OUT_BLOBS_FILE_TMP"
 
 abort 0

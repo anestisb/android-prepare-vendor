@@ -84,7 +84,7 @@ build output directory.
 List of bytecode archive files to extract from factory images, repair and generate
 individual target modules to be included in vendor makefile structure.
 
-### **shared-proprietary-blobs-apiXX.txt**
+### **dep-dso-proprietary-blobs-apiXX.txt**
 Pre-built shared libraries (*.so) extracted from factory images that are included
 as a separate local module. Multi-lib support & paths are automatically generated
 based on the evidence collected while crawling factory images extracted partitions.

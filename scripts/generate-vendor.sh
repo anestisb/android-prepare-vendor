@@ -42,13 +42,13 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input   : Root path of extracted /system & /vendor partitions
-      -o|--output  : Path to save vendor blobs & makefiles in AOSP compatible structure
-      --blobs-list : Text file with list of proprietary blobs to copy
-      --so-list    : Text file with list of shared libraries that required to be
-                     included as a separate module
-      --flags-list : Text file with list of Makefile flags to be appended at
-                     'BoardConfigVendor.mk'
+      -i|--input     : Root path of extracted /system & /vendor partitions
+      -o|--output    : Path to save vendor blobs & makefiles in AOSP compatible structure
+      --blobs-list   : Text file with list of proprietary blobs to copy
+      --dep-dso-list : Text file with list of shared libraries that required to be
+                       included as a separate module
+      --flags-list   : Text file with list of Makefile flags to be appended at
+                       'BoardConfigVendor.mk'
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -719,7 +719,7 @@ trap "abort 1" SIGINT SIGTERM
 INPUT_DIR=""
 OUTPUT_DIR=""
 BLOBS_LIST=""
-SO_BLOBS_LIST=""
+DEP_DSO_BLOBS_LIST=""
 MK_FLAGS_LIST=""
 
 DEVICE=""
@@ -750,8 +750,8 @@ do
       BLOBS_LIST="$2"
       shift
       ;;
-    --so-list)
-      SO_BLOBS_LIST="$2"
+    --dep-dso-list)
+      DEP_DSO_BLOBS_LIST="$2"
       shift
       ;;
     --flags-list)
@@ -775,15 +775,15 @@ if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
   usage
 fi
 if [[ "$BLOBS_LIST" == "" || ! -f "$BLOBS_LIST" ]]; then
-  echo "[-] Vendor proprietary blobs list file not found"
+  echo "[-] Vendor proprietary-blobs file not found"
   usage
 fi
-if [[ "$SO_BLOBS_LIST" == "" || ! -f "$SO_BLOBS_LIST" ]]; then
-  echo "[-] Vendor shared libraries proprietary blobs list file not found"
+if [[ "$DEP_DSO_BLOBS_LIST" == "" || ! -f "$DEP_DSO_BLOBS_LIST" ]]; then
+  echo "[-] Vendor dep-dso-proprietary file not found"
   usage
 fi
 if [[ "$MK_FLAGS_LIST" == "" || ! -f "$MK_FLAGS_LIST" ]]; then
-  echo "[-] Vendor makefile flags list file not found"
+  echo "[-] Vendor vendor-config file not found"
   usage
 fi
 
@@ -804,10 +804,10 @@ if [ -d "$OUTPUT_VENDOR" ]; then
 fi
 mkdir -p "$PROP_EXTRACT_BASE"
 
-# Update from DSO_MODULES array from SO_BLOBS_LIST file
-entries=$(grep -Ev '(^#|^$)' "$SO_BLOBS_LIST" | wc -l | tr -d ' ')
+# Update from DSO_MODULES array from DEP_DSO_BLOBS_LIST file
+entries=$(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST" | wc -l | tr -d ' ')
 if [ $entries -gt 0 ]; then
-  readarray -t DSO_MODULES < <(grep -Ev '(^#|^$)' "$SO_BLOBS_LIST")
+  readarray -t DSO_MODULES < <(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST")
   hasDsoModules=true
 fi
 
