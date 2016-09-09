@@ -37,6 +37,20 @@ command_exists() {
   type "$1" &> /dev/null
 }
 
+check_7z_version() {
+  local version
+
+  version="$(7z | grep -Eio "version [[:digit:]]{1,2}\.[[:digit:]]{1,2}" | cut -d " " -f2)"
+  major=$(echo "$version" | cut -d '.' -f1)
+  minor=$(echo "$version" | cut -d '.' -f2 | sed 's/^0*//')
+
+  # Minimum supported is '15.08 beta 2015-10-01'
+  if [[ $major -lt 15 || ($major -eq 15 && $minor -lt 8) ]]; then
+    echo '[-] Minimum required version of 7z for ext4 support is 15.08'
+    abort 1
+  fi
+}
+
 extract_archive() {
   local IN_ARCHIVE="$1"
   local OUT_DIR="$2"
@@ -155,6 +169,9 @@ fileExt="${archiveName##*.}"
 archName="$(basename "$archiveName" ".$fileExt")"
 extractDir="$TMP_WORK_DIR/$archName"
 mkdir -p "$extractDir"
+
+# Verify 7z supports ext4
+check_7z_version
 
 # Extract archive
 extract_archive "$INPUT_ARCHIVE" "$extractDir"
