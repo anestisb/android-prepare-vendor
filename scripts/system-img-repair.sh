@@ -47,20 +47,22 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input   : Root path of extracted factory image system partition
-      -o|--output  : Path to save input partition with repaired bytecode
-      -m|--method  : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP')
-      --oat2dex    : [OPTIONAL] Path to SmaliEx oat2dex.jar (when 'OAT2DEX' method)
-      --oatdump    : [OPTIONAL] Path to ART oatdump executable (when 'OATDUMP' method)
-      --dexrepair  : [OPTIONAL] Path to dexrepair executable (when 'OATDUMP' method)
-      --blobs-list : [OPTIONAL] list with blobs that need to be included in master
-                     makefile. When provided only required bytecode is repaired.
+      -i|--input      : Root path of extracted factory image system partition
+      -o|--output     : Path to save input partition with repaired bytecode
+      -m|--method     : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP')
+      --oat2dex       : [OPTIONAL] Path to SmaliEx oat2dex.jar (when 'OAT2DEX' method)
+      --oatdump       : [OPTIONAL] Path to ART oatdump executable (when 'OATDUMP' method)
+      --dexrepair     : [OPTIONAL] Path to dexrepair executable (when 'OATDUMP' method)
+      --bytecode-list : [OPTIONAL] list with bytecode archive files to be included in
+                        generated MKs. When provided only required bytecode is repaired,
+                        otherwise all bytecode in partition is repaired.
     INFO:
       * Input path expected to be system root as extracted from factory system image
       * Download oat2dex.jar from 'https://github.com/testwhat/SmaliEx'
       * Download dexrepair from 'https://github.com/anestisb/dexRepair'
+      * Compile oatdump host tools from AOSP /art repo
       * When creating vendor makefiles, extra care is needed for APKs signature type
-      * '--blobs-list' flag is provided to speed up things in case only specific files are wanted
+      * '--bytecode-list' flag is provided to speed up things in case only specific files are wanted
 _EOF
   abort 1
 }
@@ -166,8 +168,8 @@ oat2dex_repair() {
     fi
 
     # If APKs selection enabled, skip if not in list
-    if [[ "$hasAPKSList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
-      if ! array_contains "$relFile" "${APKS_LIST[@]}"; then
+    if [[ "$hasBytecodeList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
+      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -323,8 +325,8 @@ oatdump_repair() {
     fi
 
     # If APKs selection enabled, skip if not in list
-    if [[ "$hasAPKSList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
-      if ! array_contains "$relFile" "${APKS_LIST[@]}"; then
+    if [[ "$hasBytecodeList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
+      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -438,7 +440,7 @@ check_java_version
 INPUT_DIR=""
 OUTPUT_DIR=""
 REPAIR_METHOD=""
-BLOBS_LIST_FILE=""
+BYTECODE_LIST_FILE=""
 
 # Paths for external tools provided from args
 OAT2DEX_JAR=""
@@ -446,8 +448,8 @@ OATDUMP_BIN=""
 DEXREPAIR_BIN=""
 
 # Global variables accessible from sub-routines
-declare -a APKS_LIST
-hasAPKSList=false
+declare -a BYTECODE_LIST
+hasBytecodeList=false
 
 while [[ $# -gt 1 ]]
 do
@@ -477,8 +479,8 @@ do
       DEXREPAIR_BIN="$2"
       shift
       ;;
-    --blobs-list)
-      BLOBS_LIST_FILE="$2"
+    --bytecode-list)
+      BYTECODE_LIST_FILE="$2"
       shift
       ;;
     *)
@@ -513,8 +515,8 @@ if [[ "$DEXREPAIR_BIN" != "" && ! -f "$DEXREPAIR_BIN" ]]; then
   echo "[-] dexrepair bin not found"
   usage
 fi
-if [[ "$BLOBS_LIST_FILE" != "" && ! -f "$BLOBS_LIST_FILE" ]]; then
-  echo "[-] '$BLOBS_LIST_FILE' file not found"
+if [[ "$BYTECODE_LIST_FILE" != "" && ! -f "$BYTECODE_LIST_FILE" ]]; then
+  echo "[-] '$BYTECODE_LIST_FILE' file not found"
   usage
 fi
 
@@ -549,10 +551,10 @@ fi
 
 # Check if blobs list is set so that only selected APKs will be repaired for speed
 # JARs under /system/framework are always repaired for safety
-if [[ "$BLOBS_LIST_FILE" != "" ]]; then
-  readarray -t APKS_LIST < <(grep -i "system/.*.apk" "$BLOBS_LIST_FILE")
-  echo "[*] '${#APKS_LIST[@]}' APKs will be repaired along with framework jars"
-  hasAPKSList=true
+if [[ "$BYTECODE_LIST_FILE" != "" ]]; then
+  readarray -t BYTECODE_LIST < <(grep -Ev '(^#|^$)' "$BYTECODE_LIST_FILE")
+  echo "[*] '${#BYTECODE_LIST[@]}' APKs will be repaired along with framework jars"
+  hasBytecodeList=true
 else
   echo "[*] All bytecode files under system partition will be repaired"
 fi

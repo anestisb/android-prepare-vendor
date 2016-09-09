@@ -80,6 +80,10 @@ List of files to be appended at the `PRODUCT_COPY_FILES` list. These files are
 effectively copied across as is from source vendor directory to configured AOSP
 build output directory.
 
+### **bytecode-proprietary-apiXX.txt**
+List of bytecode archive files to extract from factory images, repair and generate
+individual target modules to be included in vendor makefile structure.
+
 ### **shared-proprietary-blobs-apiXX.txt**
 Pre-built shared libraries (*.so) extracted from factory images that are included
 as a separate local module. Multi-lib support & paths are automatically generated

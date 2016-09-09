@@ -301,7 +301,7 @@ fi
 
 $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
-     --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
+     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/bytecode-proprietary-api$API_LEVEL.txt" \
      $REPAIR_SCRIPT_ARG || {
   echo "[-] System partition bytecode repair failed"
   abort 1

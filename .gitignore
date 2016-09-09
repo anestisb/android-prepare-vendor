@@ -2,18 +2,21 @@
 
 # Ignore merged / intermediate files & generated data
 angler/*
-!angler/system-proprietary-blobs-api*
+!angler/bytecode-proprietary-api*
 !angler/shared-proprietary-blobs-api*
+!angler/system-proprietary-blobs-api*
 !angler/vendor-config-api*
 
 bullhead/*
-!bullhead/system-proprietary-blobs-api*
+!bullhead/bytecode-proprietary-api*
 !bullhead/shared-proprietary-blobs-api*
+!bullhead/system-proprietary-blobs-api*
 !bullhead/vendor-config-api*
 
 flounder/*
-!flounder/system-proprietary-blobs-api*
+!flounder/bytecode-proprietary-api*
 !flounder/shared-proprietary-blobs-api*
+!flounder/system-proprietary-blobs-api*
 !flounder/vendor-config-api*
 
 # Due to large files they're downloaded at manual step

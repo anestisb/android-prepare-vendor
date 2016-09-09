@@ -42,14 +42,13 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input      : Root path of extracted /system & /vendor partitions
-      -o|--output     : Path to save vendor blobs & makefiles in AOSP
-                        compatible structure
-      -b|--blobs-list : Text file with list of propriatery blobs to copy
-      -s|--so-list    : Text file with list of shared libraries that required to
-                        be included as a separate module
-      -f|--flags-list : Text file with list of Makefile flags to be appended at
-                        'BoardConfigVendor.mk'
+      -i|--input   : Root path of extracted /system & /vendor partitions
+      -o|--output  : Path to save vendor blobs & makefiles in AOSP compatible structure
+      --blobs-list : Text file with list of proprietary blobs to copy
+      --so-list    : Text file with list of shared libraries that required to be
+                     included as a separate module
+      --flags-list : Text file with list of Makefile flags to be appended at
+                     'BoardConfigVendor.mk'
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -198,11 +197,8 @@ gen_vendor_blobs_mk() {
 
   while read -r file
   do
-    # Skip files that have dedicated target module (APKs, JARs & selected shared libraries)
+    # Skip shared libraries files that have dedicated target module
     fileExt="${file##*.}"
-    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
-      continue
-    fi
     if [[ $hasDsoModules = true && "$fileExt" == "so" ]]; then
       if array_contains "$file" "${DSO_MODULES[@]}"; then
         continue
@@ -750,15 +746,15 @@ do
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
-    -b|--blobs-list)
+    --blobs-list)
       BLOBS_LIST="$2"
       shift
       ;;
-    -s|--so-list)
+    --so-list)
       SO_BLOBS_LIST="$2"
       shift
       ;;
-    -f|--flags-list)
+    --flags-list)
       MK_FLAGS_LIST="$2"
       shift
       ;;
