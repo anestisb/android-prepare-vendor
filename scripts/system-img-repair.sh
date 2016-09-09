@@ -325,7 +325,7 @@ oatdump_repair() {
     fi
 
     # If APKs selection enabled, skip if not in list
-    if [[ "$hasBytecodeList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
+    if [ $hasBytecodeList = true ]; then
       if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
@@ -553,7 +553,7 @@ fi
 # JARs under /system/framework are always repaired for safety
 if [[ "$BYTECODE_LIST_FILE" != "" ]]; then
   readarray -t BYTECODE_LIST < <(grep -Ev '(^#|^$)' "$BYTECODE_LIST_FILE")
-  echo "[*] '${#BYTECODE_LIST[@]}' APKs will be repaired along with framework jars"
+  echo "[*] '${#BYTECODE_LIST[@]}' bytecode archive files will be repaired"
   hasBytecodeList=true
 else
   echo "[*] All bytecode files under system partition will be repaired"
