@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "du" "stat")
+declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "du" "stat" "tr" "cut")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -78,7 +78,7 @@ extract_vendor_partition_size() {
   if [[ "$(uname)" == "Darwin" ]]; then
     size="$(stat -f %z "$VENDOR_IMG_RAW")"
   else
-    size="$(du -b "$VENDOR_IMG_RAW")"
+    size="$(du -b "$VENDOR_IMG_RAW" | tr '\t' ' ' | cut -d' ' -f1)"
   fi
 
   if [[ "$size" == "" ]]; then
