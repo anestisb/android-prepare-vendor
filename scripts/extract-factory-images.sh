@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "7z" "fdisk")
+declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "du" "stat" "fdisk")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -61,8 +61,12 @@ extract_vendor_partition_size() {
   local OUT_FILE="$2/vendor_partition_size"
   local size=""
 
-  size="$(LANG=C fdisk -l "$VENDOR_IMG_RAW" | egrep 'Disk.*bytes' | \
-          awk -F ', ' '{print $2}' | cut -d ' ' -f1)"
+  if [[ "$(uname)" == "Darwin" ]]; then
+    size="$(stat -f %z "$VENDOR_IMG_RAW")"
+  else
+    size="$(du -b "$VENDOR_IMG_RAW")"
+  fi
+
   if [[ "$size" == "" ]]; then
     echo "[!] Failed to extract vendor partition size from '$VENDOR_IMG_RAW'"
     abort 1
