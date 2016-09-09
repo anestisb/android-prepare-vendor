@@ -295,8 +295,9 @@ gen_board_cfg_mk() {
     echo ""
     echo 'BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4'
     echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz"
+
     # Update with user selected extra flags
-    grep -Ev '(^#|^$)' "$MK_FLAGS_LIST"
+    grep -Ev '(^#|^$)' "$MK_FLAGS_LIST" || true
   } > "$OUTMK"
 }
 
