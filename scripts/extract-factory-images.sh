@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "du" "stat" "fdisk")
+declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "du" "stat")
 
 abort() {
   # If debug keep work dir for bugs investigation
