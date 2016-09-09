@@ -63,13 +63,11 @@ file-system location using the `-i|--img` flag.
 `-k|--keep` flag can be used if you want to keep extracted intermediate files for further
 investigation.
 
-All scripts except `scripts/extract-factory-images.sh` can be executed from
-both MAC, Linux & other Unix-based systems. In case `execute-all.sh` is used,
-Linux/Unix host systems are the only option due to ext4 not being supported by
-default from MAC OS. If you have ext4 support in your MAC you can edit the
-mount loopback commands.
+All scripts can be executed from OS X, Linux & other Unix-based systems as long
+as utilized command line tools are installed. Scripts will abort if any of the
+required tools is missing from the running host.
 
-Individual scripts include usage info and additional flags that be used for
+Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
 
 

@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "fdisk")
+declare -a sysTools=("tar" "find" "unzip" "7z" "fdisk")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -93,11 +93,6 @@ do
     abort 1
   fi
 done
-
-if [[ "$(uname)" == "Darwin" ]]; then
-  echo "[-] Darwin platform is not supported"
-  abort 1
-fi
 
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
