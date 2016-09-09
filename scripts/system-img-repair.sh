@@ -196,7 +196,7 @@ oat2dex_repair() {
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-        cp "$file" "$OUTPUT_SYS/$relDir"
+        cp -a "$file" "$OUTPUT_SYS/$relDir"
       } || {
         echo "[-] '$relFile' not pre-optimized & without 'classes.dex' - skipping"
       }
@@ -345,7 +345,7 @@ oatdump_repair() {
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-        cp "$file" "$OUTPUT_SYS/$relDir"
+        cp -a "$file" "$OUTPUT_SYS/$relDir"
       } || {
         echo "[-] '$relFile' not pre-optimized & without 'classes.dex' - skipping"
       }
