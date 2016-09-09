@@ -197,8 +197,11 @@ gen_vendor_blobs_mk() {
 
   while read -r file
   do
-    # Skip shared libraries files that have dedicated target module
+    # Skip files that have dedicated target module (APKs, JARs & selected shared libraries)
     fileExt="${file##*.}"
+    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
+      continue
+    fi
     if [[ $hasDsoModules = true && "$fileExt" == "so" ]]; then
       if array_contains "$file" "${DSO_MODULES[@]}"; then
         continue
