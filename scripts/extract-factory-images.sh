@@ -99,6 +99,9 @@ extract_from_img() {
     echo "[-] 7z failed to extract data from '$IMAGE_FILE'"
     abort 1
   }
+
+  # Remove special directory with journal metadata
+  rm -rf "$COPY_DST_DIR/\[SYS\]"
 }
 
 trap "abort 1" SIGINT SIGTERM
