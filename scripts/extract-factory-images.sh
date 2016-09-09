@@ -40,10 +40,11 @@ command_exists() {
 extract_archive() {
   local IN_ARCHIVE="$1"
   local OUT_DIR="$2"
+  local archiveFile
 
   echo "[*] Extracting '$IN_ARCHIVE'"
 
-  local archiveFile="$(basename "$IN_ARCHIVE")"
+  archiveFile="$(basename "$IN_ARCHIVE")"
   local F_EXT="${archiveFile#*.}"
   if [[ "$F_EXT" == "tar" || "$F_EXT" == "tar.gz" || "$F_EXT" == "tgz" ]]; then
     tar -xf "$IN_ARCHIVE" -C "$OUT_DIR" || { echo "[-] tar extract failed"; abort 1; }

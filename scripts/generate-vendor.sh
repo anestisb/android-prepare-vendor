@@ -67,8 +67,9 @@ verify_input() {
 }
 
 get_device_codename() {
-  local device=$(grep 'ro.product.device=' "$1" | cut -d '=' -f2 | \
-                 tr '[:upper:]' '[:lower:]')
+  local device
+
+  device=$(grep 'ro.product.device=' "$1" | cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
   if [[ "$device" == "" ]]; then
     echo "[-] Device string not found"
     abort 1
@@ -77,8 +78,9 @@ get_device_codename() {
 }
 
 get_vendor() {
-  local vendor=$(grep 'ro.product.manufacturer=' "$1" | \
-                 cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
+  local vendor
+
+  vendor=$(grep 'ro.product.manufacturer=' "$1" | cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
   if [[ "$vendor" == "" ]]; then
     echo "[-] Device codename string not found"
     abort 1
@@ -118,6 +120,7 @@ extract_blobs() {
   local dst=""
   local dstDir=""
   local outBase=""
+  local openTag=""
 
   while read -r file
   do
@@ -165,7 +168,7 @@ extract_blobs() {
     # Some vendor xml's don't satisfy xmllint running from AOSP.
     # Better apply fix-up here
     if [[ "${file##*.}" == "xml" ]]; then
-      local openTag=$(grep '^<?xml version' "$outBase/$dst")
+      openTag=$(grep '^<?xml version' "$outBase/$dst")
       grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp"
       echo "$openTag" > "$outBase/$dst"
       cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
@@ -267,9 +270,11 @@ gen_board_cfg_mk() {
   local DEVICE="$3"
   local OUTMK="$OUTDIR/BoardConfigVendor.mk"
 
+  local v_img_sz
+
   # First lets check if vendor partition size has been extracted from
   # previous data extraction script
-  local v_img_sz="$(has_vendor_size "$INDIR")"
+  v_img_sz="$(has_vendor_size "$INDIR")"
 
   # If not found, fail over to last known value from hardcoded entries
   if [[ "$v_img_sz" == "" ]]; then
@@ -297,7 +302,9 @@ gen_board_cfg_mk() {
 
 zip_needs_resign() {
   local INFILE="$1"
-  local output=$(jarsigner -verify "$INFILE" 2>&1 || abort 1)
+  local output
+
+  output=$(jarsigner -verify "$INFILE" 2>&1 || abort 1)
   if [[ "$output" =~ .*"contains unsigned entries".* ]]; then
     return 0
   else

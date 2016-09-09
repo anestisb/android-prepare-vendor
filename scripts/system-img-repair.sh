@@ -73,8 +73,11 @@ command_exists() {
 
 # Print RAM size memory warning when using oat2dex.jar tool
 check_ram_size() {
-  local HOST_OS=$(uname)
-  local RAM_SIZE=0
+  local HOST_OS
+  local RAM_SIZE
+
+  HOST_OS=$(uname)
+  RAM_SIZE=0
   if [[ "$HOST_OS" == "Darwin" ]]; then
     RAM_SIZE=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
   else
@@ -95,15 +98,18 @@ print_expected_imgs_ver() {
 }
 
 get_build_id() {
-  local build_id=$(grep 'ro.build.id=' "$1" | cut -d "=" -f2)
+  local build_id
+
+  build_id=$(grep 'ro.build.id=' "$1" | cut -d "=" -f2)
   echo "$build_id"
 }
 
 check_java_version() {
-  local JAVA_VER=$(java -version 2>&1 | \
-                   grep -E "java version|openjdk version" | \
-                   awk '{ print $3 }' | tr -d '"' | \
-                   awk '{ split($0, data, ".") } END{ print data[2] }')
+  local JAVA_VER
+
+  JAVA_VER=$(java -version 2>&1 | grep -E "java version|openjdk version" | \
+             awk '{ print $3 }' | tr -d '"' | \
+             awk '{ split($0, data, ".") } END{ print data[2] }')
   if [[ $JAVA_VER -lt 8 ]]; then
     echo "[-] Java version ('$JAVA_VER') is detected, while minimum required version is 8"
     echo "[!] Consider exporting PATH like the following if a system-wide set is not desired"

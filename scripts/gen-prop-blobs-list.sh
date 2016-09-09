@@ -137,14 +137,16 @@ do
   echo "vendor/$FILE" >> "$OUT_BLOBS_FILE_TMP"
 done
 
-# Then append system-proprietary-blobs
-cat "$IN_SYS_FILE" >> "$OUT_BLOBS_FILE_TMP"
+{
+  # Then append system-proprietary-blobs
+  cat "$IN_SYS_FILE"
 
-# Then append dep-dso-proprietary-blobs
-cat "$IN_DEP_DSO_FILE" >> "$OUT_BLOBS_FILE_TMP"
+  # Then append dep-dso-proprietary-blobs
+  cat "$IN_DEP_DSO_FILE"
 
-# Then append bytecode-proprietary
-cat "$IN_BYTECODE_FILE" >> "$OUT_BLOBS_FILE_TMP"
+  # Then append bytecode-proprietary
+  cat "$IN_BYTECODE_FILE"
+} >> "$OUT_BLOBS_FILE_TMP"
 
 # Sort merged file with all lists
 sort -u "$OUT_BLOBS_FILE_TMP" > "$OUT_BLOBS_FILE"
