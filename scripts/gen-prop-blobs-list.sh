@@ -147,7 +147,7 @@ cat "$IN_DEP_DSO_FILE" >> "$OUT_BLOBS_FILE_TMP"
 cat "$IN_BYTECODE_FILE" >> "$OUT_BLOBS_FILE_TMP"
 
 # Sort merged file with all lists
-sort -u "$OUT_BLOBS_FILE_TMP" > "$OUT_BLOBS_FILE_TMP"
+sort -u "$OUT_BLOBS_FILE_TMP" > "$OUT_BLOBS_FILE"
 
 # Clean-up
 rm -f "$OUT_BLOBS_FILE_TMP"
