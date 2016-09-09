@@ -81,7 +81,7 @@ extract_from_img() {
   local IMAGE_FILE="$1"
   local COPY_DST_DIR="$2"
 
-  7z x -o"$COPY_DST_DIR" "$IMAGE_FILE" || {
+  7z x -o"$COPY_DST_DIR" "$IMAGE_FILE" &>/dev/null || {
     echo "[-] 7z failed to extract data from '$IMAGE_FILE'"
     abort 1
   }
