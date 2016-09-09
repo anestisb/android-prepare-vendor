@@ -56,13 +56,6 @@ command_exists() {
   type "$1" &> /dev/null
 }
 
-run_as_root() {
-  if [[ $EUID -ne 0 ]]; then
-    echo "[-] Script must run as root"
-    abort 1
-  fi
-}
-
 oatdump_prepare_env() {
   if [[ "$HOST_OS" != "Linux" ]]; then
     echo "[-] For now only Linux platform is supporting oatdump repair method"
@@ -110,9 +103,6 @@ else
   export JAVA_HOME="$JAVAPATH"
   export PATH="$JAVADIR":$PATH
 fi
-
-# Check if script run as root
-run_as_root
 
 DEVICE=""
 BUILDID=""

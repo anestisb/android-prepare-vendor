@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "mount" "su" "uname" "rsync" "fdisk")
+declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "fdisk")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -73,38 +73,14 @@ extract_vendor_partition_size() {
   echo "$size" > "$OUT_FILE"
 }
 
-mount_loop_and_copy() {
+extract_from_img() {
   local IMAGE_FILE="$1"
-  local MOUNT_DIR="$2"
-  local COPY_DST_DIR="$3"
+  local COPY_DST_DIR="$2"
 
-  # Mount to loopback
-  mount -t ext4 -o ro,loop "$IMAGE_FILE" "$MOUNT_DIR" || {
-    echo "[-] '$IMAGE_FILE' mount to loopback failed"
-    if [[ "$OS" == "Darwin" ]]; then
-      echo "[!] Most probably your MAC doesn't support ext4"
-    fi
+  7z x -o"$COPY_DST_DIR" "$IMAGE_FILE" || {
+    echo "[-] 7z failed to extract data from '$IMAGE_FILE'"
     abort 1
   }
-
-  # Copy files - it is very IMPORTANT that symbolic links are followed and copied
-  echo "[*] Copying files from '$(basename "$IMAGE_FILE")' image"
-  rsync -aruz "$MOUNT_DIR/" "$COPY_DST_DIR" || {
-    echo "[-] rsync from '$MOUNT_DIR' to '$COPY_DST_DIR' failed"
-    abort 1
-  }
-
-  # Unmount
-  umount "$MOUNT_DIR" || {
-    echo "[-] '$MOUNT_DIR' umount failed"
-  }
-}
-
-run_as_root() {
-  if [[ $EUID -ne 0 ]]; then
-    echo "[-] Script must run as root"
-    abort 1
-  fi
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -122,9 +98,6 @@ if [[ "$(uname)" == "Darwin" ]]; then
   echo "[-] Darwin platform is not supported"
   abort 1
 fi
-
-# Check if script run as root
-run_as_root
 
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
@@ -217,14 +190,10 @@ $SIMG2IMG "$vImg" "$rawVImg" || {
 # Save raw vendor img partition size
 extract_vendor_partition_size "$rawVImg" "$OUTPUT_DIR"
 
-# Mount raw system image to loopback and copy files
-sysImgData="$extractDir/factory.system"
-mkdir -p "$sysImgData"
-mount_loop_and_copy "$rawSysImg" "$sysImgData" "$SYSTEM_DATA_OUT"
+# Extract files from image
+extract_from_img "$rawSysImg" "$SYSTEM_DATA_OUT"
 
-# Same process for vendor raw image
-vImgData="$extractDir/factory.vendor"
-mkdir -p "$vImgData"
-mount_loop_and_copy "$rawVImg" "$vImgData" "$VENDOR_DATA_OUT"
+# Same process for vendor image file
+extract_from_img "$rawVImg" "$VENDOR_DATA_OUT"
 
 abort 0

@@ -61,8 +61,7 @@ alternative to download images method, script can also read factory images from
 file-system location using the `-i|--img` flag.
 
 `-k|--keep` flag can be used if you want to keep extracted intermediate files for further
-investigation. Scripts must run as root in order to maintain correct file
-permissions for generated proprietary blobs & mount images to loopback.
+investigation.
 
 All scripts except `scripts/extract-factory-images.sh` can be executed from
 both MAC, Linux & other Unix-based systems. In case `execute-all.sh` is used,
