@@ -21,7 +21,6 @@ system/lib/libmm-qcamera.so
 system/lib/libmmcamera_interface.so
 system/lib/libmmjpeg_interface.so
 system/lib/libqomx_core.so
-system/lib/libspeexwrapper.so
 system/lib/libtinyxml.so
 system/lib/soundfx/libfmas.so
 system/lib64/hw/audio.primary.msm8994.so
