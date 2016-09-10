@@ -84,6 +84,7 @@ extract_from_img() {
   local IMAGE_FILE="$1"
   local MOUNT_DIR="$2"
   local COPY_DST_DIR="$3"
+  local _umount
 
   # Mount to loopback
   fuse-ext2 -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>/dev/null || {
@@ -98,13 +99,25 @@ extract_from_img() {
     abort 1
   }
 
+  if [[ "$(uname)" == "Darwin" ]]; then
+    _umount=umount
+  else
+    _umount="fusermount -u"
+  fi
+
   # Unmount
-  umount "$MOUNT_DIR" || {
+  $_umount "$MOUNT_DIR" || {
     echo "[-] '$MOUNT_DIR' unmount failed"
   }
 }
 
 trap "abort 1" SIGINT SIGTERM
+
+if [[ "$(uname)" == "Darwin" ]]; then
+  sysTools+=("umount")
+else
+  sysTools+=("fusermount")
+fi
 
 # Check that system tools exist
 for i in "${sysTools[@]}"
