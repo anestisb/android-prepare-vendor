@@ -296,6 +296,11 @@ oatdump_repair() {
   local -a ABIS
   local -a BOOTJARS
 
+  if [[ "$(uname)" == "Darwin" ]]; then
+    local _BASE_PATH="$(dirname "$OATDUMP_BIN")/.."
+    export DYLD_FALLBACK_LIBRARY_PATH=$_BASE_PATH/lib64:$_BASE_PATH/lib
+  fi
+
   # Identify supported ABI(s) - extra work for 64bit ABIs
   for cpu in "arm" "arm64" "x86" "x86_64"
   do
