@@ -543,15 +543,15 @@ fi
 
 # Verify image contains pre-optimized oat files
 if [ ! -d "$INPUT_DIR/framework/oat" ]; then
-  echo "[!] System partition doesn't contain any pre-optimized files - moving as is"
-  mv "$INPUT_DIR" "$OUTPUT_DIR"
+  echo "[!] System partition doesn't contain any pre-optimized files - link to original partition"
+  ln -sf "$INPUT_DIR" "$OUTPUT_DIR/system"
   abort 0
 fi
 
 # No repairing
 if [[ "$REPAIR_METHOD" == "NONE" ]]; then
-  echo "[*] No repairing enabled - moving partition as is"
-  mv "$INPUT_DIR" "$OUTPUT_DIR"
+  echo "[*] No repairing enabled - link to original partition"
+  ln -sf "$INPUT_DIR" "$OUTPUT_DIR/system"
   abort 0
 fi
 
