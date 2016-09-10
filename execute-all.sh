@@ -408,7 +408,8 @@ cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
   --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
-  --flags-list "$SCRIPTS_ROOT/$DEVICE/vendor-config-api$API_LEVEL.txt" || {
+  --flags-list "$SCRIPTS_ROOT/$DEVICE/vendor-config-api$API_LEVEL.txt" \
+  --extra-modules "$SCRIPTS_ROOT/$DEVICE/extra-modules-api$API_LEVEL.txt" || {
   echo "[-] Vendor generation failed"
   abort 1
 }

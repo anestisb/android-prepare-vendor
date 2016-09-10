@@ -42,13 +42,15 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input     : Root path of extracted /system & /vendor partitions
-      -o|--output    : Path to save vendor blobs & makefiles in AOSP compatible structure
-      --blobs-list   : Text file with list of proprietary blobs to copy
-      --dep-dso-list : Text file with list of shared libraries that required to be
-                       included as a separate module
-      --flags-list   : Text file with list of Makefile flags to be appended at
-                       'BoardConfigVendor.mk'
+      -i|--input      : Root path of extracted /system & /vendor partitions
+      -o|--output     : Path to save vendor blobs & makefiles in AOSP compatible structure
+      --blobs-list    : Text file with list of proprietary blobs to copy
+      --dep-dso-list  : Text file with list of shared libraries that required to be
+                        included as a separate module
+      --flags-list    : Text file with list of Makefile flags to be appended at
+                        'BoardConfigVendor.mk'
+      --extra-modules : Text file additional modules to be appended at master vendor
+                        'Android.mk'
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -732,6 +734,7 @@ OUTPUT_DIR=""
 BLOBS_LIST=""
 DEP_DSO_BLOBS_LIST=""
 MK_FLAGS_LIST=""
+EXTRA_MODULES=""
 
 DEVICE=""
 VENDOR=""
@@ -769,6 +772,10 @@ do
       MK_FLAGS_LIST="$2"
       shift
       ;;
+    --extra-modules)
+      EXTRA_MODULES="$2"
+      shift
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -795,6 +802,10 @@ if [[ "$DEP_DSO_BLOBS_LIST" == "" || ! -f "$DEP_DSO_BLOBS_LIST" ]]; then
 fi
 if [[ "$MK_FLAGS_LIST" == "" || ! -f "$MK_FLAGS_LIST" ]]; then
   echo "[-] Vendor vendor-config file not found"
+  usage
+fi
+if [[ "$EXTRA_MODULES" == "" || ! -f "$EXTRA_MODULES" ]]; then
+  echo "[-] Vendor extra modules file not found"
   usage
 fi
 
@@ -874,7 +885,11 @@ if [ $hasDsoModules = true ]; then
   done
 fi
 
-echo "" >> "$OUTMK"
-echo "endif" >> "$OUTMK"
+{
+  # Append extra modules
+  cat "$EXTRA_MODULES"
+  echo ""
+  echo "endif"
+} >> "$OUTMK"
 
 abort 0

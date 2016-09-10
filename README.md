@@ -93,6 +93,10 @@ Additional makefile flags to be appended at the dynamically generated `BoardConf
 These flags are useful in case we want to override some default values set at
 original `BoardConfig.mk` without editing the source file.
 
+### **extra-modules-apiXX.txt**
+Additional target modules (with compatible structure based on rule build type) to
+be appended at master vendor `Android.mk`.
+
 
 ## Android M (API-23) supported devices
 

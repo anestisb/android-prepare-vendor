@@ -4,18 +4,21 @@
 angler/*
 !angler/bytecode-proprietary-api*
 !angler/dep-dso-proprietary-blobs-api*
+!angler/extra-modules-api*
 !angler/system-proprietary-blobs-api*
 !angler/vendor-config-api*
 
 bullhead/*
 !bullhead/bytecode-proprietary-api*
 !bullhead/dep-dso-proprietary-blobs-api*
+!bullhead/extra-modules-api*
 !bullhead/system-proprietary-blobs-api*
 !bullhead/vendor-config-api*
 
 flounder/*
 !flounder/bytecode-proprietary-api*
 !flounder/dep-dso-proprietary-blobs-api*
+!flounder/extra-modules-api*
 !flounder/system-proprietary-blobs-api*
 !flounder/vendor-config-api*
 
