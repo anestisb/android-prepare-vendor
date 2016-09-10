@@ -139,13 +139,13 @@ done
 
 {
   # Then append system-proprietary-blobs
-  cat "$IN_SYS_FILE"
+  cat "$IN_SYS_FILE" | grep -Ev '(^#|^$)'
 
   # Then append dep-dso-proprietary-blobs
-  cat "$IN_DEP_DSO_FILE"
+  cat "$IN_DEP_DSO_FILE" | grep -Ev '(^#|^$)'
 
   # Then append bytecode-proprietary
-  cat "$IN_BYTECODE_FILE"
+  cat "$IN_BYTECODE_FILE" | grep -Ev '(^#|^$)'
 } >> "$OUT_BLOBS_FILE_TMP"
 
 # Sort merged file with all lists
