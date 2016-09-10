@@ -32,6 +32,7 @@ cat <<_EOF
 
     INFO:
       * fuse-ext2 available at 'https://github.com/alperakcan/fuse-ext2'
+      * Caller is responsible to unmount mount points when done
 _EOF
   abort 1
 }
@@ -80,44 +81,21 @@ extract_vendor_partition_size() {
   echo "$size" > "$OUT_FILE"
 }
 
-extract_from_img() {
+mount_img() {
   local IMAGE_FILE="$1"
   local MOUNT_DIR="$2"
-  local COPY_DST_DIR="$3"
-  local _umount
 
-  # Mount to loopback
+  if [ ! -d "$MOUNT_DIR" ]; then
+    mkdir -p "$MOUNT_DIR"
+  fi
+
   fuse-ext2 -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>/dev/null || {
     echo "[-] '$IMAGE_FILE' mount failed"
     abort 1
   }
-
-  # Copy files - it is very IMPORTANT to keep symbolic links untouched
-  echo "[*] Copying files from '$(basename "$IMAGE_FILE")' image"
-  rsync -aruz "$MOUNT_DIR/" "$COPY_DST_DIR" || {
-    echo "[-] rsync from '$MOUNT_DIR' to '$COPY_DST_DIR' failed"
-    abort 1
-  }
-
-  if [[ "$(uname)" == "Darwin" ]]; then
-    _umount=umount
-  else
-    _umount="fusermount -u"
-  fi
-
-  # Unmount
-  $_umount "$MOUNT_DIR" || {
-    echo "[-] '$MOUNT_DIR' unmount failed"
-  }
 }
 
 trap "abort 1" SIGINT SIGTERM
-
-if [[ "$(uname)" == "Darwin" ]]; then
-  sysTools+=("umount")
-else
-  sysTools+=("fusermount")
-fi
 
 # Check that system tools exist
 for i in "${sysTools[@]}"
@@ -220,13 +198,9 @@ $SIMG2IMG "$vImg" "$rawVImg" || {
 extract_vendor_partition_size "$rawVImg" "$OUTPUT_DIR"
 
 # Mount raw system image and copy files
-sysImgData="$extractDir/factory.system"
-mkdir -p "$sysImgData"
-extract_from_img "$rawSysImg" "$sysImgData" "$SYSTEM_DATA_OUT"
+mount_img "$rawSysImg" "$SYSTEM_DATA_OUT"
 
 # Same process for vendor raw image
-vImgData="$extractDir/factory.vendor"
-mkdir -p "$vImgData"
-extract_from_img "$rawVImg" "$vImgData" "$VENDOR_DATA_OUT"
+mount_img "$rawVImg" "$VENDOR_DATA_OUT"
 
 abort 0

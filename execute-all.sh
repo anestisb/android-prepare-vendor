@@ -34,6 +34,11 @@ declare -a sysTools=("mkdir" "dirname" "wget")
 declare -a availDevices=("bullhead" "flounder" "angler")
 
 abort() {
+  # Remove mount points in case of error
+  if [ $1 -ne 0 ]; then
+    unmount_raw_image "$FACTORY_IMGS_DATA/system"
+    unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
+  fi
   exit "$1"
 }
 
@@ -126,6 +131,16 @@ _canonicalize_file_path() {
     (cd "$dir" 2>/dev/null && printf '%s/%s\n' "$(pwd -P)" "$file")
 }
 
+unmount_raw_image() {
+  local MOUNT_POINT="$1"
+
+  if [[ -d "$MOUNT_POINT" && -f "$MOUNT_POINT/build.prop" ]]; then
+    $_UMOUNT "$MOUNT_POINT" || {
+      echo "[-] '$MOUNT_POINT' unmount failed"
+    }
+  fi
+}
+
 oatdump_prepare_env() {
   if [[ "$HOST_OS" != "Linux" ]]; then
     echo "[-] For now only Linux platform is supporting oatdump repair method"
@@ -145,6 +160,34 @@ oatdump_prepare_env() {
 }
 
 trap "abort 1" SIGINT SIGTERM
+
+# Global variables
+DEVICE=""
+BUILDID=""
+OUTPUT_DIR=""
+INPUT_IMG=""
+KEEP_DATA=false
+HOST_OS=""
+DEV_ALIAS=""
+API_LEVEL=""
+SKIP_SYSDEOPT=false
+_UMOUNT=""
+
+# Compatibility
+HOST_OS=$(uname)
+if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
+  echo "[-] '$HOST_OS' OS is not supported"
+  abort 1
+fi
+
+# Platform specific commands
+if [[ "$HOST_OS" == "Darwin" ]]; then
+  sysTools+=("umount")
+  _UMOUNT=umount
+else
+  sysTools+=("fusermount")
+  _UMOUNT="fusermount -u"
+fi
 
 # Check that system tools exist
 for i in "${sysTools[@]}"
@@ -173,16 +216,6 @@ else
   export JAVA_HOME="$JAVAPATH"
   export PATH="$JAVADIR":$PATH
 fi
-
-DEVICE=""
-BUILDID=""
-OUTPUT_DIR=""
-INPUT_IMG=""
-KEEP_DATA=false
-HOST_OS=""
-DEV_ALIAS=""
-API_LEVEL=""
-SKIP_SYSDEOPT=false
 
 while [[ $# -gt 0 ]]
 do
@@ -236,13 +269,6 @@ if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
 fi
 if [[ "$INPUT_IMG" != "" && ! -f "$INPUT_IMG" ]]; then
   echo "[-] '$INPUT_IMG' file not found"
-  abort 1
-fi
-
-# Adjust hosts tools based on OS
-HOST_OS=$(uname)
-if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
-  echo "[-] '$HOST_OS' OS is not supported"
   abort 1
 fi
 
@@ -370,9 +396,9 @@ $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
 }
 
 # Bytecode under vendor partition doesn't require repair (at least for now)
-# However, move it to repaired data directory to have a single source for
-# next script
-mv "$FACTORY_IMGS_DATA/vendor" "$FACTORY_IMGS_R_DATA"
+# However, make it available to repaired data directory to have a single source
+# for next script
+ln -s "$FACTORY_IMGS_DATA/vendor" "$FACTORY_IMGS_R_DATA/vendor"
 
 # Copy vendor partition image size as saved from $EXTRACT_SCRIPT script
 # $VGEN_SCRIPT will fail over to last known working default if image size
@@ -388,7 +414,8 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
 }
 
 if [ "$KEEP_DATA" = false ]; then
-  rm -rf "$FACTORY_IMGS_DATA"
+  unmount_raw_image "$FACTORY_IMGS_DATA/system"
+  unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
   rm -rf "$FACTORY_IMGS_R_DATA"
 fi
 
