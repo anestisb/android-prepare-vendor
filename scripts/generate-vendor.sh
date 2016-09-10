@@ -887,6 +887,7 @@ fi
 
 {
   # Append extra modules
+  echo ""
   cat "$EXTRA_MODULES"
   echo ""
   echo "endif"

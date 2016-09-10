@@ -1,5 +1,4 @@
 include $(CLEAR_VARS)
-
 LOCAL_MODULE := ETC_AOSPLinks
 LOCAL_MODULE_OWNER := google
 LOCAL_MODULE_TAGS := optional
@@ -19,5 +18,4 @@ LOCAL_POST_INSTALL_CMD := \
     ln -sf /vendor/bin/imsdatadaemon $(PRODUCT_OUT)/system/bin/imsdatadaemon; \
     ln -sf /vendor/bin/imsqmidaemon $(PRODUCT_OUT)/system/bin/imsqmidaemon; \
     ln -sf /vendor/bin/ims_rtp_daemon $(PRODUCT_OUT)/system/bin/ims_rtp_daemon; }
-
 include $(BUILD_PHONY_PACKAGE)
