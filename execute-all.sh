@@ -417,6 +417,7 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
 if [ "$KEEP_DATA" = false ]; then
   unmount_raw_image "$FACTORY_IMGS_DATA/system"
   unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
+  rm -rf "$FACTORY_IMGS_DATA"
   rm -rf "$FACTORY_IMGS_R_DATA"
 fi
 
