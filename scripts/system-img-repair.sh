@@ -30,7 +30,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_repair.XXXXXX) || exit 1
-declare -a sysTools=("cp" "sed" "java" "zipinfo" "jar" "zip" "wc" "cut")
+declare -a sysTools=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -105,13 +105,24 @@ get_build_id() {
 }
 
 check_java_version() {
-  local JAVA_VER
+  local JAVA_VER_MAJOR=""
+  local JAVA_VER_MINOR=""
+  local JAVA_VER_BUILD=""
+  local _token
 
-  JAVA_VER=$(java -version 2>&1 | grep -E "java version|openjdk version" | \
-             awk '{ print $3 }' | tr -d '"' | \
-             awk '{ split($0, data, ".") } END{ print data[2] }')
-  if [[ $JAVA_VER -lt 8 ]]; then
-    echo "[-] Java version ('$JAVA_VER') is detected, while minimum required version is 8"
+  for _token in $(java -version 2>&1 | grep -i version)
+  do
+      if [[ $_token =~ \"([[:digit:]])\.([[:digit:]])\.(.*)\" ]]
+      then
+          JAVA_VER_MAJOR=${BASH_REMATCH[1]}
+          JAVA_VER_MINOR=${BASH_REMATCH[2]}
+          JAVA_VER_BUILD=${BASH_REMATCH[3]}
+          break
+      fi
+  done
+
+  if [ "$JAVA_VER_MINOR" -lt 8 ]; then
+    echo "[-] Java version ('$JAVA_VER_MINOR') is detected, while minimum required version is 8"
     echo "[!] Consider exporting PATH like the following if a system-wide set is not desired"
     echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
     abort 1
@@ -440,9 +451,6 @@ do
   fi
 done
 
-# Verify Java version >= 8
-check_java_version
-
 INPUT_DIR=""
 OUTPUT_DIR=""
 REPAIR_METHOD=""
@@ -573,6 +581,13 @@ if [[ "$REPAIR_METHOD" == "OAT2DEX" ]]; then
     echo "[-] Missing oat2dex.jar tool"
     abort 1
   fi
+
+  # Verify Java version >= 8
+  if ! command_exists "java"; then
+    echo "[-] 'java' not found in PATH"
+    abort 1
+  fi
+  check_java_version
 
   echo "[*] Repairing bytecode under /system partition using oat2dex method"
   oat2dex_repair
