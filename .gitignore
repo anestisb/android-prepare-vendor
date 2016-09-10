@@ -2,31 +2,19 @@
 
 # Ignore merged / intermediate files & generated data
 angler/*
-!angler/bytecode-proprietary-api*
-!angler/dep-dso-proprietary-blobs-api*
-!angler/extra-modules-api*
-!angler/system-proprietary-blobs-api*
-!angler/vendor-config-api*
+!angler/config
 
 bullhead/*
-!bullhead/bytecode-proprietary-api*
-!bullhead/dep-dso-proprietary-blobs-api*
-!bullhead/extra-modules-api*
-!bullhead/system-proprietary-blobs-api*
-!bullhead/vendor-config-api*
+!bullhead/config
 
 flounder/*
-!flounder/bytecode-proprietary-api*
-!flounder/dep-dso-proprietary-blobs-api*
-!flounder/extra-modules-api*
-!flounder/system-proprietary-blobs-api*
-!flounder/vendor-config-api*
+!flounder/config
 
 # Due to large files they're downloaded at manual step
 # and not part of git files
 hostTools/Linux/*.zip
 hostTools/Linux/bin/oatdump
-hostTools/Linux/lib64
+hostTools/Linux/lib*
 hostTools/Darwin/*.zip
 hostTools/Darwin/bin/oatdump
-hostTools/Darwin/lib64
+hostTools/Darwin/lib*

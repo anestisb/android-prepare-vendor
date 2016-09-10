@@ -357,9 +357,9 @@ $EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
 # Generate unified readonly "proprietary-blobs.txt"
 $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
      --output "$SCRIPTS_ROOT/$DEVICE" \
-     --sys-list "$SCRIPTS_ROOT/$DEVICE/system-proprietary-blobs-api""$API_LEVEL"".txt" \
-     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/bytecode-proprietary-api$API_LEVEL.txt" \
-     --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/dep-dso-proprietary-blobs-api$API_LEVEL.txt" || {
+     --sys-list "$SCRIPTS_ROOT/$DEVICE/config/system-proprietary-blobs-api""$API_LEVEL"".txt" \
+     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/config/bytecode-proprietary-api$API_LEVEL.txt" \
+     --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/config/dep-dso-proprietary-blobs-api$API_LEVEL.txt" || {
   echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
 }
@@ -392,7 +392,7 @@ fi
 
 $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
-     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/bytecode-proprietary-api$API_LEVEL.txt" \
+     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/config/bytecode-proprietary-api$API_LEVEL.txt" \
      $REPAIR_SCRIPT_ARG || {
   echo "[-] System partition bytecode repair failed"
   abort 1
@@ -410,9 +410,9 @@ cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
-  --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
-  --flags-list "$SCRIPTS_ROOT/$DEVICE/vendor-config-api$API_LEVEL.txt" \
-  --extra-modules "$SCRIPTS_ROOT/$DEVICE/extra-modules-api$API_LEVEL.txt" || {
+  --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/config/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
+  --flags-list "$SCRIPTS_ROOT/$DEVICE/config/vendor-config-api$API_LEVEL.txt" \
+  --extra-modules "$SCRIPTS_ROOT/$DEVICE/config/extra-modules-api$API_LEVEL.txt" || {
   echo "[-] Vendor generation failed"
   abort 1
 }
