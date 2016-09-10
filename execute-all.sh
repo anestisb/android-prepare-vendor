@@ -26,6 +26,7 @@ readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
 
 # oatdump dependencies
 readonly LINUX_OATDUMP_BIN_URL='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21467&authkey=ADsdFhslWvJwuO8'
+readonly DARWIN_OATDUMP_BIN_URL='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21480&authkey=ANIztAhGhwGWDiU'
 
 # Change this if you don't want to apply used Java version system-wide
 readonly LC_J_HOME="/usr/local/java/jdk1.8.0_71/bin/java"
@@ -142,13 +143,15 @@ unmount_raw_image() {
 }
 
 oatdump_prepare_env() {
-  if [[ "$HOST_OS" != "Linux" ]]; then
-    echo "[-] For now only Linux platform is supporting oatdump repair method"
-    abort 1
-  fi
   local OUT_FILE="$SCRIPTS_ROOT/hostTools/$HOST_OS/oatdump_deps.zip"
+  local DOWNLOAD_URL
+  if [[ "$HOST_OS" == "Darwin" ]]; then
+    DOWNLOAD_URL="$DARWIN_OATDUMP_BIN_URL"
+  else
+    DOWNLOAD_URL="$LINUX_OATDUMP_BIN_URL"
+  fi
 
-  wget -O "$OUT_FILE" "$LINUX_OATDUMP_BIN_URL" || {
+  wget -O "$OUT_FILE" "$DOWNLOAD_URL" || {
     echo "[-] oatdump dependencies download failed"
     abort 1
   }
