@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "7z" "du" "stat" "tr" "cut")
+declare -a sysTools=("tar" "find" "unzip" "uname" "fuse-ext2" "du" "stat" "tr" "cut")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -25,30 +25,19 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input    : archive with factory images as downloaded from
+      -i|--input    : Archive with factory images as downloaded from
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
-      -t|--simg2img : simg2img binary path to convert sparse images
+      -t|--simg2img : Path to simg2img binary for converting sparse images
+
+    INFO:
+      * fuse-ext2 available at 'https://github.com/alperakcan/fuse-ext2'
 _EOF
   abort 1
 }
 
 command_exists() {
   type "$1" &> /dev/null
-}
-
-check_7z_version() {
-  local version
-
-  version="$(7z | grep -Eio "version [[:digit:]]{1,2}\.[[:digit:]]{1,2}" | cut -d " " -f2)"
-  major=$(echo "$version" | cut -d '.' -f1)
-  minor=$(echo "$version" | cut -d '.' -f2 | sed 's/^0*//')
-
-  # Minimum supported is '15.08 beta 2015-10-01'
-  if [[ $major -lt 15 || ($major -eq 15 && $minor -lt 8) ]]; then
-    echo '[-] Minimum required version of 7z for ext4 support is 15.08'
-    abort 1
-  fi
 }
 
 extract_archive() {
@@ -93,15 +82,26 @@ extract_vendor_partition_size() {
 
 extract_from_img() {
   local IMAGE_FILE="$1"
-  local COPY_DST_DIR="$2"
+  local MOUNT_DIR="$2"
+  local COPY_DST_DIR="$3"
 
-  7z x -o"$COPY_DST_DIR" "$IMAGE_FILE" &>/dev/null || {
-    echo "[-] 7z failed to extract data from '$IMAGE_FILE'"
+  # Mount to loopback
+  fuse-ext2 -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>/dev/null || {
+    echo "[-] '$IMAGE_FILE' mount failed"
     abort 1
   }
 
-  # Remove special directory with journal metadata
-  rm -rf "$COPY_DST_DIR/[SYS]"
+  # Copy files - it is very IMPORTANT to keep symbolic links untouched
+  echo "[*] Copying files from '$(basename "$IMAGE_FILE")' image"
+  rsync -aruz "$MOUNT_DIR/" "$COPY_DST_DIR" || {
+    echo "[-] rsync from '$MOUNT_DIR' to '$COPY_DST_DIR' failed"
+    abort 1
+  }
+
+  # Unmount
+  umount "$MOUNT_DIR" || {
+    echo "[-] '$MOUNT_DIR' unmount failed"
+  }
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -173,9 +173,6 @@ archName="$(basename "$archiveName" ".$fileExt")"
 extractDir="$TMP_WORK_DIR/$archName"
 mkdir -p "$extractDir"
 
-# Verify 7z supports ext4
-check_7z_version
-
 # Extract archive
 extract_archive "$INPUT_ARCHIVE" "$extractDir"
 
@@ -209,10 +206,14 @@ $SIMG2IMG "$vImg" "$rawVImg" || {
 # Save raw vendor img partition size
 extract_vendor_partition_size "$rawVImg" "$OUTPUT_DIR"
 
-# Extract files from image
-extract_from_img "$rawSysImg" "$SYSTEM_DATA_OUT"
+# Mount raw system image and copy files
+sysImgData="$extractDir/factory.system"
+mkdir -p "$sysImgData"
+extract_from_img "$rawSysImg" "$sysImgData" "$SYSTEM_DATA_OUT"
 
-# Same process for vendor image file
-extract_from_img "$rawVImg" "$VENDOR_DATA_OUT"
+# Same process for vendor raw image
+vImgData="$extractDir/factory.vendor"
+mkdir -p "$vImgData"
+extract_from_img "$rawVImg" "$vImgData" "$VENDOR_DATA_OUT"
 
 abort 0

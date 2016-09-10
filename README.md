@@ -42,7 +42,7 @@ The process to extract and import vendor proprietary blobs requires to:
 
 1. Obtain device matching factory images archive from Google developer website
 (`scripts/download-nexus-image.sh`)
-2. Extract images from archives, convert from sparse to raw, mount to loopback &
+2. Extract images from archives, convert from sparse to raw, mount to with fuse-ext2 &
 extract data (`scripts/extract-factory-images.sh`)
   * Extra care is taken to maintain symbolic links since they are important to
 generate rules for prebuilt packages' JNI libs not embedded into APKs
@@ -64,8 +64,8 @@ file-system location using the `-i|--img` flag.
 investigation.
 
 All scripts can be executed from OS X, Linux & other Unix-based systems as long
-as utilized command line tools are installed. Scripts will abort if any of the
-required tools is missing from the running host.
+as `fuse-ext2` and other utilized command line tools are installed. Scripts will
+abort if any of the required tools is missing from the host.
 
 Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
@@ -103,10 +103,11 @@ original `BoardConfig.mk` without editing the source file.
 
 ## Android N (API-24) supported devices
 
+* angler - Nexus 6p (`TESTING`)
 * bullhead - Nexus 5x
 * flounder - Nexus 9 WiFi (volantis)
 
-`Nexus 6p & 9 LTE will be supported as soon as Google releases Nougat factory images`
+`Nexus 9 LTE will be supported as soon as Google releases Nougat factory images`
 
 
 ## Contributing
