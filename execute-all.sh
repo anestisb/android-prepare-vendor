@@ -214,10 +214,15 @@ if [[ "$JAVALINK" == "" ]]; then
   export PATH
   PATH=$(dirname "$LC_J_HOME"):$PATH
 else
-  readonly JAVAPATH=$(realpath "$JAVALINK")
-  readonly JAVADIR=$(dirname "$JAVAPATH")
-  export JAVA_HOME="$JAVAPATH"
-  export PATH="$JAVADIR":$PATH
+  if [[ "$HOST_OS" == "Darwin" ]]; then
+    export JAVA_HOME="$(/usr/libexec/java_home)"
+    export PATH="$JAVA_HOME/bin":$PATH
+  else
+    readonly JAVAPATH=$(realpath "$JAVALINK")
+    readonly JAVADIR=$(dirname "$JAVAPATH")
+    export JAVA_HOME="$JAVAPATH"
+    export PATH="$JAVADIR":$PATH
+  fi
 fi
 
 while [[ $# -gt 0 ]]
