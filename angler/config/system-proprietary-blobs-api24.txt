@@ -4,6 +4,7 @@ system/bin/ssr_setup
 system/bin/subsystem_ramdump
 system/etc/diag/Angler_Radio-general.cfg
 system/etc/gps.conf
+system/etc/lowi.conf
 system/etc/old-apns-conf.xml
 system/etc/permissions/cneapiclient.xml
 system/etc/permissions/com.android.omadm.service.xml
