@@ -7,6 +7,7 @@ system/framework/com.google.widevine.software.drm.jar
 system/framework/qcrilhook.jar
 system/priv-app/CNEService/CNEService.apk
 system/priv-app/CallStatistics/CallStatistics.apk
+system/priv-app/CarrierEntitlement/CarrierEntitlement.apk
 system/priv-app/ConfigUpdater/ConfigUpdater.apk
 system/priv-app/ConnMO/ConnMO.apk
 system/priv-app/DCMO/DCMO.apk

@@ -2,7 +2,9 @@ system/bin/fingerprintd
 system/bin/mm-qcamera-app
 system/bin/ssr_setup
 system/bin/subsystem_ramdump
+system/etc/diag/Angler_Radio-general.cfg
 system/etc/gps.conf
+system/etc/old-apns-conf.xml
 system/etc/permissions/cneapiclient.xml
 system/etc/permissions/com.android.omadm.service.xml
 system/etc/permissions/com.google.widevine.software.drm.xml
