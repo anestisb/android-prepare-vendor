@@ -31,7 +31,7 @@ readonly DARWIN_OATDUMP_BIN_URL='https://onedrive.live.com/download?cid=D1FAC8CC
 # Change this if you don't want to apply used Java version system-wide
 readonly LC_J_HOME="/usr/local/java/jdk1.8.0_71/bin/java"
 
-declare -a sysTools=("mkdir" "dirname" "wget")
+declare -a sysTools=("mkdir" "dirname" "wget" "mount")
 declare -a availDevices=("bullhead" "flounder" "angler")
 
 abort() {
@@ -349,6 +349,14 @@ echo "[*] Processing with 'API-$API_LEVEL' configuration"
 
 # Clear old data if present & extract data from factory images
 if [ -d "$FACTORY_IMGS_DATA" ]; then
+  # Previous run might have been with --keep which keeps the mount-points. Check
+  # if mounted & unmount if so.
+  if mount | grep -q "$FACTORY_IMGS_DATA/system"; then
+    unmount_raw_image "$FACTORY_IMGS_DATA/system"
+  fi
+  if mount | grep -q "$FACTORY_IMGS_DATA/vendor"; then
+    unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
+  fi
   rm -rf "${FACTORY_IMGS_DATA:?}"/*
 else
   mkdir -p "$FACTORY_IMGS_DATA"
