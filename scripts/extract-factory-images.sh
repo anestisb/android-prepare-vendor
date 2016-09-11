@@ -84,13 +84,15 @@ extract_vendor_partition_size() {
 mount_img() {
   local IMAGE_FILE="$1"
   local MOUNT_DIR="$2"
+  local MOUNT_LOG="$TMP_WORK_DIR/mount.log"
 
   if [ ! -d "$MOUNT_DIR" ]; then
     mkdir -p "$MOUNT_DIR"
   fi
 
-  fuse-ext2 -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>/dev/null || {
+  fuse-ext2 -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>"$MOUNT_LOG" || {
     echo "[-] '$IMAGE_FILE' mount failed"
+    cat "$MOUNT_LOG"
     abort 1
   }
 }
