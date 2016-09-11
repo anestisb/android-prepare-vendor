@@ -3,22 +3,22 @@
 For latest Android Nexus devices (N5x, N6p, N9 LTE/WiFi), Google is no longer
 providing vendor binary archives to be included into AOSP build tree.
 Officially it is claimed that all vendor proprietary blobs have been moved to
-`/vendor` partition, which allegedly doesn't need build from users.
+`/vendor` partition, which allegedly doesn't need building from users.
 Unfortunately, that is not the case since quite a few vendor executables, DSOs
 and APKs/JARs required in order to have a fully functional set of images, are present
 under `/system`, although missing from AOSP public tree. Additionally, if
-`vendor.img` is not generated when `system.img` is getting built, a few bits
-are broken that also require manual fixing (`/system/vendor` symbolic link, bytecode
-product packages, vendor shared libs dependencies, etc.).
+`vendor.img` is not generated when `system.img` is prepared for build, a few bits
+are broken that also require manual fixing (various symbolic links between two
+partitions, bytecode product packages, vendor shared libs dependencies, etc.).
 
 Everyone's hope is that Google **will revise** this policy for Nexus devices.
 However until then, missing blobs need to be manually extracted from factory
-images, processed and included into AOSP tree. This processing steps are evolving
+images, processed and included into AOSP tree. These processing steps are evolving
 into a total nightmare considering that all recent factory images have their
 bytecode (APKs, JARs) pre-optimized to reduce boot time and their original
-classes.dex stripped to reduce disk size. As such, these missing pre-built components
-need to be repaired/de-optimized prior to be included since AOSP build is not
-capable to import pre-optimized modules as part of the makefile tree.
+`classes.dex` stripped to reduce disk size. As such, these missing pre-built
+components need to be repaired/de-optimized prior to be included, since AOSP build
+is not capable to import pre-optimized modules as part of the makefile tree.
 
 Scripts & tools included in this repository aim to automate the extraction,
 processing and generation of vendor specific data using factory images as
@@ -29,8 +29,8 @@ pre-optimize. If you have modified the build process (such as CyanogenMod) you
 might need to apply additional changes in device configurations / makefiles.
 
 The main concept of this tool-set is to apply all required changes in vendor
-makefiles leaving the AOSP tree & build chain untouched. Hacks in AOSP tree
-(such as those applied by CyanogenMod) are painful to maintain and very fragile.
+makefiles leaving the AOSP source code tree & build chain untouched. Hacks in AOSP
+tree, such as those applied by CyanogenMod, are painful to maintain and very fragile.
 
 Repository data are LICENSE free, use them as you want at your own risk. Feedback &
 patches are more than welcome though.
@@ -42,26 +42,24 @@ The process to extract and import vendor proprietary blobs requires to:
 
 1. Obtain device matching factory images archive from Google developer website
 (`scripts/download-nexus-image.sh`)
-2. Extract images from archives, convert from sparse to raw, mount to with fuse-ext2 &
+2. Extract images from archive, convert from sparse to raw, mount to with fuse-ext2 &
 extract data (`scripts/extract-factory-images.sh`)
-  * Extra care is taken to maintain symbolic links since they are important to
-generate rules for prebuilt packages' JNI libs not embedded into APKs
   * All vendor partition data are mirror in order to generate a production identical `vendor.img`
 3. Repair bytecode (APKs/JARs) from factory system image (`scripts/system-img-repair.sh`)
-  * Use oatdump ART host tool to extract DEX from OAT ELF .rodata section & dexRepair
-to fix signatures (API >= 24 - **EXPERIMENTAL** more info [here](https://github.com/anestisb/android-prepare-vendor/issues/22))
-  * Use SmaliEx to de-odex bytecode (API == 23)
+  * **API >= 24**: Use oatdump ART host tool to extract DEX from OAT ELF .rodata section
+  & dexRepair to fix signatures (more info [here](https://github.com/anestisb/android-prepare-vendor/issues/22))
+  * **API = 23**: Use SmaliEx to de-odex bytecode
 4. Generate vendor proprietary includes & makefiles compatible with AOSP build tree
 (`scripts/generate-vendor.sh`)
-  * Extra care in Makefile rules to not break compatibility between old & new build
-  system (ninja)
+  * Extra care in Makefile rules to not break compatibility among AOSP versions
 
-`execute-all.sh` runs all previous steps with required order. As an
-alternative to download images method, script can also read factory images from
+`execute-all.sh` runs all previous steps with required order. As an alternative to
+download images from Google's websize, script can also read factory images from
 file-system location using the `-i|--img` flag.
 
 `-k|--keep` flag can be used if you want to keep extracted intermediate files for further
-investigation.
+investigation. Keep in mind that if used the mount-points from fuse-ext2 are not unmounted.
+So be sure that you manually remove them (or run the script again without the flag) when done.
 
 All scripts can be executed from OS X, Linux & other Unix-based systems as long
 as `fuse-ext2` and other utilized command line tools are installed. Scripts will
@@ -107,7 +105,7 @@ be appended at master vendor `Android.mk`.
 
 ## Android N (API-24) supported devices
 
-* angler - Nexus 6p (`TESTING`)
+* angler - Nexus 6p
 * bullhead - Nexus 5x
 * flounder - Nexus 9 WiFi (volantis)
 
@@ -116,16 +114,25 @@ be appended at master vendor `Android.mk`.
 
 ## Contributing
 
-If you want to contribute to `system-proprietary-blobs-apiXX.txt` or `shared-proprietary-blobs-apiXX.txt`
-files, please test against the target device before pull request.
+If you want to contribute to device configuration files, please test against the
+target device before any pull request.
+
+## Change Log
+* 0.1.0 - 11 Sep 2016
+ * Nougat API-24 support
+ * Utilize fuse-ext2 to drop required root permissions
+ * Implement new bytecode repair method
+ * Read directly data from mount points - deprecate local rsync copies for speed
+ * Add OS X support (requires OSXFuse)
+ * Improved device configuration layers / files
+ * AOSP compatibility bug fixes & performance optimizations
 
 ## Warnings
 
 * No binary vendor data against supported devices will be maintained in this
 repository. Scripts provide all necessary automation to generate them yourself.
-* No promises on how `system-proprietary-blobs-apiXX.txt` and
-`shared-proprietary-blobs-apiXX.txt` lists will be maintained. Feel free to
-contribute if you detect that something is broken/missing or not required.
+* No promises on how the device configuration files will be maintained. Feel free
+to contribute if you detect that something is broken/missing or not required.
 * Host tool binaries are provided for convenience, although with no promises
 that will be kept up-to-date. Prefer to adjust your env. with upstream versions and
 keep them updated.
@@ -138,6 +145,10 @@ conflicted vendor makefiles didn't bother to wrap them with
 device matching clauses to resolve the issue.
 * If deprecated SmaliEx method for API-23 is chosen, Java 8 is required for
 the bytecode de-optimization process to work.
+* Bytecode repaired with oatdump method cannot be pre-optimized. As such generated
+rules have `LOCAL_DEXPREOPT := false`. This is because host dex2oatd is invoked with
+more strict flags and results into aborting when front-end reaches already optimized
+instructions.
 
 
 ## Examples
