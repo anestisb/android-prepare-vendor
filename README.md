@@ -141,161 +141,137 @@ the bytecode de-optimization process to work.
 
 
 ## Examples
-
+### API-24 (Nougat) N9 WiFi flounder with alias (volantis) vendor generation after downloading factory image from website
 ```
-root@aosp-build:prepare_vendor_blobs# ./execute-all.sh -d bullhead -b NRD90S -o $(pwd)
-[*] Setting output base to '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s'
-[*] Downloading image from 'https://dl.google.com/dl/android/aosp/bullhead-nrd90s-factory-d6bf1f56.zip'
---2016-09-07 10:02:31--  https://dl.google.com/dl/android/aosp/bullhead-nrd90s-factory-d6bf1f56.zip
-Resolving dl.google.com (dl.google.com)... 62.75.10.30, 62.75.10.24, 62.75.10.55, ...
-Connecting to dl.google.com (dl.google.com)|62.75.10.30|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 1243254222 (1.2G) [application/zip]
-Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/bullhead-nrd90s-factory-d6bf1f56.zip’
-
-/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/ 100%[==================================================================================================================>]   1.16G  1.21MB/s   in 16m 28ss
-
-2016-09-07 10:19:00 (1.20 MB/s) - ‘/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/bullhead-nrd90s-factory-d6bf1f56.zip’ saved [1243254222/1243254222]
-
-[*] Processing with 'API-24' configuration
-[*] Extracting '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/bullhead-nrd90s-factory-d6bf1f56.zip'
-[*] Unzipping 'image-bullhead-nrd90s.zip'
-[*] Copying files from 'system.img.raw' image
-[*] Copying files from 'vendor.img.raw' image
-[*] '15' APKs will be repaired along with framework jars
-[*] Repairing bytecode under /system partition using oatdump method
-[-] '/framework/framework-res.apk' not pre-optimized & without 'classes.dex' - skipping
-[-] '/framework/core-oj.jar' not pre-optimized & without 'classes.dex' - skipping
-[*] '/framework/rcsimssettings.jar' not pre-optimized with sanity checks passed - copying without changes
-[*] '/framework/rcsservice.jar' not pre-optimized with sanity checks passed - copying without changes
-[*] '/framework/cneapiclient.jar' not pre-optimized with sanity checks passed - copying without changes
-[*] System partition successfully extracted & repaired at '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/factory_imgs_repaired_data'
-[!] Target device expects to have following img versions when using output system img
- [*] Booatloder:BHZ11e
- [*] Baseband:M8994F-2.6.33.2.14
-[*] Generating blobs for vendor/lge/bullhead
-[*] Copying files to '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/vendor/lge/bullhead'
-[*] Generating 'bullhead-vendor-blobs.mk' makefile
-[*] Generating 'device-vendor.mk'
-[*] Generating 'BoardConfigVendor.mk'
-[*] Generating 'Android.mk'
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/vendor/lge/bullhead/vendor/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/vendor/lge/bullhead/proprietary/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/vendor/lge/bullhead/proprietary/framework' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/vendor/lge/bullhead/proprietary/priv-app' APK/JAR pre-builts
-[*] Gathering data for shared library (.so) pre-built modules
-[*] All actions completed successfully
-[*] Import '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90s/vendor' to AOSP root
-```
-
-```
-root@aosp-build:prepare_vendor_blobs# ./execute-all.sh -d bullhead -b nrd90m -o $(pwd) -i bullhead/nrd90m/bullhead-nrd90m-factory-61495c8b.zip
-[*] Setting output base to '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m'
-[*] Processing with 'API-24' configuration
-[*] Extracting 'bullhead/nrd90m/bullhead-nrd90m-factory-61495c8b.zip'
-[*] Unzipping 'image-bullhead-nrd90m.zip'
-[*] Copying files from 'system.img.raw' image
-[*] Copying files from 'vendor.img.raw' image
-[*] '15' APKs will be repaired along with framework jars
-[*] Repairing bytecode under /system partition using oatdump method
-[-] '/framework/framework-res.apk' not pre-optimized & without 'classes.dex' - skipping
-[-] '/framework/core-oj.jar' not pre-optimized & without 'classes.dex' - skipping
-[*] '/framework/rcsimssettings.jar' not pre-optimized with sanity checks passed - copying without changes
-[*] '/framework/rcsservice.jar' not pre-optimized with sanity checks passed - copying without changes
-[*] '/framework/cneapiclient.jar' not pre-optimized with sanity checks passed - copying without changes
-[*] System partition successfully extracted & repaired at '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/factory_imgs_repaired_data'
-[!] Target device expects to have following img versions when using output system img
- [*] Booatloder:BHZ11e
- [*] Baseband:M8994F-2.6.33.2.14
-[*] Generating blobs for vendor/lge/bullhead
-[*] Copying files to '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead'
-[*] Generating 'bullhead-vendor-blobs.mk' makefile
-[*] Generating 'device-vendor.mk'
-[*] Generating 'BoardConfigVendor.mk'
-[*] Generating 'Android.mk'
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/vendor/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/proprietary/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/proprietary/framework' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor/lge/bullhead/proprietary/priv-app' APK/JAR pre-builts
-[*] Gathering data for shared library (.so) pre-built modules
-[*] All actions completed successfully
-[*] Import '/aosp_b_prod/prepare_vendor_blobs/bullhead/nrd90m/vendor' to AOSP root
-```
-
-```
-root@aosp-build:prepare_vendor_blobs# ./execute-all.sh -d angler -b MTC20L -o $(pwd)
-[*] Setting output base to '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l'
-[*] Downloading image from 'https://dl.google.com/dl/android/aosp/angler-mtc20l-factory-a74ad54f.zip'
---2016-09-07 10:36:10--  https://dl.google.com/dl/android/aosp/angler-mtc20l-factory-a74ad54f.zip
-Resolving dl.google.com (dl.google.com)... 216.58.214.46, 2a00:1450:4001:814::200e
-Connecting to dl.google.com (dl.google.com)|216.58.214.46|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 935435661 (892M) [application/zip]
-Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/angler-mtc20l-factory-a74ad54f.zip’
-
-/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/an 100%[==================================================================================================================>] 892.10M  1.19MB/s   in 12m 26ss
-
-2016-09-07 10:48:37 (1.20 MB/s) - ‘/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/angler-mtc20l-factory-a74ad54f.zip’ saved [935435661/935435661]
-
-[*] Processing with 'API-23' configuration
-[*] Extracting '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/angler-mtc20l-factory-a74ad54f.zip'
-[*] Unzipping 'image-angler-mtc20l.zip'
-[*] Copying files from 'system.img.raw' image
-[*] Copying files from 'vendor.img.raw' image
-[*] '16' APKs will be decompiled along with framework jars
-[*] Repairing bytecode under /system partition using oat2dex method
-[*] Preparing environment for 'arm' ABI
-[*] Preparing environment for 'arm64' ABI
-[*] Start processing system partition & de-optimize pre-compiled bytecode
-[-] '/framework/framework-res.apk' not pre-optimized & without 'classes.dex' - skipping
-[*] '/framework/framework.jar' is multi-dex - adjusting recursive archive adds
-[*] System partition successfully extracted & repaired at '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/factory_imgs_repaired_data'
-[!] Target device expects to have following img versions when using output system img
- [*] Booatloder:angler-03.54
- [*] Baseband:angler-03.61
-[*] Generating blobs for vendor/huawei/angler
-[*] Copying files to '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/vendor/huawei/angler'
-[*] Generating 'angler-vendor-blobs.mk' makefile
-[*] Generating 'device-vendor.mk'
-[*] Generating 'BoardConfigVendor.mk'
-[*] Generating 'Android.mk'
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/vendor/huawei/angler/vendor/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/vendor/huawei/angler/proprietary/app' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/vendor/huawei/angler/proprietary/framework' APK/JAR pre-builts
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/vendor/huawei/angler/proprietary/priv-app' APK/JAR pre-builts
-[*] Processing standalone symlinks
-[*] All actions completed successfully
-[*] Import '/aosp_b_prod/prepare_vendor_blobs/angler/mtc20l/vendor' to AOSP root
-```
-
-```
-root@aosp-build:prepare_vendor_blobs# ./execute-all.sh -d flounder -a volantis -b NRD90R -o $(pwd)
-[*] Setting output base to '/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r'
+anestisb@aosp-build::android-prepare-vendor$ ./execute-all.sh -d flounder -a volantis -b nrd90r -o $(pwd)
+[*] Setting output base to '/aosp_b_prod/android-prepare-vendor/flounder/nrd90r'
 [*] Downloading image from 'https://dl.google.com/dl/android/aosp/volantis-nrd90r-factory-84de678f.zip'
---2016-09-07 12:08:24--  https://dl.google.com/dl/android/aosp/volantis-nrd90r-factory-84de678f.zip
-Resolving dl.google.com (dl.google.com)... 172.217.16.174, 2a00:1450:4001:816::200e
-Connecting to dl.google.com (dl.google.com)|172.217.16.174|:443... connected.
+--2016-09-11 11:57:14--  https://dl.google.com/dl/android/aosp/volantis-nrd90r-factory-84de678f.zip
+Resolving dl.google.com (dl.google.com)... 62.75.10.104, 62.75.10.118, 62.75.10.84, ...
+Connecting to dl.google.com (dl.google.com)|62.75.10.104|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 793127173 (756M) [application/zip]
-Saving to: ‘/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r/volantis-nrd90r-factory-84de678f.zip’
+Saving to: ‘/aosp_b_prod/android-prepare-vendor/flounder/nrd90r/volantis-nrd90r-factory-84de678f.zip’
 
-/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r/ 100%[==================================================================================================================>] 756.38M  1.19MB/s   in 10m 33ss
+/aosp_b_prod/android-prepare-vendor/flounder/ 100%[================================================================================================>] 756.38M  1.21MB/s   in 10m 30ss
 
-2016-09-07 12:18:58 (1.19 MB/s) - ‘/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r/volantis-nrd90r-factory-84de678f.zip’ saved [793127173/793127173]
+2016-09-11 12:07:45 (1.20 MB/s) - ‘/aosp_b_prod/android-prepare-vendor/flounder/nrd90r/volantis-nrd90r-factory-84de678f.zip’ saved [793127173/793127173]
 
 [*] Processing with 'API-24' configuration
-[*] Extracting '/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r/volantis-nrd90r-factory-84de678f.zip'
+[*] Extracting '/aosp_b_prod/android-prepare-vendor/flounder/nrd90r/volantis-nrd90r-factory-84de678f.zip'
 [*] Unzipping 'image-volantis-nrd90r.zip'
-[*] Copying files from 'system.img.raw' image
-[*] Copying files from 'vendor.img.raw' image
-[!] System partition doesn't contain any pre-optimized files - moving as is
+[*] First run detected - downloading oatdump host bin & lib dependencies
+--2016-09-11 12:08:30--  https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21467&authkey=ADsdFhslWvJwuO8
+Resolving onedrive.live.com (onedrive.live.com)... 204.79.197.217
+Connecting to onedrive.live.com (onedrive.live.com)|204.79.197.217|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://jnq3da.bl3301.livefilestore.com/y3maU_6cHZqrFOKIqYCP39w-X6JOEjYHC__YrioLdqyCGcZelZRE4elpyiTo6rxjd3LvaNhpItcXgBrD9ztKo4YNR0V8k1VQRD6bM4ob7AJ_pOfWVPWXZJJEwZMS2dzplO-QC2Rn9qHPG3H0ELsyzVevq5MJnp87QZx_iThNQM1xtE/Linux_oatdump_bin_deps.zip?download&psid=1 [following]
+--2016-09-11 12:08:31--  https://jnq3da.bl3301.livefilestore.com/y3maU_6cHZqrFOKIqYCP39w-X6JOEjYHC__YrioLdqyCGcZelZRE4elpyiTo6rxjd3LvaNhpItcXgBrD9ztKo4YNR0V8k1VQRD6bM4ob7AJ_pOfWVPWXZJJEwZMS2dzplO-QC2Rn9qHPG3H0ELsyzVevq5MJnp87QZx_iThNQM1xtE/Linux_oatdump_bin_deps.zip?download&psid=1
+Resolving jnq3da.bl3301.livefilestore.com (jnq3da.bl3301.livefilestore.com)... 204.79.197.213
+Connecting to jnq3da.bl3301.livefilestore.com (jnq3da.bl3301.livefilestore.com)|204.79.197.213|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 73497410 (70M) [application/zip]
+Saving to: ‘/aosp_b_prod/android-prepare-vendor/hostTools/Linux/oatdump_deps.zip’
+
+/aosp_b_prod/android-prepare-vendor/hostTools 100%[================================================================================================>]  70.09M  1.19MB/s   in 59s
+
+2016-09-11 12:09:38 (1.19 MB/s) - ‘/aosp_b_prod/android-prepare-vendor/hostTools/Linux/oatdump_deps.zip’ saved [73497410/73497410]
+
+[!] System partition doesn't contain any pre-optimized files - link to original partition
 [*] Generating blobs for vendor/htc/flounder
-[*] Copying files to '/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r/vendor/htc/flounder'
+[*] Copying files to '/aosp_b_prod/android-prepare-vendor/flounder/nrd90r/vendor/htc/flounder'
 [*] Generating 'flounder-vendor-blobs.mk' makefile
 [*] Generating 'device-vendor.mk'
 [*] Generating 'BoardConfigVendor.mk'
 [*] Generating 'Android.mk'
-[*] Gathering data from '/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r/vendor/htc/flounder/vendor/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/flounder/nrd90r/vendor/htc/flounder/vendor/app' APK/JAR pre-builts
 [*] All actions completed successfully
-[*] Import '/aosp_b_prod/prepare_vendor_blobs/flounder/nrd90r/vendor' to AOSP root
+[*] Import '/aosp_b_prod/android-prepare-vendor/flounder/nrd90r/vendor' to AOSP root
+```
+
+### API-24 (Nougat) N6p vendor generation after downloading factory image from website
+```
+anestisb@aosp-build:android-prepare-vendor$ ./execute-all.sh -d angler -b nrd90u -o $(pwd)
+[*] Setting output base to '/aosp_b_prod/android-prepare-vendor/angler/nrd90u'
+[*] Downloading image from 'https://dl.google.com/dl/android/aosp/angler-nrd90u-factory-7c9b6a2b.zip'
+--2016-09-11 12:39:37--  https://dl.google.com/dl/android/aosp/angler-nrd90u-factory-7c9b6a2b.zip
+Resolving dl.google.com (dl.google.com)... 172.217.21.14, 2a00:1450:4017:805::200e
+Connecting to dl.google.com (dl.google.com)|172.217.21.14|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1247407454 (1.2G) [application/zip]
+Saving to: ‘/aosp_b_prod/android-prepare-vendor/angler/nrd90u/angler-nrd90u-factory-7c9b6a2b.zip’
+
+/aosp_b_prod/android-prepare-vendor/angler/nr 100%[================================================================================================>]   1.16G  1.13MB/s   in 16m 55ss
+
+2016-09-11 12:56:32 (1.17 MB/s) - ‘/aosp_b_prod/android-prepare-vendor/angler/nrd90u/angler-nrd90u-factory-7c9b6a2b.zip’ saved [1247407454/1247407454]
+
+[*] Processing with 'API-24' configuration
+[*] Extracting '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/angler-nrd90u-factory-7c9b6a2b.zip'
+[*] Unzipping 'image-angler-nrd90u.zip'
+[*] '17' bytecode archive files will be repaired
+[*] Repairing bytecode under /system partition using oatdump method
+[*] System partition successfully extracted & repaired at '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/factory_imgs_repaired_data'
+[!] Target device expects to have following img versions when using output system img
+ [*] Booatloder:angler-03.58
+ [*] Baseband:angler-03.72
+[*] Generating blobs for vendor/huawei/angler
+[*] Copying files to '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/vendor/huawei/angler'
+[*] Generating 'angler-vendor-blobs.mk' makefile
+[*] Generating 'device-vendor.mk'
+[*] Generating 'BoardConfigVendor.mk'
+[*] Generating 'Android.mk'
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/vendor/huawei/angler/vendor/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/vendor/huawei/angler/proprietary/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/vendor/huawei/angler/proprietary/framework' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/vendor/huawei/angler/proprietary/priv-app' APK/JAR pre-builts
+[*] Gathering data for shared library (.so) pre-built modules
+[*] All actions completed successfully
+[*] Import '/aosp_b_prod/android-prepare-vendor/angler/nrd90u/vendor' to AOSP root
+```
+
+### API-23 (Marshmallow) N5x vendor generation after downloading factory image from website
+```
+anestisb@aosp-build:android-prepare-vendor$ ./execute-all.sh -d bullhead -b MTC20K -o $(pwd)
+[*] Setting output base to '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k'
+[*] Downloading image from 'https://dl.google.com/dl/android/aosp/bullhead-mtc20k-factory-4a950470.zip'
+--2016-09-11 12:13:12--  https://dl.google.com/dl/android/aosp/bullhead-mtc20k-factory-4a950470.zip
+Resolving dl.google.com (dl.google.com)... 216.58.208.46, 2a00:1450:4017:803::200e
+Connecting to dl.google.com (dl.google.com)|216.58.208.46|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 964936536 (920M) [application/zip]
+Saving to: ‘/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/bullhead-mtc20k-factory-4a950470.zip’
+
+/aosp_b_prod/android-prepare-vendor/bullhead/ 100%[================================================================================================>] 920.23M  1.19MB/s   in 12m 56ss
+
+2016-09-11 12:26:09 (1.19 MB/s) - ‘/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/bullhead-mtc20k-factory-4a950470.zip’ saved [964936536/964936536]
+
+[*] Processing with 'API-23' configuration
+[*] Extracting '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/bullhead-mtc20k-factory-4a950470.zip'
+[*] Unzipping 'image-bullhead-mtc20k.zip'
+[*] '20' bytecode archive files will be repaired
+[*] Repairing bytecode under /system partition using oat2dex method
+[*] Preparing environment for 'arm' ABI
+[*] Preparing environment for 'arm64' ABI
+[*] Start processing system partition & de-optimize pre-compiled bytecode
+[*] '/framework/cneapiclient.jar' not pre-optimized with sanity checks passed - copying without changes
+[-] '/framework/framework-res.apk' not pre-optimized & without 'classes.dex' - skipping
+[*] '/framework/framework.jar' is multi-dex - adjusting recursive archive adds
+[*] '/framework/rcsimssettings.jar' not pre-optimized with sanity checks passed - copying without changes
+[*] '/framework/rcsservice.jar' not pre-optimized with sanity checks passed - copying without changes
+[*] System partition successfully extracted & repaired at '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/factory_imgs_repaired_data'
+[!] Target device expects to have following img versions when using output system img
+ [*] Booatloder:BHZ10r
+ [*] Baseband:M8994F-2.6.32.1.13
+[*] Generating blobs for vendor/lge/bullhead
+[*] Copying files to '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/vendor/lge/bullhead'
+[*] Generating 'bullhead-vendor-blobs.mk' makefile
+[*] Generating 'device-vendor.mk'
+[*] Generating 'BoardConfigVendor.mk'
+[*] Generating 'Android.mk'
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/vendor/lge/bullhead/vendor/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/vendor/lge/bullhead/proprietary/app' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/vendor/lge/bullhead/proprietary/framework' APK/JAR pre-builts
+[*] Gathering data from '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/vendor/lge/bullhead/proprietary/priv-app' APK/JAR pre-builts
+[*] All actions completed successfully
+[*] Import '/aosp_b_prod/android-prepare-vendor/bullhead/mtc20k/vendor' to AOSP root
 ```
