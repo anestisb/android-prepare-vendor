@@ -118,6 +118,13 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.1.2 - 12 Sep 2016
+ * Fix JAR META-INF repaired archives deletion bug
+ * Improved fuse mount error handling
+ * FAQ for common fuse mount issues
+ * Extra defensive checks for /vendor/priv-app chosen signing certificate
+* 0.1.1 - 12 Sep 2016
+ * Unbound variable bug fix when early error abort
 * 0.1.0 - 11 Sep 2016
  * Nougat API-24 support
  * Utilize fuse-ext2 to drop required root permissions
