@@ -462,13 +462,12 @@ gen_mk_for_bytecode() {
       stem="package.apk"
     fi
 
-    # Annotate extra privilleges when required
+    # Annotate extra privileges when required
     if [[ "$RELSUBROOT" == "priv-app" ]]; then
       priv='LOCAL_PRIVILEGED_MODULE := true'
     fi
 
-    # APKs under /vendor should not be optimized and always use the
-    # PRESIGNED cert
+    # APKs under /vendor should not be optimized & always use the PRESIGNED cert
     if [[ "$fileExt" == "apk" && "$RELROOT" == "vendor" ]]; then
       cert="PRESIGNED"
     elif [[ "$fileExt" == "apk" ]]; then
