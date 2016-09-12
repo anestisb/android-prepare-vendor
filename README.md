@@ -150,6 +150,13 @@ rules have `LOCAL_DEXPREOPT := false`. This is because host dex2oatd is invoked 
 more strict flags and results into aborting when front-end reaches already optimized
 instructions.
 
+## Frequently Spotted Issues
+### fuse-ext2
+* `fusermount: failed to open /etc/fuse.conf: Permission denied`
+ * FIX-1: Add low privilege username to fuse group (e.g.: `# usermod -a -G fuse anestisb`)
+ * FIX-2: Change file permissions - `# chmod +r /etc/fuse.conf
+* `fusermount: option allow_other only allowed if 'user_allow_other' is set in /etc/fuse.conf`
+ * Edit `/etc/fuse.conf` and write/uncomment the `user_allow_other` flag
 
 ## Examples
 ### API-24 (Nougat) N9 WiFi flounder with alias (volantis) vendor generation after downloading factory image from website
