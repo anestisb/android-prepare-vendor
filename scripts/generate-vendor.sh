@@ -478,6 +478,13 @@ gen_mk_for_bytecode() {
       cert="PRESIGNED"
     fi
 
+    # Some defensive checks in case configuration files are not aligned with the
+    # existing assumptions about the signing entities
+    if [[ "$RELSUBROOT" == "priv-app" && "$RELROOT" == "vendor" ]]; then
+      echo "[-] Privileged modules under /vendor/priv-app are not supported"
+      abort 1
+    fi
+
     # Some prebuilt APKs have also prebuilt JNI libs that are stored under
     # system-wide lib directories, with app directory containing a symlink to.
     # Resolve such cases to adjust includes so that we don't copy across the
