@@ -36,7 +36,7 @@ declare -a availDevices=("bullhead" "flounder" "angler")
 
 abort() {
   # Remove mount points in case of error
-  if [ $1 -ne 0 ]; then
+  if [[ $1 -ne 0 && "$FACTORY_IMGS_DATA" != "" ]]; then
     unmount_raw_image "$FACTORY_IMGS_DATA/system"
     unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
   fi
@@ -175,6 +175,7 @@ DEV_ALIAS=""
 API_LEVEL=""
 SKIP_SYSDEOPT=false
 _UMOUNT=""
+FACTORY_IMGS_DATA=""
 
 # Compatibility
 HOST_OS=$(uname)
