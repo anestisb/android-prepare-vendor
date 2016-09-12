@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "fuse-ext2" "du" "stat" "tr" "cut")
+declare -a sysTools=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -90,11 +90,17 @@ mount_img() {
     mkdir -p "$MOUNT_DIR"
   fi
 
-  fuse-ext2 -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>"$MOUNT_LOG" || {
+  $_MOUNT -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>"$MOUNT_LOG" || {
     echo "[-] '$IMAGE_FILE' mount failed"
     cat "$MOUNT_LOG"
     abort 1
   }
+
+  if ! mount | grep -qs "$MOUNT_DIR"; then
+    echo "[-] "$IMAGE_FILE" mount point missing indicates fuse mount error"
+    cat "$MOUNT_LOG"
+    abort 1
+  fi
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -111,6 +117,23 @@ done
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 SIMG2IMG=""
+_MOUNT=""
+
+# Compatibility
+HOST_OS=$(uname)
+if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
+  echo "[-] '$HOST_OS' OS is not supported"
+  abort 1
+fi
+
+# Platform specific commands
+if [[ "$HOST_OS" == "Darwin" ]]; then
+  sysTools+=("mount")
+  _MOUNT="mount -t fuse-ext2"
+else
+  sysTools+=("fuse-ext2")
+  _MOUNT="fuse-ext2"
+fi
 
 while [[ $# -gt 1 ]]
 do
