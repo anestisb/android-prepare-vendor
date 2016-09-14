@@ -118,6 +118,8 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.1.3 - 14 Sep 2016-09-11
+ * Fix missing output path normalization which was corrupting symbolic links
 * 0.1.2 - 12 Sep 2016
  * Fix JAR META-INF repaired archives deletion bug
  * Improved fuse mount error handling

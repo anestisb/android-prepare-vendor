@@ -231,7 +231,7 @@ do
   arg="$1"
   case $arg in
     -o|--output)
-      OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
+      OUTPUT_DIR="$(realpath "$2")"
       shift
       ;;
     -d|--device)
@@ -247,7 +247,7 @@ do
       shift
       ;;
     -i|--imgs)
-      INPUT_IMG=$2
+      INPUT_IMG="$(realpath "$2")"
       shift
       ;;
     -k|--keep)
