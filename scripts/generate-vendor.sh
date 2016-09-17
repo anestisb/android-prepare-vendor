@@ -891,12 +891,27 @@ if [ $hasDsoModules = true ]; then
   done
 fi
 
+# Append extra modules & close master Android.mk
 {
-  # Append extra modules
   echo ""
   cat "$EXTRA_MODULES"
   echo ""
   echo "endif"
 } >> "$OUTMK"
+
+# Add extra module targets to PRODUCT_PACKAGES list
+VENDORMK="$OUTPUT_VENDOR/device-vendor.mk"
+{
+  echo ""
+  echo "# Extra modules from user configuration"
+  echo 'PRODUCT_PACKAGES += \'
+  grep 'LOCAL_MODULE :=' "$EXTRA_MODULES" | cut -d "=" -f2- | \
+    awk '{$1=$1;print}' | while read -r module
+  do
+    echo "    $module \\"
+  done
+} >> "$VENDORMK"
+sed '$s/ \\//' "$VENDORMK" > "$VENDORMK.tmp"
+mv "$VENDORMK.tmp" "$VENDORMK"
 
 abort 0
