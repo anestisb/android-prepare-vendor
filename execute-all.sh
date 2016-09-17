@@ -52,6 +52,7 @@ cat <<_EOF
       -b|--buildID : BuildID string (e.g. MMB29P)
       -o|--output  : Path to save generated vendor data
       -i|--img     : [OPTIONAL] Read factory image archive from file instead of downloading
+      -g|--gplay   : Use blobs configuration compatible with Google Play Services / GApps
       -k|--keep    : [OPTIONAL] Keep all factory images extracted & repaired data
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
 _EOF
@@ -176,6 +177,7 @@ API_LEVEL=""
 SKIP_SYSDEOPT=false
 _UMOUNT=""
 FACTORY_IMGS_DATA=""
+CONFIG="config-naked"
 
 # Compatibility
 HOST_OS=$(uname)
@@ -249,6 +251,9 @@ do
     -i|--imgs)
       INPUT_IMG="$(realpath "$2")"
       shift
+      ;;
+    -g|--gplay)
+      CONFIG="config-gplay"
       ;;
     -k|--keep)
       KEEP_DATA=true
@@ -346,7 +351,7 @@ case "$magicChar" in
     abort 1
     ;;
 esac
-echo "[*] Processing with 'API-$API_LEVEL' configuration"
+echo "[*] Processing with 'API-$API_LEVEL $CONFIG' configuration"
 
 # Clear old data if present & extract data from factory images
 if [ -d "$FACTORY_IMGS_DATA" ]; then
@@ -371,9 +376,9 @@ $EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
 # Generate unified readonly "proprietary-blobs.txt"
 $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
      --output "$SCRIPTS_ROOT/$DEVICE" \
-     --sys-list "$SCRIPTS_ROOT/$DEVICE/config/system-proprietary-blobs-api""$API_LEVEL"".txt" \
-     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/config/bytecode-proprietary-api$API_LEVEL.txt" \
-     --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/config/dep-dso-proprietary-blobs-api$API_LEVEL.txt" || {
+     --sys-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/system-proprietary-blobs-api""$API_LEVEL"".txt" \
+     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt" \
+     --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/dep-dso-proprietary-blobs-api$API_LEVEL.txt" || {
   echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
 }
@@ -406,7 +411,7 @@ fi
 
 $REPAIR_SCRIPT --input "$FACTORY_IMGS_DATA/system" \
      --output "$FACTORY_IMGS_R_DATA" \
-     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/config/bytecode-proprietary-api$API_LEVEL.txt" \
+     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt" \
      $REPAIR_SCRIPT_ARG || {
   echo "[-] System partition bytecode repair failed"
   abort 1
@@ -424,9 +429,9 @@ cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
-  --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/config/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
-  --flags-list "$SCRIPTS_ROOT/$DEVICE/config/vendor-config-api$API_LEVEL.txt" \
-  --extra-modules "$SCRIPTS_ROOT/$DEVICE/config/extra-modules-api$API_LEVEL.txt" || {
+  --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
+  --flags-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/vendor-config-api$API_LEVEL.txt" \
+  --extra-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/extra-modules-api$API_LEVEL.txt" || {
   echo "[-] Vendor generation failed"
   abort 1
 }

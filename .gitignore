@@ -2,13 +2,13 @@
 
 # Ignore merged / intermediate files & generated data
 angler/*
-!angler/config
+!angler/config-*
 
 bullhead/*
-!bullhead/config
+!bullhead/config-*
 
 flounder/*
-!flounder/config
+!flounder/config-*
 
 # Due to large files they're downloaded at manual step
 # and not part of git files

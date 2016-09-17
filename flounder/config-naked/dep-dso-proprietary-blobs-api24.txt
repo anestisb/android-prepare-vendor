@@ -1,0 +1,2 @@
+# List of shared libraries (*.so) that require individual modules instead of
+# copying across via PRODUCT_COPY_FILES
