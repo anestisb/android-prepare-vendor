@@ -70,6 +70,14 @@ targeted advanced actions, bugs investigation & development of new features.
 
 
 ## Configuration files explained
+### Naked vs GPlay
+Naked configuration group (enabled by default when using the master script)
+includes data & module targets required to have a functional device from AOSP
+without using Google Play Services / Google Apps. On the other hand GPlay
+configuration group (enabled with `-g|--gplay` flag from master script) has additional
+blobs & module targets which are required only when GApps are installed (either
+manually post-boot or included as additional vendor blobs).
+
 ### **system-proprietary-blobs-apiXX.txt**
 List of files to be appended at the `PRODUCT_COPY_FILES` list. These files are
 effectively copied across as is from source vendor directory to configured AOSP
@@ -118,7 +126,10 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.1.3 - 14 Sep 2016-09-11
+* 0.1.4 - 17 Sep 2016
+ * Split configuration into 2 groups: Naked & GPlay
+ * Fix extra modules being ignored bug
+* 0.1.3 - 14 Sep 2016
  * Fix missing output path normalization which was corrupting symbolic links
 * 0.1.2 - 12 Sep 2016
  * Fix JAR META-INF repaired archives deletion bug
