@@ -2,6 +2,8 @@
 
 system/app/HwMMITest/HwMMITest.apk
 system/app/HwSarControlService/HwSarControlService.apk
+system/app/SetupSmartDeviceOverlay/SetupSmartDeviceOverlay.apk
+system/app/Tycho/Tycho.apk
 system/framework/com.google.android.camera.experimental2015.jar
 system/framework/com.google.widevine.software.drm.jar
 system/framework/qcrilhook.jar
