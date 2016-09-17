@@ -4,6 +4,7 @@ system/app/HiddenMenu/HiddenMenu.apk
 system/app/RCSBootstraputil/RCSBootstraputil.apk
 system/app/RcsImsBootstraputil/RcsImsBootstraputil.apk
 system/app/TimeService/TimeService.apk
+system/app/Tycho/Tycho.apk
 system/framework/cneapiclient.jar
 system/framework/com.google.widevine.software.drm.jar
 system/framework/qcrilhook.jar
@@ -17,6 +18,7 @@ system/priv-app/DMConfigUpdate/DMConfigUpdate.apk
 system/priv-app/DMService/DMService.apk
 system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/Entitlement/Entitlement.apk
+system/priv-app/GCS/GCS.apk
 system/priv-app/HotwordEnrollment/HotwordEnrollment.apk
 system/priv-app/LifeTimerService/LifeTimerService.apk
 system/priv-app/SprintDM/SprintDM.apk
