@@ -126,6 +126,8 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.1.5 - TBC
+ * Fixes issue with symlinks resolve when output path with spaces
 * 0.1.4 - 17 Sep 2016
  * Split configuration into 2 groups: Naked & GPlay
  * Fix extra modules being ignored bug
