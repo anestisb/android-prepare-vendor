@@ -8,6 +8,9 @@ set -e # fail on unhandled error
 set -u # fail on undefined variable
 #set -x # debug
 
+readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly REALPATH_SCRIPT="$SCRIPTS_DIR/realpath.sh"
+
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
 declare -a sysTools=("cp" "sed" "java" "zipinfo" "jarsigner" "awk")
 declare -a dirsWithBC=("app" "framework" "priv-app")
@@ -102,8 +105,7 @@ has_vendor_size() {
 read_invalid_symlink() {
   local INBASE="$1"
   local RELTARGET="$2"
-  # shellcheck disable=SC2012
-  ls -l "$INBASE/$RELTARGET" | awk '{ print $11 }'
+  _resolve_symlinks "$INBASE/$RELTARGET"
 }
 
 array_contains() {
@@ -137,7 +139,7 @@ extract_blobs() {
     # will be handled later when unified Android.mk is created
     if [[ -L "$INDIR/$src" ]]; then
       if [[ "$dst" != "$src" ]]; then
-        echo "[-] Symlink paths cannot have their destination altered"
+        echo "[-] Symbolic links cannot have their destination path altered"
         abort 1
       fi
       symLinkSrc="$(read_invalid_symlink "$INDIR" "$src" | sed 's#^/##')"
@@ -734,6 +736,7 @@ gen_mk_for_shared_libs() {
 }
 
 trap "abort 1" SIGINT SIGTERM
+. "$REALPATH_SCRIPT"
 
 INPUT_DIR=""
 OUTPUT_DIR=""
