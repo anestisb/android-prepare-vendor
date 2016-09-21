@@ -128,6 +128,8 @@ target device before any pull request.
 ## Change Log
 * 0.1.5 - TBC
  * Fixes issue with symlinks resolve when output path with spaces
+ * Fixes bug when repairing multi-dex APKs with oatdump method
+ * Introduced sorted data processing so that output is diff friendly
 * 0.1.4 - 17 Sep 2016
  * Split configuration into 2 groups: Naked & GPlay
  * Fix extra modules being ignored bug
