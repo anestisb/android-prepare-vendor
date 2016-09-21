@@ -178,7 +178,7 @@ extract_blobs() {
       cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
       rm "$TMP_WORK_DIR/xml_fixup.tmp"
     fi
-  done <<< "$(grep -Ev '(^#|^$)' "$BLOBS_LIST")"
+  done < <(grep -Ev '(^#|^$)' "$BLOBS_LIST")
 }
 
 gen_vendor_blobs_mk() {
@@ -252,7 +252,7 @@ gen_vendor_blobs_mk() {
     fi
 
     echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$OUTMK"
-  done <<< "$(grep -Ev '(^#|^$)' "$BLOBS_LIST")"
+  done < <(grep -Ev '(^#|^$)' "$BLOBS_LIST")
 
   # Trim last backslash
   sed '$s/ \\//' "$OUTMK" > "$OUTMK.tmp"
@@ -512,7 +512,7 @@ gen_mk_for_bytecode() {
         PKGS_SLINKS=("${PKGS_SLINKS[@]-}" "$dsoMName")
         apk_lib_slinks="$apk_lib_slinks\n$(gen_apk_dso_symlink "$dsoName" \
                         "$dsoMName" "$dsoRoot" "$lcMPath/$pkgName" "$arch" "$VENDOR")"
-      done <<< "$(find -L "$appDir/lib" -type l -iname '*.so')"
+      done < <(find -L "$appDir/lib" -type l -iname '*.so')
     fi
 
     {
@@ -548,7 +548,8 @@ gen_mk_for_bytecode() {
 
     # Also add pkgName to runtime array to append later the vendor mk
     PKGS=("${PKGS[@]-}" "$pkgName")
-  done <<< "$(find "$OUTBASE/$RELROOT/$RELSUBROOT" -maxdepth 2 -type f -iname '*.apk' -o -iname '*.jar')"
+  done < <(find "$OUTBASE/$RELROOT/$RELSUBROOT" -maxdepth 2 \
+           -type f -iname '*.apk' -o -iname '*.jar' | sort)
 
   # Update vendor mk
   {
@@ -660,7 +661,7 @@ gen_mk_for_shared_libs() {
       # Also add pkgName to runtime array to append later the vendor mk
       PKGS=("${PKGS[@]-}" "$dsoName")
       hasPKGS=true
-    done <<< "$(find "$OUTBASE/$RELROOT/lib64" -maxdepth 1 -type f -iname 'lib*.so')"
+    done < <(find "$OUTBASE/$RELROOT/lib64" -maxdepth 1 -type f -iname 'lib*.so' | sort)
   fi
 
   # Then iterate the 32bit libs excluding the ones already included as dual targets
@@ -718,7 +719,7 @@ gen_mk_for_shared_libs() {
     # Also add pkgName to runtime array to append later the vendor mk
     PKGS=("${PKGS[@]-}" "$dsoName")
     hasPKGS=true
-  done <<< "$(find "$OUTBASE/$RELROOT/lib" -maxdepth 1 -type f -iname 'lib*.so')"
+  done < <(find "$OUTBASE/$RELROOT/lib" -maxdepth 1 -type f -iname 'lib*.so' | sort)
 
   # Update vendor mk
   if [ $hasPKGS = true ]; then

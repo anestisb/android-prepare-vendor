@@ -290,7 +290,7 @@ oat2dex_repair() {
 
       cp "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
     fi
-  done <<< "$(find "$INPUT_DIR" -not -type d)"
+  done < <(find "$INPUT_DIR" -not -type d)
 }
 
 oatdump_repair() {
@@ -316,7 +316,7 @@ oatdump_repair() {
   do
     jarFile="$(basename "$file" | cut -d '-' -f2- | sed 's#.oat#.jar#')"
     BOOTJARS=("${BOOTJARS[@]-}" "$jarFile")
-  done <<< "$(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot-*.oat")"
+  done < <(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot-*.oat")
 
   while read -r file
   do
@@ -444,7 +444,7 @@ oatdump_repair() {
 
       mv "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
     fi
-  done <<< "$(find "$INPUT_DIR" -not -type d)"
+  done < <(find "$INPUT_DIR" -not -type d)
 }
 
 trap "abort 1" SIGINT SIGTERM
