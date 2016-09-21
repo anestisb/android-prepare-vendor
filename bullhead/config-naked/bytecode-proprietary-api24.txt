@@ -17,7 +17,6 @@ system/priv-app/DMConfigUpdate/DMConfigUpdate.apk
 system/priv-app/DMService/DMService.apk
 system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/Entitlement/Entitlement.apk
-system/priv-app/HotwordEnrollment/HotwordEnrollment.apk
 system/priv-app/LifeTimerService/LifeTimerService.apk
 system/priv-app/SprintDM/SprintDM.apk
 system/priv-app/atfwd/atfwd.apk
