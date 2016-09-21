@@ -212,11 +212,11 @@ oat2dex_repair() {
     if [ $odexFound -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-        cp -a "$file" "$OUTPUT_SYS/$relDir"
+        echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
       } || {
-        echo "[-] '$relFile' not pre-optimized & without 'classes.dex' - skipping"
+        echo "[!] '$relFile' not pre-optimized & without 'classes.dex' - copying without changes"
       }
+      cp -a "$file" "$OUTPUT_SYS/$relDir"
     else
       # If pre-compiled, de-optimize to original DEX bytecode
       for abi in ${ABIS[@]}
@@ -367,11 +367,11 @@ oatdump_repair() {
     if [ $odexFound -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[*] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-        cp -a "$file" "$OUTPUT_SYS/$relDir"
+        echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
       } || {
-        echo "[-] '$relFile' not pre-optimized & without 'classes.dex' - skipping"
+        echo "[!] '$relFile' not pre-optimized & without 'classes.dex' - copying without changes"
       }
+      cp -a "$file" "$OUTPUT_SYS/$relDir"
     else
       # If pre-compiled, dump bytecode from oat .rodata section
       # If bytecode compiled for more than one ABIs - only the first is kept
