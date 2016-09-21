@@ -288,7 +288,6 @@ oat2dex_repair() {
         zip -d "$TMP_WORK_DIR/$fileName" META-INF/\* &>/dev/null
       fi
 
-      mkdir -p "$OUTPUT_SYS/$relDir"
       cp "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
     fi
   done <<< "$(find "$INPUT_DIR" -not -type d)"
@@ -443,7 +442,6 @@ oatdump_repair() {
         zip -d "$TMP_WORK_DIR/$fileName" META-INF/\* &>/dev/null
       fi
 
-      mkdir -p "$OUTPUT_SYS/$relDir"
       mv "$TMP_WORK_DIR/$fileName" "$OUTPUT_SYS/$relDir"
     fi
   done <<< "$(find "$INPUT_DIR" -not -type d)"
