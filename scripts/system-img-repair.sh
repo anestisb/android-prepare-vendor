@@ -412,7 +412,8 @@ oatdump_repair() {
         # multi-dex file
         echo "[*] '$relFile' is multi-dex - adjusting recursive archive adds"
         counter=2
-        curMultiDex="$(find "$TMP_WORK_DIR" -type f -maxdepth 1 "*$counter*_repaired.dex")"
+        curMultiDex="$(find "$TMP_WORK_DIR" -type f -maxdepth 1 \
+                       -name "*classes$counter.dex*_repaired.dex")"
         while [ "$curMultiDex" != "" ]
         do
           mv "$curMultiDex" "$TMP_WORK_DIR/classes$counter.dex"
@@ -424,7 +425,8 @@ oatdump_repair() {
           rm "$TMP_WORK_DIR/classes$counter.dex"
 
           counter=$(( counter + 1))
-          curMultiDex="$(find "$TMP_WORK_DIR" -type f -maxdepth 1 "*$counter*_repaired.dex")"
+          curMultiDex="$(find "$TMP_WORK_DIR" -type f -maxdepth 1 \
+                         -name "*classes$counter.dex*_repaired.dex")"
         done
       fi
 
