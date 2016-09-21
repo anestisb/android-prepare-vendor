@@ -492,9 +492,10 @@ gen_mk_for_bytecode() {
     # Resolve such cases to adjust includes so that we don't copy across the
     # same file twice.
     if [ -d "$appDir/lib" ]; then
-      hasApkSymLinks=true
       while read -r lib
       do
+        hasApkSymLinks=true
+
         # We don't expect a depth bigger than 1 here
         dsoName=$(basename "$lib")
         arch=$(dirname "$lib" | sed "s#$appDir/lib/##" | cut -d '/' -f1)
