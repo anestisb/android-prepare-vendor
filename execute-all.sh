@@ -72,6 +72,7 @@ unmount_raw_image() {
   if [[ -d "$MOUNT_POINT" && -f "$MOUNT_POINT/build.prop" ]]; then
     $_UMOUNT "$MOUNT_POINT" || {
       echo "[-] '$MOUNT_POINT' unmount failed"
+      exit 1
     }
   fi
 }
