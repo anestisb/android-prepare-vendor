@@ -173,6 +173,9 @@ the bytecode de-optimization process to work.
 rules have `LOCAL_DEXPREOPT := false`. This is because host dex2oatd is invoked with
 more strict flags and results into aborting when front-end reaches already optimized
 instructions.
+* If you're planning to deliver OTA updates for Nexus 5x, you need to manually extract
+`update-binary` from a factory OTA archive since it's missing from AOSP tree due to some
+proprietary LG code.
 
 ## Frequently Spotted Issues
 ### fuse-ext2
