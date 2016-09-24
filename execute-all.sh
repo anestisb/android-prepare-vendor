@@ -31,9 +31,6 @@ readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
 readonly LINUX_OATDUMP_BIN_URL='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21467&authkey=ADsdFhslWvJwuO8'
 readonly DARWIN_OATDUMP_BIN_URL='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21480&authkey=ANIztAhGhwGWDiU'
 
-# Change this if you don't want to apply used Java version system-wide
-readonly LC_J_HOME="/usr/local/java/jdk1.8.0_71/bin/java"
-
 declare -a sysTools=("mkdir" "dirname" "wget" "mount")
 declare -a availDevices=("bullhead" "flounder" "angler")
 
@@ -54,10 +51,11 @@ cat <<_EOF
       -a|--alias   : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
       -b|--buildID : BuildID string (e.g. MMB29P)
       -o|--output  : Path to save generated vendor data
-      -i|--img     : [OPTIONAL] Read factory image archive from file instead of downloading
       -g|--gplay   : Use blobs configuration compatible with Google Play Services / GApps
+      -i|--img     : [OPTIONAL] Read factory image archive from file instead of downloading
       -k|--keep    : [OPTIONAL] Keep all factory images extracted & repaired data
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
+      -j|--java    : [OPTIONAL] Java path to use instead of system auto detected global version
 _EOF
   abort 1
 }
@@ -113,6 +111,7 @@ SKIP_SYSDEOPT=false
 _UMOUNT=""
 FACTORY_IMGS_DATA=""
 CONFIG="config-naked"
+USER_JAVA_PATH=""
 
 # Compatibility
 HOST_OS=$(uname)
@@ -138,30 +137,6 @@ do
     abort 1
   fi
 done
-
-# Resolve Java location
-readonly JAVALINK=$(which java)
-if [[ "$JAVALINK" == "" ]]; then
-  echo "[!] Java binary not found in path, using hardcoded path"
-  if [ ! -f "$LC_J_HOME" ]; then
-    echo "[-] '$LC_J_HOME' not found in system"
-    abort 1
-  fi
-
-  export JAVA_HOME=$LC_J_HOME
-  export PATH
-  PATH=$(dirname "$LC_J_HOME"):$PATH
-else
-  if [[ "$HOST_OS" == "Darwin" ]]; then
-    export JAVA_HOME="$(/usr/libexec/java_home)"
-    export PATH="$JAVA_HOME/bin":$PATH
-  else
-    readonly JAVAPATH=$(_realpath "$JAVALINK")
-    readonly JAVADIR=$(dirname "$JAVAPATH")
-    export JAVA_HOME="$JAVAPATH"
-    export PATH="$JAVADIR":$PATH
-  fi
-fi
 
 while [[ $# -gt 0 ]]
 do
@@ -196,6 +171,10 @@ do
     -s|--skip)
       SKIP_SYSDEOPT=true
       ;;
+    -j|--java)
+      USER_JAVA_PATH="$(_realpath "$2")"
+      shift
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -219,6 +198,40 @@ fi
 if [[ "$INPUT_IMG" != "" && ! -f "$INPUT_IMG" ]]; then
   echo "[-] '$INPUT_IMG' file not found"
   abort 1
+fi
+if [[ "$USER_JAVA_PATH" != "" ]]; then
+  if  [ ! -f "$USER_JAVA_PATH" ]; then
+    echo "[-] '$USER_JAVA_PATH' path not found"
+    abort 1
+  fi
+  if [[ "$(basename "$USER_JAVA_PATH")" != "java" ]]; then
+    echo "[-] Invalid java path"
+    abort 1
+  fi
+fi
+
+# Resolve Java location
+if [[ "$USER_JAVA_PATH" != "" ]]; then
+  readonly JAVAPATH=$(_realpath "$USER_JAVA_PATH")
+  readonly JAVADIR=$(dirname "$JAVAPATH")
+  export JAVA_HOME="$JAVAPATH"
+  export PATH="$JAVADIR":$PATH
+else
+  readonly JAVALINK=$(which java)
+  if [[ "$JAVALINK" == "" ]]; then
+    # We don't fail since Java is required only when oat2dex method is used
+    echo "[-] Java not found in system"
+  else
+    if [[ "$HOST_OS" == "Darwin" ]]; then
+      export JAVA_HOME="$(/usr/libexec/java_home)"
+      export PATH="$JAVA_HOME/bin":$PATH
+    else
+      readonly JAVAPATH=$(_realpath "$JAVALINK")
+      readonly JAVADIR=$(dirname "$JAVAPATH")
+      export JAVA_HOME="$JAVAPATH"
+      export PATH="$JAVADIR":$PATH
+    fi
+  fi
 fi
 
 # Check if supported device
