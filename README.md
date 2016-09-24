@@ -130,6 +130,7 @@ target device before any pull request.
  * Fixes issue with symlinks resolve when output path with spaces
  * Fixes bug when repairing multi-dex APKs with oatdump method
  * Introduced sorted data processing so that output is diff friendly
+ * Include baseband & bootloader firmware at vendor blobs
 * 0.1.4 - 17 Sep 2016
  * Split configuration into 2 groups: Naked & GPlay
  * Fix extra modules being ignored bug
@@ -160,7 +161,6 @@ to contribute if you detect that something is broken/missing or not required.
 * Host tool binaries are provided for convenience, although with no promises
 that will be kept up-to-date. Prefer to adjust your env. with upstream versions and
 keep them updated.
-* It's your responsibility to flash matching baseband & bootloader images.
 * If you experience `already defined` type of errors when AOSP makefiles are
 included, you have other vendor makefiles that define the same packages (e.g.
 hammerhead vs bullhead from LGE). This issue is due to the developers of

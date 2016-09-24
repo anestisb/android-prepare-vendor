@@ -12,7 +12,7 @@ readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly REALPATH_SCRIPT="$SCRIPTS_DIR/realpath.sh"
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
-declare -a sysTools=("cp" "sed" "java" "zipinfo" "jarsigner" "awk")
+declare -a sysTools=("cp" "sed" "zipinfo" "jarsigner" "awk")
 declare -a dirsWithBC=("app" "framework" "priv-app")
 
 # Last known good defaults in case fdisk automation failed
@@ -65,7 +65,8 @@ command_exists() {
 }
 
 verify_input() {
-  if [[ ! -d "$1/vendor" || ! -d "$1/system" || ! -f "$1/system/build.prop" ]]; then
+  if [[ ! -d "$1/vendor" || ! -d "$1/system" || ! -d "$1/radio" || \
+        ! -f "$1/system/build.prop" ]]; then
     echo "[-] Invalid input directory structure"
     usage
   fi
@@ -74,7 +75,8 @@ verify_input() {
 get_device_codename() {
   local device
 
-  device=$(grep 'ro.product.device=' "$1" | cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
+  device=$(grep 'ro.product.device=' "$1" | cut -d '=' -f2 | \
+           tr '[:upper:]' '[:lower:]')
   if [[ "$device" == "" ]]; then
     echo "[-] Device string not found"
     abort 1
@@ -85,12 +87,33 @@ get_device_codename() {
 get_vendor() {
   local vendor
 
-  vendor=$(grep 'ro.product.manufacturer=' "$1" | cut -d '=' -f2 | tr '[:upper:]' '[:lower:]')
+  vendor=$(grep 'ro.product.manufacturer=' "$1" | cut -d '=' -f2 | \
+           tr '[:upper:]' '[:lower:]')
   if [[ "$vendor" == "" ]]; then
     echo "[-] Device codename string not found"
     abort 1
   fi
   echo "$vendor"
+}
+
+get_radio_ver() {
+  local radio_ver
+  radio_ver=$(grep 'ro.build.expect.baseband' "$1" | cut -d '=' -f2)
+  if [[ "$radio_ver" == "" ]]; then
+    echo "[-] Failed to identify radio version"
+    abort 1
+  fi
+  echo "$radio_ver"
+}
+
+get_bootloader_ver() {
+  local bootloader_ver
+  bootloader_ver=$(grep 'ro.build.expect.bootloader' "$1" | cut -d '=' -f2)
+  if [[ "$bootloader_ver" == "" ]]; then
+    echo "[-] Failed to identify bootloader version"
+    abort 1
+  fi
+  echo "$bootloader_ver"
 }
 
 has_vendor_size() {
@@ -114,6 +137,22 @@ array_contains() {
   return 1
 }
 
+copy_radio_files() {
+  local INDIR="$1"
+  local OUTDIR="$2"
+
+  mkdir -p "$OUTDIR/radio"
+  cp -a "$INDIR/radio/radio"* "$OUTDIR/radio/radio-$DEVICE-$RADIO_VER.img" || {
+    echo "[-] Failed to copy radio image"
+    abort 1
+  }
+
+  cp -a "$INDIR/radio/bootloader"* "$OUTDIR/radio/bootloader-$DEVICE-$BOOTLOADER_VER.img" || {
+    echo "[-] Failed to copy bootloader image"
+    abort 1
+  }
+}
+
 extract_blobs() {
   local BLOBS_LIST="$1"
   local INDIR="$2"
@@ -128,7 +167,7 @@ extract_blobs() {
 
   while read -r file
   do
-    # Input format is following AOSP spec allowing optional save into different path
+    # Input format follows AOSP compatibility allowing optional save at relative path
     src=$(echo "$file" | cut -d ":" -f1)
     dst=$(echo "$file" | cut -d ":" -f2)
     if [[ "$dst" == "" ]]; then
@@ -184,7 +223,6 @@ extract_blobs() {
 gen_vendor_blobs_mk() {
   local BLOBS_LIST="$1"
   local OUTDIR="$2"
-  local VENDOR="$3"
 
   local OUTMK="$OUTDIR/$DEVICE-vendor-blobs.mk"
   local RELDIR_PROP="vendor/$VENDOR/$DEVICE/proprietary"
@@ -263,15 +301,30 @@ gen_dev_vendor_mk() {
   local OUTDIR="$1"
   local OUTMK="$OUTDIR/device-vendor.mk"
 
-  echo "# Auto-generated file, do not edit" > "$OUTMK"
-  echo "" >> "$OUTMK"
-  echo "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)" >> "$OUTMK"
+  {
+    echo "# Auto-generated file, do not edit"
+    echo ""
+    echo "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)"
+  } > "$OUTMK"
+}
+
+gen_board_vendor_mk() {
+  local OUTDIR="$1"
+  local OUTMK="$OUTDIR/AndroidBoardVendor.mk"
+
+  {
+    echo "# Auto-generated file, do not edit"
+    echo ""
+    echo 'LOCAL_PATH := $(call my-dir)'
+    echo ""
+    echo "\$(call add-radio-file,radio/bootloader-$DEVICE-$BOOTLOADER_VER.img,version-bootloader)"
+    echo "\$(call add-radio-file,radio/radio-$DEVICE-$RADIO_VER.img,version-baseband)"
+  } > "$OUTMK"
 }
 
 gen_board_cfg_mk() {
   local INDIR="$1"
   local OUTDIR="$2"
-  local DEVICE="$3"
   local OUTMK="$OUTDIR/BoardConfigVendor.mk"
 
   local v_img_sz
@@ -297,12 +350,24 @@ gen_board_cfg_mk() {
   {
     echo "# Auto-generated file, do not edit"
     echo ""
+    echo "TARGET_BOARD_INFO_FILE := vendor/$VENDOR/$DEVICE/vendor-board-info.txt"
     echo 'BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4'
     echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz"
 
     # Update with user selected extra flags
     grep -Ev '(^#|^$)' "$MK_FLAGS_LIST" || true
   } > "$OUTMK"
+}
+
+gen_board_info_txt() {
+  local OUTDIR="$1"
+  local OUTTXT="$OUTDIR/vendor-board-info.txt"
+
+  {
+    echo "require board=$DEVICE"
+    echo "require version-bootloader=$BOOTLOADER_VER"
+    echo "require version-baseband=$RADIO_VER"
+  } > "$OUTTXT"
 }
 
 zip_needs_resign() {
@@ -826,6 +891,8 @@ verify_input "$INPUT_DIR"
 # Get device details
 DEVICE=$(get_device_codename "$INPUT_DIR/system/build.prop")
 VENDOR=$(get_vendor "$INPUT_DIR/system/build.prop")
+RADIO_VER=$(get_radio_ver "$INPUT_DIR/system/build.prop")
+BOOTLOADER_VER=$(get_bootloader_ver "$INPUT_DIR/system/build.prop")
 
 echo "[*] Generating blobs for vendor/$VENDOR/$DEVICE"
 
@@ -844,21 +911,36 @@ if [ $entries -gt 0 ]; then
   hasDsoModules=true
 fi
 
+# Copy radio images
+echo "[*] Copying radio files '$OUTPUT_VENDOR'"
+copy_radio_files "$INPUT_DIR" "$OUTPUT_VENDOR"
+
 # Copy device specific files from input
 echo "[*] Copying files to '$OUTPUT_VENDOR'"
 extract_blobs "$BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
 
 # Generate $DEVICE-vendor-blobs.mk makefile (plain files that don't require a target module)
 echo "[*] Generating '$DEVICE-vendor-blobs.mk' makefile"
-gen_vendor_blobs_mk "$BLOBS_LIST" "$OUTPUT_VENDOR" "$VENDOR"
+gen_vendor_blobs_mk "$BLOBS_LIST" "$OUTPUT_VENDOR"
 
 # Generate device-vendor.mk makefile (will be updated later)
 echo "[*] Generating 'device-vendor.mk'"
 gen_dev_vendor_mk "$OUTPUT_VENDOR"
 
+# Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
+echo "[*] Generating 'AndroidBoardVendor.mk'"
+gen_board_vendor_mk $OUTPUT_VENDOR
+echo "  [*] Bootloader:$BOOTLOADER_VER"
+echo "  [*] Baseband:$RADIO_VER"
+
+
 # Generate BoardConfigVendor.mk (vendor partition type)
 echo "[*] Generating 'BoardConfigVendor.mk'"
-gen_board_cfg_mk "$INPUT_DIR" "$OUTPUT_VENDOR" "$DEVICE"
+gen_board_cfg_mk "$INPUT_DIR" "$OUTPUT_VENDOR"
+
+# Generate vendor-board-info.txt with baseband & bootloader versions
+echo "[*] Generating 'vendor-board-info.txt'"
+gen_board_info_txt "$OUTPUT_VENDOR"
 
 # Iterate over directories with bytecode and generate a unified Android.mk file
 echo "[*] Generating 'Android.mk'"
@@ -869,6 +951,7 @@ OUTMK="$OUTPUT_VENDOR/Android.mk"
   echo ""
   echo 'LOCAL_PATH := $(call my-dir)'
   echo "ifeq (\$(TARGET_DEVICE),$DEVICE)"
+  echo "include vendor/$VENDOR/$DEVICE/AndroidBoardVendor.mk"
 } > "$OUTMK"
 
 for root in "vendor" "proprietary"

@@ -97,7 +97,7 @@ mount_img() {
   }
 
   if ! mount | grep -qs "$MOUNT_DIR"; then
-    echo "[-] "$IMAGE_FILE" mount point missing indicates fuse mount error"
+    echo "[-] '$IMAGE_FILE' mount point missing indicates fuse mount error"
     cat "$MOUNT_LOG"
     abort 1
   fi
@@ -183,6 +183,12 @@ if [ -d "$VENDOR_DATA_OUT" ]; then
   rm -rf "${VENDOR_DATA_OUT:?}"/*
 fi
 
+RADIO_DATA_OUT="$OUTPUT_DIR/radio"
+if [ -d "$RADIO_DATA_OUT" ]; then
+  rm -rf "${RADIO_DATA_OUT:?}"/*
+fi
+mkdir -p "$RADIO_DATA_OUT"
+
 archiveName="$(basename "$INPUT_ARCHIVE")"
 fileExt="${archiveName##*.}"
 archName="$(basename "$archiveName" ".$fileExt")"
@@ -206,6 +212,20 @@ else
   vImg="$extractDir/images/vendor.img"
 fi
 
+# Baseband image
+radioImg=$(find "$extractDir" -iname "radio-*.img" | head -n 1)
+if [[ "$radioImg" == "" ]]; then
+  echo "[-] Failed to locate radio image"
+  abort 1
+fi
+
+# Bootloader image
+bootloaderImg=$(find "$extractDir" -iname "bootloader-*.img" | head -n 1)
+if [[ "$bootloaderImg" == "" ]]; then
+  echo "[-] Failed to locate bootloader image"
+  abort 1
+fi
+
 # Convert from sparse to raw
 rawSysImg="$extractDir/images/system.img.raw"
 rawVImg="$extractDir/images/vendor.img.raw"
@@ -227,5 +247,15 @@ mount_img "$rawSysImg" "$SYSTEM_DATA_OUT"
 
 # Same process for vendor raw image
 mount_img "$rawVImg" "$VENDOR_DATA_OUT"
+
+# Copy bootloader & radio images
+mv "$radioImg" "$RADIO_DATA_OUT/" || {
+  echo "[-] Failed to copy radio image"
+  abort 1
+}
+mv "$bootloaderImg" "$RADIO_DATA_OUT/" || {
+  echo "[-] Failed to copy bootloader image"
+  abort 1
+}
 
 abort 0

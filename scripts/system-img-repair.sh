@@ -89,14 +89,6 @@ check_ram_size() {
   fi
 }
 
-print_expected_imgs_ver() {
-  bootloader=$(grep 'ro.build.expect.bootloader' "$1" | cut -d '=' -f2)
-  baseband=$(grep 'ro.build.expect.baseband' "$1" | cut -d '=' -f2)
-  echo "[!] Target device expects to have following img versions when using output system img"
-  echo " [*] Booatloder:$bootloader"
-  echo " [*] Baseband:$baseband"
-}
-
 get_build_id() {
   local build_id
 
@@ -611,6 +603,5 @@ elif [[ "$REPAIR_METHOD" == "OATDUMP" ]]; then
 fi
 
 echo "[*] System partition successfully extracted & repaired at '$OUTPUT_DIR'"
-print_expected_imgs_ver "$INPUT_DIR/build.prop"
 
 abort 0
