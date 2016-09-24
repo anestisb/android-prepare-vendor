@@ -8,7 +8,6 @@ system/etc/lowi.conf
 system/etc/old-apns-conf.xml
 system/etc/permissions/cneapiclient.xml
 system/etc/permissions/com.android.omadm.service.xml
-system/etc/permissions/com.google.widevine.software.drm.xml
 system/etc/permissions/qcrilhook.xml
 system/lib/hw/audio.primary.msm8994.so
 system/lib/hw/camera.msm8994.so

@@ -5,7 +5,6 @@ system/app/RCSBootstraputil/RCSBootstraputil.apk
 system/app/RcsImsBootstraputil/RcsImsBootstraputil.apk
 system/app/TimeService/TimeService.apk
 system/framework/cneapiclient.jar
-system/framework/com.google.widevine.software.drm.jar
 system/framework/qcrilhook.jar
 system/framework/rcsimssettings.jar
 system/framework/rcsservice.jar
