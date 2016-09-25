@@ -505,11 +505,18 @@ gen_mk_for_bytecode() {
       abort 1
     fi
 
-    # Some prebuilt APKs have also prebuilt JNI libs that are stored under
-    # system-wide lib directories, with app directory containing a symlink to.
-    # Resolve such cases to adjust includes so that we don't copy across the
-    # same file twice.
+    # Pre-optimized APKs have their native libraries resources stripped from archive
     if [ -d "$appDir/lib" ]; then
+      # Self-contained native libraries are copied across utilizing PRODUCT_COPY_FILES
+      while read -r lib
+      do
+        echo "$lib" | sed "s#$INDIR/##" >> "$RUNTIME_EXTRA_BLOBS_LIST"
+      done < <(find "$appDir/lib" -type f -iname '*.so')
+
+      # Some prebuilt APKs have also prebuilt JNI libs that are stored under
+      # system-wide lib directories, with app directory containing a symlink to.
+      # Resolve such cases to adjust includes so that we don't copy across the
+      # same file twice.
       while read -r lib
       do
         hasApkSymLinks=true
@@ -810,6 +817,7 @@ EXTRA_MODULES=""
 
 DEVICE=""
 VENDOR=""
+RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
 
 # Check that system tools exist
 for i in "${sysTools[@]}"
@@ -955,6 +963,11 @@ gen_android_mk "$OUTPUT_VENDOR"
 # Add user defined extra module targets to PRODUCT_PACKAGES list
 update_dev_vendor_mk
 
+# Generate $DEVICE-vendor-blobs.mk makefile (plain files that don't require a target module)
+if [ -f "$RUNTIME_EXTRA_BLOBS_LIST" ]; then
+  echo "[*] Processing additional runtime generated product files"
+  extract_blobs "$RUNTIME_EXTRA_BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
+  update_vendor_blobs_mk "$RUNTIME_EXTRA_BLOBS_LIST"
 fi
 
 # Generate file signatures list
