@@ -73,10 +73,10 @@ verify_input() {
 }
 
 get_device_codename() {
-  local device
+  local device=""
 
   device=$(grep 'ro.product.device=' "$1" | cut -d '=' -f2 | \
-           tr '[:upper:]' '[:lower:]')
+           tr '[:upper:]' '[:lower:]' || true)
   if [[ "$device" == "" ]]; then
     echo "[-] Device string not found"
     abort 1
@@ -85,10 +85,10 @@ get_device_codename() {
 }
 
 get_vendor() {
-  local vendor
+  local vendor=""
 
   vendor=$(grep 'ro.product.manufacturer=' "$1" | cut -d '=' -f2 | \
-           tr '[:upper:]' '[:lower:]')
+           tr '[:upper:]' '[:lower:]' || true)
   if [[ "$vendor" == "" ]]; then
     echo "[-] Device codename string not found"
     abort 1
@@ -97,18 +97,16 @@ get_vendor() {
 }
 
 get_radio_ver() {
-  local radio_ver
-  radio_ver=$(grep 'ro.build.expect.baseband' "$1" | cut -d '=' -f2)
-  if [[ "$radio_ver" == "" ]]; then
-    echo "[-] Failed to identify radio version"
-    abort 1
-  fi
+  local radio_ver=""
+  radio_ver=$(grep 'ro.build.expect.baseband' "$1" | cut -d '=' -f2 || true)
+
+  # We allow empty radio version so that we can detect devices with no baseband
   echo "$radio_ver"
 }
 
 get_bootloader_ver() {
-  local bootloader_ver
-  bootloader_ver=$(grep 'ro.build.expect.bootloader' "$1" | cut -d '=' -f2)
+  local bootloader_ver=""
+  bootloader_ver=$(grep 'ro.build.expect.bootloader' "$1" | cut -d '=' -f2 || true)
   if [[ "$bootloader_ver" == "" ]]; then
     echo "[-] Failed to identify bootloader version"
     abort 1
@@ -142,10 +140,13 @@ copy_radio_files() {
   local OUTDIR="$2"
 
   mkdir -p "$OUTDIR/radio"
-  cp -a "$INDIR/radio/radio"* "$OUTDIR/radio/radio-$DEVICE-$RADIO_VER.img" || {
-    echo "[-] Failed to copy radio image"
-    abort 1
-  }
+
+  if [[ "$RADIO_VER" != "" ]]; then
+    cp -a "$INDIR/radio/radio"* "$OUTDIR/radio/radio-$DEVICE-$RADIO_VER.img" || {
+      echo "[-] Failed to copy radio image"
+      abort 1
+    }
+  fi
 
   cp -a "$INDIR/radio/bootloader"* "$OUTDIR/radio/bootloader-$DEVICE-$BOOTLOADER_VER.img" || {
     echo "[-] Failed to copy bootloader image"
@@ -283,6 +284,10 @@ update_vendor_blobs_mk() {
 update_dev_vendor_mk() {
   local module
 
+  if [ ! -s "$EXTRA_MODULES" ]; then
+    return
+  fi
+
   {
     echo "# Extra modules from user configuration"
     echo 'PRODUCT_PACKAGES += \'
@@ -300,7 +305,9 @@ gen_board_vendor_mk() {
     echo 'LOCAL_PATH := $(call my-dir)'
     echo ""
     echo "\$(call add-radio-file,radio/bootloader-$DEVICE-$BOOTLOADER_VER.img,version-bootloader)"
-    echo "\$(call add-radio-file,radio/radio-$DEVICE-$RADIO_VER.img,version-baseband)"
+    if [[ "$RADIO_VER" != "" ]]; then
+      echo "\$(call add-radio-file,radio/radio-$DEVICE-$RADIO_VER.img,version-baseband)"
+    fi
   } >> "$ANDROID_BOARD_VENDOR_MK"
 }
 
@@ -343,7 +350,9 @@ gen_board_info_txt() {
   {
     echo "require board=$DEVICE"
     echo "require version-bootloader=$BOOTLOADER_VER"
-    echo "require version-baseband=$RADIO_VER"
+    if [[ "$RADIO_VER" != "" ]]; then
+      echo "require version-baseband=$RADIO_VER"
+    fi
   } > "$OUTTXT"
 }
 
@@ -778,10 +787,16 @@ gen_android_mk() {
     done
   fi
 
-  # Append extra modules & close master Android.mk
+  # Append extra modules if present
+  if [ -s "$EXTRA_MODULES" ]; then
+    {
+      echo ""
+      cat "$EXTRA_MODULES"
+    } >> "$ANDROID_MK"
+  fi
+
+  # Finally close master Android.mk
   {
-    echo ""
-    cat "$EXTRA_MODULES"
     echo ""
     echo "endif"
   } >> "$ANDROID_MK"
@@ -946,7 +961,9 @@ echo -e "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk
 echo "[*] Generating 'AndroidBoardVendor.mk'"
 gen_board_vendor_mk
 echo "  [*] Bootloader:$BOOTLOADER_VER"
-echo "  [*] Baseband:$RADIO_VER"
+if [[ "$RADIO_VER" != "" ]]; then
+  echo "  [*] Baseband:$RADIO_VER"
+fi
 
 # Generate BoardConfigVendor.mk (vendor partition type)
 echo "[*] Generating 'BoardConfigVendor.mk'"

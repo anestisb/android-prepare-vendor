@@ -213,10 +213,11 @@ else
 fi
 
 # Baseband image
+hasRadioImg=true
 radioImg=$(find "$extractDir" -iname "radio-*.img" | head -n 1)
 if [[ "$radioImg" == "" ]]; then
-  echo "[-] Failed to locate radio image"
-  abort 1
+  echo "[!] No baseband firmware present - skipping"
+  hasRadioImg=false
 fi
 
 # Bootloader image
@@ -249,10 +250,12 @@ mount_img "$rawSysImg" "$SYSTEM_DATA_OUT"
 mount_img "$rawVImg" "$VENDOR_DATA_OUT"
 
 # Copy bootloader & radio images
-mv "$radioImg" "$RADIO_DATA_OUT/" || {
-  echo "[-] Failed to copy radio image"
-  abort 1
-}
+if [ $hasRadioImg = true ]; then
+  mv "$radioImg" "$RADIO_DATA_OUT/" || {
+    echo "[-] Failed to copy radio image"
+    abort 1
+  }
+fi
 mv "$bootloaderImg" "$RADIO_DATA_OUT/" || {
   echo "[-] Failed to copy bootloader image"
   abort 1
