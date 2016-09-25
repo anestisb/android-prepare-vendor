@@ -131,6 +131,7 @@ target device before any pull request.
  * Fixes bug when repairing multi-dex APKs with oatdump method
  * Introduced sorted data processing so that output is diff friendly
  * Include baseband & bootloader firmware at vendor blobs
+ * Various performance optimizations
 * 0.1.4 - 17 Sep 2016
  * Split configuration into 2 groups: Naked & GPlay
  * Fix extra modules being ignored bug
