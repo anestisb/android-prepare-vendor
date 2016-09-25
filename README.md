@@ -126,7 +126,7 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.1.5 - TBC
+* 0.1.5 - 25 Sep 2016
  * Fixes issue with symlinks resolve when output path with spaces
  * Fixes bug when repairing multi-dex APKs with oatdump method
  * Introduced sorted data processing so that output is diff friendly
