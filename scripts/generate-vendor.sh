@@ -968,6 +968,10 @@ if [ -f "$RUNTIME_EXTRA_BLOBS_LIST" ]; then
   echo "[*] Processing additional runtime generated product files"
   extract_blobs "$RUNTIME_EXTRA_BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
   update_vendor_blobs_mk "$RUNTIME_EXTRA_BLOBS_LIST"
+
+  cat "$RUNTIME_EXTRA_BLOBS_LIST" >> "$BLOBS_LIST"
+  sort "$BLOBS_LIST" > "$BLOBS_LIST.tmp"
+  mv "$BLOBS_LIST.tmp" "$BLOBS_LIST"
 fi
 
 # Generate file signatures list
