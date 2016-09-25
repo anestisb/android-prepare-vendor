@@ -12,7 +12,7 @@ readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly REALPATH_SCRIPT="$SCRIPTS_DIR/realpath.sh"
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
-declare -a sysTools=("cp" "sed" "zipinfo" "jarsigner" "awk")
+declare -a sysTools=("cp" "sed" "zipinfo" "jarsigner" "awk" "shasum")
 declare -a dirsWithBC=("app" "framework" "priv-app")
 
 # Last known good defaults in case fdisk automation failed
@@ -786,6 +786,16 @@ strip_trail_slash_from_file() {
   sed '$s/ \\/\n/' "$INFILE" > "$INFILE.tmp"
   mv "$INFILE.tmp" "$INFILE"
 }
+
+gen_sigs_file() {
+  local INDIR="$1"
+  local SIGSFILE="$INDIR/file_signatures.txt"
+  > "$SIGSFILE"
+
+  find "$INDIR" -type f ! -name "file_signatures.txt" | sort | while read -r file
+  do
+    shasum -a1 "$file" | sed "s#$INDIR/##" >> "$SIGSFILE"
+  done
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -947,5 +957,8 @@ update_dev_vendor_mk
 
 fi
 
+# Generate file signatures list
+echo "[*] Generating signatures file"
+gen_sigs_file "$OUTPUT_VENDOR"
 
 abort 0
