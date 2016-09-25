@@ -611,104 +611,97 @@ gen_mk_for_bytecode() {
 
 gen_mk_for_shared_libs() {
   local INDIR="$1"
-  local RELROOT="$2"
-  local OUTBASE="$3"
+  local OUTBASE="$2"
 
   local -a PKGS
   local hasPKGS=false
   local -a MULTIDSO
   local hasMultiDSO=false
+  local dsoModule
 
-  # If target is multi-lib we first iterate the 64bit libs to detect possible
-  # dual target modules
-  if [ -d "$OUTBASE/$RELROOT/lib64" ]; then
-    while read -r file
-    do
-      local dsoRelRoot="" dso32RelRoot=""  dsoFile="" dsoName="" dsoSrc="" dso32Src=""
-
-      dsoRelRoot=$(dirname "$file" | sed "s#$OUTBASE/##")
-      dsoFile=$(basename "$file")
-      dsoName=$(basename "$file" ".so")
-      dsoSrc="$dsoRelRoot/$dsoFile"
-
-      dso32RelRoot=$(echo "$dsoRelRoot" | sed "s#lib64#lib#")
-      dso32Src="$dso32RelRoot/$dsoFile"
-
-      if [[ "$RELROOT" == "proprietary" ]]; then
-        dsoRealRel="$(echo "$dsoSrc" | sed "s#proprietary/#system/#")"
-      else
-        dsoRealRel="$dsoSrc"
-      fi
-
-      # TODO: Instead of iterate all and skip, go with the whitelist array
-      # directly. This is a temporarily hack to ensure that approach is working
-      # as expected before finalizing
-      if [ $hasDsoModules = true ]; then
-        if ! array_contains "$dsoRealRel" "${DSO_MODULES[@]}"; then
-          continue
-        fi
-      fi
-
-      {
-        echo ""
-        echo 'include $(CLEAR_VARS)'
-        echo "LOCAL_MODULE := $dsoName"
-        echo 'LOCAL_MODULE_TAGS := optional'
-        echo "LOCAL_MODULE_OWNER := $VENDOR"
-        echo "LOCAL_SRC_FILES := $dsoSrc"
-        echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
-        echo "LOCAL_MODULE_SUFFIX := .so"
-
-        if [[ "$RELROOT" == "vendor" ]]; then
-          echo "LOCAL_PROPRIETARY_MODULE := true"
-        fi
-
-        # In case 32bit version present - upgrade to dual target
-        if [ -f "$OUTBASE/$dso32Src" ]; then
-          echo "LOCAL_MULTILIB := both"
-          echo "LOCAL_SRC_FILES_32 := $dso32Src"
-
-          # Cache dual-targets so that we don't include again when searching for
-          # 32bit only libs under a 64bit system
-          MULTIDSO=("${MULTIDSO[@]-}" "$dso32Src")
-          hasMultiDSO=true
-        else
-          echo "LOCAL_MULTILIB := first"
-        fi
-
-        echo 'include $(BUILD_PREBUILT)'
-      } >> "$ANDROID_MK"
-
-      # Also add pkgName to runtime array to append later the vendor mk
-      PKGS=("${PKGS[@]-}" "$dsoName")
-      hasPKGS=true
-    done < <(find "$OUTBASE/$RELROOT/lib64" -maxdepth 1 -type f -iname 'lib*.so' | sort)
-  fi
-
-  # Then iterate the 32bit libs excluding the ones already included as dual targets
-  while read -r file
+  # First iterate the 64bit libs to detect possible dual target modules
+  for dsoModule in "${DSO_MODULES[@]}"
   do
-    local dsoRelRoot="" dsoFile="" dsoName="" dsoSrc=""
+    # Array is mixed so skip non-64bit libs
+    if echo "$dsoModule" | grep -q "/lib/"; then
+      continue
+    fi
 
-    dsoRelRoot=$(dirname "$file" | sed "s#$OUTBASE/##")
-    dsoFile=$(basename "$file")
-    dsoName=$(basename "$file" ".so")
+    local curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
+
+    # Check that configuration requested file exists
+    if [ ! -f "$curFile" ]; then
+      echo "[-] Failed to locate '$curFile' file"
+      abort 1
+    fi
+
+    local dsoRelRoot="" dso32RelRoot="" dsoFile="" dsoName="" dsoSrc="" dso32Src=""
+
+    dsoRelRoot=$(dirname "$curFile" | sed "s#$OUTBASE/##")
+    dsoFile=$(basename "$curFile")
+    dsoName=$(basename "$curFile" ".so")
     dsoSrc="$dsoRelRoot/$dsoFile"
 
-    if [[ "$RELROOT" == "proprietary" ]]; then
-      dsoRealRel="$(echo "$dsoSrc" | sed "s#proprietary/#system/#")"
-    else
-      dsoRealRel="$dsoSrc"
+    dso32RelRoot=$(echo "$dsoRelRoot" | sed "s#lib64#lib#")
+    dso32Src="$dso32RelRoot/$dsoFile"
+
+    {
+      echo ""
+      echo 'include $(CLEAR_VARS)'
+      echo "LOCAL_MODULE := $dsoName"
+      echo 'LOCAL_MODULE_TAGS := optional'
+      echo "LOCAL_MODULE_OWNER := $VENDOR"
+      echo "LOCAL_SRC_FILES := $dsoSrc"
+      echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
+      echo "LOCAL_MODULE_SUFFIX := .so"
+
+      if echo "$dsoModule" | grep -q "^vendor/"; then
+        echo "LOCAL_PROPRIETARY_MODULE := true"
+      fi
+
+      # In case 32bit version present - upgrade to dual target
+      if [ -f "$OUTBASE/$dso32Src" ]; then
+        echo "LOCAL_MULTILIB := both"
+        echo "LOCAL_SRC_FILES_32 := $dso32Src"
+
+        # Cache dual-targets so that we don't include again when searching for
+        # 32bit only libs under a 64bit system
+        MULTIDSO=("${MULTIDSO[@]-}" "$dso32Src")
+        hasMultiDSO=true
+      else
+        echo "LOCAL_MULTILIB := first"
+      fi
+
+      echo 'include $(BUILD_PREBUILT)'
+    } >> "$ANDROID_MK"
+
+    # Also add pkgName to runtime array to append later the vendor mk
+    PKGS=("${PKGS[@]-}" "$dsoName")
+    hasPKGS=true
+  done
+
+  # Then iterate the 32bit libs excluding the ones already included as dual targets
+  for dsoModule in "${DSO_MODULES[@]}"
+  do
+    # Array is mixed so skip non-64bit libs
+    if echo "$dsoModule" | grep -q "/lib64/"; then
+      continue
     fi
 
-    # TODO: Instead of iterate all and skip, go with the whitelist array
-    # directly. This is a temporarily hack to ensure that approach is working
-    # as expected before finalizing
-    if [ $hasDsoModules = true ]; then
-      if ! array_contains "$dsoRealRel" "${DSO_MODULES[@]}"; then
-        continue
-      fi
+    local curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
+
+    # Check that configuration requested file exists
+    if [ ! -f "$curFile" ]; then
+      echo "[-] Failed to locate '$curFile' file"
+      abort 1
     fi
+
+    local dsoRelRoot="" dsoFile="" dsoName="" dsoSrc=""
+
+    dsoRelRoot=$(dirname "$curFile" | sed "s#$OUTBASE/##")
+    dsoFile=$(basename "$curFile")
+    dsoName=$(basename "$curFile" ".so")
+    dsoSrc="$dsoRelRoot/$dsoFile"
 
     if [ $hasMultiDSO = true ]; then
       if array_contains "$dsoSrc" "${MULTIDSO[@]}"; then
@@ -726,7 +719,7 @@ gen_mk_for_shared_libs() {
       echo "LOCAL_MODULE_CLASS := SHARED_LIBRARIES"
       echo "LOCAL_MODULE_SUFFIX := .so"
 
-      if [[ "$RELROOT" == "vendor" ]]; then
+      if echo "$dsoModule" | grep -q "^vendor/"; then
         echo "LOCAL_PROPRIETARY_MODULE := true"
       fi
 
@@ -737,12 +730,12 @@ gen_mk_for_shared_libs() {
     # Also add pkgName to runtime array to append later the vendor mk
     PKGS=("${PKGS[@]-}" "$dsoName")
     hasPKGS=true
-  done < <(find "$OUTBASE/$RELROOT/lib" -maxdepth 1 -type f -iname 'lib*.so' | sort)
+  done
 
   # Update vendor mk
   if [ $hasPKGS = true ]; then
     {
-      echo "# Prebuilt shared libraries from '$RELROOT'"
+      echo "# Prebuilt shared libraries"
       echo 'PRODUCT_PACKAGES += \'
       for pkg in ${PKGS[@]}
       do
@@ -780,11 +773,8 @@ gen_android_mk() {
 
   # Iterate over directories with shared libraries and update the unified Android.mk file
   if [ $hasDsoModules = true ]; then
-    echo "[*] Gathering data for shared library (.so) pre-built modules"
-    for root in "vendor" "proprietary"
-    do
-      gen_mk_for_shared_libs "$INPUT_DIR" "$root" "$OUTPUT_VENDOR"
-    done
+    echo "[*] Generating shared library individual pre-built modules"
+    gen_mk_for_shared_libs "$INPUT_DIR" "$OUTPUT_VENDOR"
   fi
 
   # Append extra modules if present
