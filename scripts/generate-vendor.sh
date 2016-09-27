@@ -142,13 +142,13 @@ copy_radio_files() {
   mkdir -p "$OUTDIR/radio"
 
   if [[ "$RADIO_VER" != "" ]]; then
-    cp -a "$INDIR/radio/radio"* "$OUTDIR/radio/radio-$DEVICE-$RADIO_VER.img" || {
+    cp -a "$INDIR/radio/radio"* "$OUTDIR/radio/radio.img" || {
       echo "[-] Failed to copy radio image"
       abort 1
     }
   fi
 
-  cp -a "$INDIR/radio/bootloader"* "$OUTDIR/radio/bootloader-$DEVICE-$BOOTLOADER_VER.img" || {
+  cp -a "$INDIR/radio/bootloader"* "$OUTDIR/radio/bootloader.img" || {
     echo "[-] Failed to copy bootloader image"
     abort 1
   }
@@ -304,9 +304,9 @@ gen_board_vendor_mk() {
   {
     echo 'LOCAL_PATH := $(call my-dir)'
     echo ""
-    echo "\$(call add-radio-file,radio/bootloader-$DEVICE-$BOOTLOADER_VER.img,version-bootloader)"
+    echo "\$(call add-radio-file,radio/bootloader.img,version-bootloader)"
     if [[ "$RADIO_VER" != "" ]]; then
-      echo "\$(call add-radio-file,radio/radio-$DEVICE-$RADIO_VER.img,version-baseband)"
+      echo "\$(call add-radio-file,radio/radio.img,version-baseband)"
     fi
   } >> "$ANDROID_BOARD_VENDOR_MK"
 }
