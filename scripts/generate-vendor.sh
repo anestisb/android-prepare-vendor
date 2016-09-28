@@ -795,7 +795,7 @@ gen_android_mk() {
 strip_trail_slash_from_file() {
   local INFILE="$1"
 
-  sed '$s/ \\/\n/' "$INFILE" > "$INFILE.tmp"
+  sed '$s# \\#\'$'\n#' "$INFILE" > "$INFILE.tmp"
   mv "$INFILE.tmp" "$INFILE"
 }
 
