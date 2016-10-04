@@ -54,6 +54,7 @@ cat <<_EOF
                         'BoardConfigVendor.mk'
       --extra-modules : Text file additional modules to be appended at master vendor
                         'Android.mk'
+      --allow-preopt  : Don't disable LOCAL_DEX_PREOPT for /system
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -570,7 +571,9 @@ gen_mk_for_bytecode() {
         echo "$priv"
       fi
       echo "LOCAL_MODULE_SUFFIX := $suffix"
-      echo "LOCAL_DEX_PREOPT := false"
+      if [[ "$ALLOW_PREOPT" = false || "$RELROOT" == "vendor" ]]; then
+        echo "LOCAL_DEX_PREOPT := false"
+      fi
       echo 'include $(BUILD_PREBUILT)'
 
       # Append rules for APK lib symlinks if present
@@ -819,6 +822,7 @@ BLOBS_LIST=""
 DEP_DSO_BLOBS_LIST=""
 MK_FLAGS_LIST=""
 EXTRA_MODULES=""
+ALLOW_PREOPT=false
 
 DEVICE=""
 VENDOR=""
@@ -833,7 +837,7 @@ do
   fi
 done
 
-while [[ $# -gt 1 ]]
+while [[ $# -gt 0 ]]
 do
   arg="$1"
   case $arg in
@@ -860,6 +864,9 @@ do
     --extra-modules)
       EXTRA_MODULES="$2"
       shift
+      ;;
+    --allow-preopt)
+      ALLOW_PREOPT=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"

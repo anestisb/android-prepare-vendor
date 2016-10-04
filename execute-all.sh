@@ -57,6 +57,7 @@ cat <<_EOF
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
       -j|--java    : [OPTIONAL] Java path to use instead of system auto detected global version
       -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images
+      --force-opt  : [OPTIONAL] Disable LOCAL_DEX_PREOPT overrides for /system bytecode
 _EOF
   abort 1
 }
@@ -114,6 +115,7 @@ FACTORY_IMGS_DATA=""
 CONFIG="config-naked"
 USER_JAVA_PATH=""
 AUTO_TOS_ACCEPT=false
+FORCE_PREOPT=false
 
 # Compatibility
 HOST_OS=$(uname)
@@ -179,6 +181,9 @@ do
       ;;
     -y|--yes)
       AUTO_TOS_ACCEPT=true
+      ;;
+    --force-preopt)
+      FORCE_PREOPT=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -362,6 +367,13 @@ elif [ $API_LEVEL -ge 24 ]; then
   REPAIR_SCRIPT_ARG="--method OATDUMP \
                      --oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/oatdump \
                      --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/dexrepair"
+
+  # dex2oat is invoked from host with aggressive verifier flags. So there is a
+  # high chance it will fail to preoptimize bytecode repaired with oatdumo method
+  # Let the user know.
+  if [ $FORCE_PREOPT = true ]; then
+    echo "[!] AOSP builds might fail when LOCAL_DEX_PREOPT isn't disabled for this bytecode repair method"
+  fi
 else
   echo "[-] Non expected /system repair method"
   abort 1
@@ -388,11 +400,17 @@ cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 # Make radio files available to vendor generate script
 ln -s "$FACTORY_IMGS_DATA/radio" "$FACTORY_IMGS_R_DATA/radio"
 
+VGEN_SCRIPT_EXTRA_ARGS=""
+if [ $FORCE_PREOPT = true ]; then
+  VGEN_SCRIPT_EXTRA_ARGS="--allow-preopt"
+fi
+
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
   --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
   --flags-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/vendor-config-api$API_LEVEL.txt" \
-  --extra-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/extra-modules-api$API_LEVEL.txt" || {
+  --extra-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/extra-modules-api$API_LEVEL.txt" \
+  $VGEN_SCRIPT_EXTRA_ARGS || {
   echo "[-] Vendor generation failed"
   abort 1
 }
