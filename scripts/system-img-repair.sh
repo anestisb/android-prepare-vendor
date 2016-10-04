@@ -221,7 +221,7 @@ oat2dex_repair() {
           java -jar "$OAT2DEX_JAR" -o "$TMP_WORK_DIR" "$curOdex" \
                "$TMP_WORK_DIR/$abi/dex" &>/dev/null || {
             echo "[!] '$relFile/oat/$abi/$pkgName.odex' de-optimization failed"
-            abort 1
+            continue 2
           }
 
           # If DEX not created, oat2dex failed to resolve a dependency and skipped file
@@ -229,6 +229,10 @@ oat2dex_repair() {
             echo "[-] '$relFile' de-optimization failed consider manual inspection - skipping archive"
             continue 2
           fi
+
+          # Generate an empty directory under package dir with the detected ABI
+          # so that vendor generate script can detect possible multilib scenarios
+          mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
         elif [ -f "$TMP_WORK_DIR/$abi/dex/$pkgName.dex" ]; then
           # boot classes bytecode is available from boot.oat extracts - copy
           # them with wildcard so following multi-dex detection logic can pick
@@ -386,6 +390,10 @@ oatdump_repair() {
             echo "[-] '$relFile' DEX export failed consider manual inspection - skipping archive"
             continue 2
           else
+            # Generate an empty directory under package dir with the detected ABI
+            # so that vendor generate script can detect possible multilib scenarios
+            mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
+
             # Abort inner loop at first match
             break
           fi
@@ -578,6 +586,10 @@ smali_repair() {
 
         # Don't do the same work again for other ABIs if no error
         if [ $hasError = false ]; then
+
+          # Generate an empty directory under package dir with the detected ABI
+          # so that vendor generate script can detect possible multilib scenarios
+          mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
           break;
         fi
       done

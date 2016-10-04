@@ -574,6 +574,12 @@ gen_mk_for_bytecode() {
       if [[ "$ALLOW_PREOPT" = false || "$RELROOT" == "vendor" ]]; then
         echo "LOCAL_DEX_PREOPT := false"
       fi
+
+      # Check if not building against first target when 64bit
+      if [[ -d "$appDir/oat/arm" || -d "$appDir/arm/x86" ]]; then
+        echo "LOCAL_MULTILIB := 32"
+      fi
+
       echo 'include $(BUILD_PREBUILT)'
 
       # Append rules for APK lib symlinks if present
