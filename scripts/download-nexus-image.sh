@@ -141,7 +141,7 @@ curl --silent -c "$COOKIE_FILE" -L "$NID_URL" &>/dev/null
 
 # Change cookie scope back to google.com since we might have
 # a location based redirect to different domain (e.g. google.gr)
-grep -io "google.[[:alpha:]]\+\t" "$COOKIE_FILE" | \
+grep -io "google.[[:alpha:]]\+[[:blank:]]" "$COOKIE_FILE" | \
   sed -e "s/[[:space:]]\+//g" | sort -u | \
   while read -r domain
 do
