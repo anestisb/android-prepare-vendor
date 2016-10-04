@@ -129,6 +129,7 @@ target device before any pull request.
 * 0.1.7 - TBC
  * [EXPERIMENTAL] Deprecate SmaliEx and use Baksmali/Smali to deodex bytecode
  * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor generate script
+ * Respect LOCAL_MULTILIB when 32bit bytecode prebuilts detected against a 64bit device
 * 0.1.6 - 4 Oct 2016
  * Download automation compatibility with refactored Google Nexus images website
  * Bug fixes when generating from MAC
