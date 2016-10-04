@@ -184,7 +184,7 @@ do
     -y|--yes)
       AUTO_TOS_ACCEPT=true
       ;;
-    --force-preopt)
+    --force-opt)
       FORCE_PREOPT=true
       ;;
     --smali)
