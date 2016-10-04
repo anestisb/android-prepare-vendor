@@ -58,6 +58,7 @@ cat <<_EOF
       -j|--java    : [OPTIONAL] Java path to use instead of system auto detected global version
       -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images
       --force-opt  : [OPTIONAL] Disable LOCAL_DEX_PREOPT overrides for /system bytecode
+      --smali      : [EXPERIMENTAL] Always use smali/baksmali to deodex preoptimized bytecode
 _EOF
   abort 1
 }
@@ -116,6 +117,7 @@ CONFIG="config-naked"
 USER_JAVA_PATH=""
 AUTO_TOS_ACCEPT=false
 FORCE_PREOPT=false
+USE_SMALI=false
 
 # Compatibility
 HOST_OS=$(uname)
@@ -184,6 +186,9 @@ do
       ;;
     --force-preopt)
       FORCE_PREOPT=true
+      ;;
+    --smali)
+      USE_SMALI=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -356,6 +361,18 @@ fi
 # Adjust repair method based on API level or skip flag
 if [ $SKIP_SYSDEOPT = true ]; then
   REPAIR_SCRIPT_ARG="--method NONE"
+elif [ $USE_SMALI = true ]; then
+  if [ ! -f "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/oatdump" ]; then
+    echo "[*] First run detected - downloading oatdump host bin & lib dependencies"
+    oatdump_prepare_env
+  fi
+  REPAIR_SCRIPT_ARG="--method SMALIDEODEX \
+                     --oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/oatdump \
+                     --smali $SCRIPTS_ROOT/hostTools/Java/smali.jar \
+                     --baksmali $SCRIPTS_ROOT/hostTools/Java/baksmali.jar"
+
+  # LOCAL_DEX_PREOPT can be safely used so enable globally for /system
+  FORCE_PREOPT=true
 elif [ $API_LEVEL -le 23 ]; then
   REPAIR_SCRIPT_ARG="--method OAT2DEX \
                      --oat2dex $SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"
