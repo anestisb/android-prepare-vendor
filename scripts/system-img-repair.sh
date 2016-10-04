@@ -220,19 +220,22 @@ oat2dex_repair() {
           # If odex present de-optimize it
           java -jar "$OAT2DEX_JAR" -o "$TMP_WORK_DIR" "$curOdex" \
                "$TMP_WORK_DIR/$abi/dex" &>/dev/null || {
-            echo "[!] '$relFile/oat/$abi/$pkgName.odex' de-optimization failed"
-            continue 2
+            echo "[-] '$relFile/oat/$abi/$pkgName.odex' de-optimization failed"
+            abort 1
           }
 
           # If DEX not created, oat2dex failed to resolve a dependency and skipped file
           if [ ! -f "$TMP_WORK_DIR/$pkgName.dex" ]; then
-            echo "[-] '$relFile' de-optimization failed consider manual inspection - skipping archive"
-            continue 2
+            echo "[-] '$relFile' de-optimization failed"
+            abort 1
           fi
 
           # Generate an empty directory under package dir with the detected ABI
           # so that vendor generate script can detect possible multilib scenarios
           mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
+
+          # Abort inner loop at first match
+          break
         elif [ -f "$TMP_WORK_DIR/$abi/dex/$pkgName.dex" ]; then
           # boot classes bytecode is available from boot.oat extracts - copy
           # them with wildcard so following multi-dex detection logic can pick
@@ -377,26 +380,28 @@ oatdump_repair() {
       for abi in ${ABIS[@]}
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
-        if [ -f "$curOdex" ]; then
-          $OATDUMP_BIN --oat-file="$curOdex" \
-               --export-dex-to="$TMP_WORK_DIR" &>/dev/null || {
-            echo "[!] DEX dump from '$curOdex' failed"
-            abort 1
-          }
+        if [ ! -f "$curOdex" ]; then
+          continue
+        fi
 
-          # If DEX not created, oat2dex failed to resolve a dependency and skipped file
-          dexsExported=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_export.dex" | wc -l | tr -d ' ')
-          if [ $dexsExported -eq 0 ]; then
-            echo "[-] '$relFile' DEX export failed consider manual inspection - skipping archive"
-            continue 2
-          else
-            # Generate an empty directory under package dir with the detected ABI
-            # so that vendor generate script can detect possible multilib scenarios
-            mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
+        $OATDUMP_BIN --oat-file="$curOdex" \
+             --export-dex-to="$TMP_WORK_DIR" &>/dev/null || {
+          echo "[-] DEX dump from '$curOdex' failed"
+          abort 1
+        }
 
-            # Abort inner loop at first match
-            break
-          fi
+        # If DEX not created, oat2dex failed to resolve a dependency and skipped file
+        dexsExported=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_export.dex" | wc -l | tr -d ' ')
+        if [ $dexsExported -eq 0 ]; then
+          echo "[-] '$relFile' DEX export failed"
+          abort 1
+        else
+          # Generate an empty directory under package dir with the detected ABI
+          # so that vendor generate script can detect possible multilib scenarios
+          mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
+
+          # Abort inner loop at first match
+          break
         fi
       done
 
@@ -522,7 +527,6 @@ smali_repair() {
       }
       cp -a "$file" "$OUTPUT_SYS/$relDir"
     else
-      hasError=false
       deoptDir="$TMP_WORK_DIR/$pkgName/deopt"
       mkdir -p "$deoptDir"
 
@@ -537,9 +541,6 @@ smali_repair() {
         # clean bits that might have left from previous ABI run
         rm -rf "$deoptDir/*"
 
-        # Reset flag since we might have error from previous ABI try for same APK
-        hasError=false
-
         # Since baksmali is not automatically picking all dex entries inside an OAT
         # file, we first need to enumerate them. For that purpose we use oatdump tool
         dexFiles=""
@@ -549,8 +550,7 @@ smali_repair() {
 
         if [[ "$dexFiles" == "" ]]; then
           echo "[-] Failed to detect dex entries at '$curOdex' OAT file"
-          hasError=true
-          continue # Retry with different ABI if available
+          abort 1
         fi
 
         counter=1
@@ -559,8 +559,7 @@ smali_repair() {
           java -jar "$BAKSMALI_JAR" x -o "$deoptDir" -d "$TMP_WORK_DIR/$abi" \
                     "$curOdex" &>/dev/null || {
             echo "[-] '$relFile/oat/$abi/$pkgName.odex' baksmali failed"
-            hasError=true
-            continue 2 # Retry with different ABI if available
+            abort 1
           }
 
           if [ $counter -eq 1 ]; then
@@ -571,34 +570,24 @@ smali_repair() {
 
           java -jar "$SMALI_JAR" a "$deoptDir" -o "$deoptDexOut" &>/dev/null || {
             echo "[-] '$relFile/oat/$abi/$pkgName.odex' smali failed"
-            hasError=true
-            continue 2 # Retry with different ABI if available
+            abort 1
           }
 
           if [[ ! -f "$deoptDexOut" || ! -s "$deoptDexOut" ]]; then
             echo "[-] Missing generated dex file when repairing '$relFile/oat/$abi/$pkgName.odex'"
-            hasError=true
-            continue 2 # Retry with different ABI if available
+            abort 1
           fi
 
           counter=$(( counter + 1))
         done < <(echo "$dexFiles")
 
-        # Don't do the same work again for other ABIs if no error
-        if [ $hasError = false ]; then
+        # Generate an empty directory under package dir with the detected ABI
+        # so that vendor generate script can detect possible multilib scenarios
+        mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
 
-          # Generate an empty directory under package dir with the detected ABI
-          # so that vendor generate script can detect possible multilib scenarios
-          mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
-          break;
-        fi
+        # Abort inner loop at first match
+        break
       done
-
-      # If all previous loops failed - abort
-      if [ $hasError = true ]; then
-        echo "[-] '$relFile' de-optimization failed consider manual inspection - skipping archive"
-        continue # Continue with next file
-      fi
 
       # Copy APK/jar to workspace for repair
       cp "$file" "$TMP_WORK_DIR"
