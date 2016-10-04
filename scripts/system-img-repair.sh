@@ -529,6 +529,9 @@ smali_repair() {
         # clean bits that might have left from previous ABI run
         rm -rf "$deoptDir/*"
 
+        # Reset flag since we might have error from previous ABI try for same APK
+        hasError=false
+
         # Since baksmali is not automatically picking all dex entries inside an OAT
         # file, we first need to enumerate them. For that purpose we use oatdump tool
         dexFiles=""
