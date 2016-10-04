@@ -576,7 +576,7 @@ gen_mk_for_bytecode() {
       fi
 
       # Check if not building against first target when 64bit
-      if [[ -d "$appDir/oat/arm" || -d "$appDir/arm/x86" ]]; then
+      if [[ -d "$appDir/oat/arm" || -d "$appDir/oat/x86" ]]; then
         echo "LOCAL_MULTILIB := 32"
       fi
 
