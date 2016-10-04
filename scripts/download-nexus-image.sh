@@ -7,7 +7,10 @@ set -e # fail on unhandled error
 set -u # fail on undefined variable
 #set -x # debug
 
+readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_download.XXXXXX) || exit 1
+readonly NID_URL="https://google.com"
 readonly GURL="https://developers.google.com/android/nexus/images"
+readonly TOSURL="https://developers.google.com/profile/acknowledgeNotification"
 declare -a sysTools=("curl" "wget")
 
 abort() {
@@ -22,12 +25,47 @@ cat <<_EOF
       -a|--alias   : Device alias at Google Dev website (e.g. volantis vs flounder)
       -b|--buildID : BuildID string (e.g. MMB29P)
       -o|--output  : Path to save images archived
+      -y|--yes     : Default accept Google ToS
 _EOF
   abort 1
 }
 
 command_exists() {
   type "$1" &> /dev/null
+}
+
+accept_tos() {
+  local userRes userResFmt
+
+  # Message based on 'October 3, 2016' update
+  cat << EOF
+
+--{ Google Terms and Conditions
+Downloading of the system image and use of the device software is subject to the
+Google Terms of Service [1]. By continuing, you agree to the Google Terms of
+Service [1] and Privacy Policy [2]. Your downloading of the system image and use
+of the device software may also be subject to certain third-party terms of
+service, which can be found in Settings > About phone > Legal information, or as
+otherwise provided.
+
+[1] https://www.google.com/intl/en/policies/terms/
+[2] https://www.google.com/intl/en/policies/privacy/
+
+EOF
+
+echo -n "[?] I have read and agree with the above terms and conditions - ACKNOWLEDGE [y|n]: "
+if [ $AUTO_TOS_ACCEPT = true ]; then
+  echo "yes"
+  userRes="yes"
+else
+  read userRes
+fi
+
+userResFmt=$(echo "$userRes" | tr '[:upper:]' '[:lower:]')
+if [[ "$userResFmt" != "yes" && "$userResFmt" != "y" ]]; then
+  echo "[!] Cannot continue downloading without agreeing"
+  abort 1
+fi
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -45,8 +83,9 @@ DEVICE=""
 DEV_ALIAS=""
 BUILDID=""
 OUTPUT_DIR=""
+AUTO_TOS_ACCEPT=false
 
-while [[ $# -gt 1 ]]
+while [[ $# -gt 0 ]]
 do
   arg="$1"
   case $arg in
@@ -65,6 +104,9 @@ do
     -b|--buildID)
       BUILDID=$(echo "$2" | tr '[:upper:]' '[:lower:]')
       shift
+      ;;
+    -y|--yes)
+      AUTO_TOS_ACCEPT=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -93,8 +135,35 @@ if [[ "$DEV_ALIAS" == "" ]]; then
   DEV_ALIAS="$DEVICE"
 fi
 
-url=$(curl --silent "$GURL" | grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | \
-      cut -d '"' -f2)
+# Since ToS is bind with NID cookie, first get one
+COOKIE_FILE="$TMP_WORK_DIR/g_cookies.txt"
+curl --silent -c "$COOKIE_FILE" -L "$NID_URL" &>/dev/null
+
+# Change cookie scope back to google.com since we might have
+# a location based redirect to different domain (e.g. google.gr)
+grep -io "google.[[:alpha:]]\+\t" "$COOKIE_FILE" | \
+  sed -e "s/[[:space:]]\+//g" | sort -u | \
+  while read -r domain
+do
+  sed -i.bak "s/$domain/google.com/g" $COOKIE_FILE
+done
+
+# Accept news ToS page
+accept_tos
+xsrf_token=$(curl -b "$COOKIE_FILE" --silent "$GURL" | \
+             grep -io "<meta name=\"xsrf_token\" content=\".*\" />" | \
+             cut -d '"' -f4)
+response=$(curl -b "$COOKIE_FILE" -X POST -d "notification_id=wall-nexus-image-tos" \
+           -H "X_XSRFToken: $xsrf_token" --write-out "%{http_code}" --output /dev/null \
+           --silent "$TOSURL")
+if [[ "$response" != "200" ]]; then
+  echo "[-] Nexus ToS accept request failed"
+  abort 1
+fi
+
+# Then retrieve the index page
+url=$(curl -b "$COOKIE_FILE" --silent -H "X_XSRFToken: $xsrf_token" "$GURL" | \
+      grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | cut -d '"' -f2)
 if [ "$url" == "" ]; then
   echo "[-] Image URL not found"
   abort 1

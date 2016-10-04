@@ -56,6 +56,7 @@ cat <<_EOF
       -k|--keep    : [OPTIONAL] Keep all factory images extracted & repaired data
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
       -j|--java    : [OPTIONAL] Java path to use instead of system auto detected global version
+      -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images
 _EOF
   abort 1
 }
@@ -112,6 +113,7 @@ _UMOUNT=""
 FACTORY_IMGS_DATA=""
 CONFIG="config-naked"
 USER_JAVA_PATH=""
+AUTO_TOS_ACCEPT=false
 
 # Compatibility
 HOST_OS=$(uname)
@@ -174,6 +176,9 @@ do
     -j|--java)
       USER_JAVA_PATH="$(_realpath "$2")"
       shift
+      ;;
+    -y|--yes)
+      AUTO_TOS_ACCEPT=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -269,8 +274,13 @@ if [[ "$INPUT_IMG" == "" ]]; then
     DEV_ALIAS="$DEVICE"
   fi
 
+  __extraArgs=""
+  if [ $AUTO_TOS_ACCEPT = true ]; then
+    __extraArgs="--yes"
+  fi
+
  $DOWNLOAD_SCRIPT --device "$DEVICE" --alias "$DEV_ALIAS" \
-       --buildID "$BUILDID" --output "$OUT_BASE" || {
+       --buildID "$BUILDID" --output "$OUT_BASE" $__extraArgs || {
     echo "[-] Images download failed"
     abort 1
   }
