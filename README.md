@@ -126,6 +126,9 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.1.7 - TBC
+ * [EXPERIMENTAL] Deprecate SmaliEx and use Baksmali/Smali to deodex bytecode
+ * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor generate script
 * 0.1.6 - 4 Oct 2016
  * Download automation compatibility with refactored Google Nexus images website
  * Bug fixes when generating from MAC
