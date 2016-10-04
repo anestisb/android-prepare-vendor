@@ -387,7 +387,7 @@ oatdump_repair() {
             continue 2
           else
             # Abort inner loop at first match
-            continue
+            break
           fi
         fi
       done
@@ -575,6 +575,11 @@ smali_repair() {
 
           counter=$(( counter + 1))
         done < <(echo "$dexFiles")
+
+        # Don't do the same work again for other ABIs if no error
+        if [ $hasError = false ]; then
+          break;
+        fi
       done
 
       # If all previous loops failed - abort
