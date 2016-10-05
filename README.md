@@ -104,21 +104,13 @@ Additional target modules (with compatible structure based on rule build type) t
 be appended at master vendor `Android.mk`.
 
 
-## Android M (API-23) supported devices
-
-* angler - Nexus 6p
-* bullhead - Nexus 5x
-* flounder - Nexus 9 WiFi (volantis)
-* flounder - Nexus 9 LTE (volantisg)
-
-## Android N (API-24) supported devices
-
-* angler - Nexus 6p
-* bullhead - Nexus 5x
-* flounder - Nexus 9 WiFi (volantis)
-
-`Nexus 9 LTE will be supported as soon as Google releases Nougat factory images`
-
+## Supported devices
+| Device                          | API 23                      | API 24           |
+| ------------------------------- | --------------------------- | -----------------|
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | smali<br>oatdump |
+| N6p angler                      | smaliex<br>smali<br>oatdump | smali<br>oatdump |
+| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | smali<br>oatdump |
+| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | *PENDING*        |
 
 ## Contributing
 
