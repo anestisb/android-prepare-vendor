@@ -103,6 +103,26 @@ mount_img() {
   fi
 }
 
+check_dir() {
+  local dirPath="$1"
+  local dirDesc="$2"
+
+  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
+    echo "[-] $dirDesc directory not found"
+    usage
+  fi
+}
+
+check_file() {
+  local filePath="$1"
+  local fileDesc="$2"
+
+  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
+    echo "[-] $fileDesc file not found"
+    usage
+  fi
+}
+
 trap "abort 1" SIGINT SIGTERM
 
 # Check that system tools exist
@@ -159,18 +179,10 @@ do
   shift
 done
 
-if [[ "$INPUT_ARCHIVE" == "" || ! -f "$INPUT_ARCHIVE" ]]; then
-  echo "[-] Input archive file not found"
-  usage
-fi
-if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
-  echo "[-] Output directory not found"
-  usage
-fi
-if [[ "$SIMG2IMG" == "" || ! -f "$SIMG2IMG" ]]; then
-  echo "[-] simg2img file not found"
-  usage
-fi
+# Input args check
+check_dir "$OUTPUT_DIR" "Output"
+check_file "$INPUT_ARCHIVE" "Input archive"
+check_file "$SIMG2IMG" "simg2img"
 
 # Prepare output folders
 SYSTEM_DATA_OUT="$OUTPUT_DIR/system"

@@ -819,6 +819,26 @@ gen_sigs_file() {
   done
 }
 
+check_dir() {
+  local dirPath="$1"
+  local dirDesc="$2"
+
+  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
+    echo "[-] $dirDesc directory not found"
+    usage
+  fi
+}
+
+check_file() {
+  local filePath="$1"
+  local fileDesc="$2"
+
+  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
+    echo "[-] $fileDesc file not found"
+    usage
+  fi
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 
@@ -882,30 +902,15 @@ do
   shift
 done
 
-if [[ "$INPUT_DIR" == "" || ! -d "$INPUT_DIR" ]]; then
-  echo "[-] Input directory not found"
-  usage
-fi
-if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
-  echo "[-] Output directory not found"
-  usage
-fi
-if [[ "$BLOBS_LIST" == "" || ! -f "$BLOBS_LIST" ]]; then
-  echo "[-] Vendor proprietary-blobs file not found"
-  usage
-fi
-if [[ "$DEP_DSO_BLOBS_LIST" == "" || ! -f "$DEP_DSO_BLOBS_LIST" ]]; then
-  echo "[-] Vendor dep-dso-proprietary file not found"
-  usage
-fi
-if [[ "$MK_FLAGS_LIST" == "" || ! -f "$MK_FLAGS_LIST" ]]; then
-  echo "[-] Vendor vendor-config file not found"
-  usage
-fi
-if [[ "$EXTRA_MODULES" == "" || ! -f "$EXTRA_MODULES" ]]; then
-  echo "[-] Vendor extra modules file not found"
-  usage
-fi
+# Input args check
+check_dir "$INPUT_DIR" "Input"
+check_dir "$OUTPUT_DIR" "Output"
+
+# Mandatory configuration files
+check_file "$BLOBS_LIST" "Vendor proprietary-blobs"
+check_file "$DEP_DSO_BLOBS_LIST" "Vendor dep-dso-proprietary"
+check_file "$MK_FLAGS_LIST" "Vendor vendor-config"
+check_file "$EXTRA_MODULES" "Vendor extra modules"
 
 # Verify input directory structure
 verify_input "$INPUT_DIR"

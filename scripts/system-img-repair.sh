@@ -63,6 +63,7 @@ cat <<_EOF
       * Download oat2dex.jar from 'https://github.com/testwhat/SmaliEx'
       * Download dexrepair from 'https://github.com/anestisb/dexRepair'
       * Compile oatdump host tools from AOSP /art repo
+      * Download baksmali from 'https://github.com/JesusFreke/smali'
       * When creating vendor makefiles, extra care is needed for APKs signature type
       * '--bytecode-list' flag is provided to speed up things in case only specific files are wanted
 _EOF
@@ -616,6 +617,26 @@ smali_repair() {
   done < <(find "$INPUT_DIR" -not -type d)
 }
 
+check_dir() {
+  local dirPath="$1"
+  local dirDesc="$2"
+
+  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
+    echo "[-] $dirDesc directory not found"
+    usage
+  fi
+}
+
+check_opt_file() {
+  local filePath="$1"
+  local fileDesc="$2"
+
+  if [[ "$filePath" != "" && ! -f "$filePath" ]]; then
+    echo "[-] '$fileDesc' file not found"
+    usage
+  fi
+}
+
 trap "abort 1" SIGINT SIGTERM
 
 # Check that system tools exist
@@ -691,43 +712,26 @@ do
   shift
 done
 
-if [[ "$INPUT_DIR" == "" || ! -d "$INPUT_DIR" ]]; then
-  echo "[-] Input directory not found"
-  usage
-fi
-if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
-  echo "[-] Output directory not found"
-  usage
-fi
+# Input args check
 if [[ "$REPAIR_METHOD" != "NONE" && "$REPAIR_METHOD" != "OAT2DEX" && \
       "$REPAIR_METHOD" != "OATDUMP" && "$REPAIR_METHOD" != "SMALIDEODEX" ]]; then
   echo "[-] Invalid repair method"
   usage
 fi
-if [[ "$OAT2DEX_JAR" != "" && ! -f "$OAT2DEX_JAR" ]]; then
-  echo "[-] oat2dex.jar not found"
-  usage
-fi
-if [[ "$OATDUMP_BIN" != "" && ! -f "$OATDUMP_BIN" ]]; then
-  echo "[-] oatdump bin not found"
-  usage
-fi
-if [[ "$DEXREPAIR_BIN" != "" && ! -f "$DEXREPAIR_BIN" ]]; then
-  echo "[-] dexrepair bin not found"
-  usage
-fi
-if [[ "$SMALI_JAR" != "" && ! -f "$SMALI_JAR" ]]; then
-  echo "[-] smali.jar bin not found"
-  usage
-fi
-if [[ "$BAKSMALI_JAR" != "" && ! -f "$BAKSMALI_JAR" ]]; then
-  echo "[-] baksmali.jar bin not found"
-  usage
-fi
-if [[ "$BYTECODE_LIST_FILE" != "" && ! -f "$BYTECODE_LIST_FILE" ]]; then
-  echo "[-] '$BYTECODE_LIST_FILE' file not found"
-  usage
-fi
+check_dir "$INPUT_DIR" "Input"
+check_dir "$OUTPUT_DIR" "Output"
+
+# Bytecode list filter file is optional
+check_opt_file "$BYTECODE_LIST_FILE" "BYTECODE_LIST_FILE"
+
+# Check optional tool paths if set. Each repair method rechecks that required
+# tools are set prior to start processing
+check_opt_file "$OAT2DEX_JAR" "oat2dex.jar"
+check_opt_file "$OATDUMP_BIN" "oatdump"
+check_opt_file "$DEXREPAIR_BIN" "dexrepair"
+check_opt_file "$SMALI_JAR" "smali.jar"
+check_opt_file "$BAKSMALI_JAR" "baksmali.jar"
+
 
 # Verify input is an Android system partition
 if [ ! -f "$INPUT_DIR/build.prop" ]; then
