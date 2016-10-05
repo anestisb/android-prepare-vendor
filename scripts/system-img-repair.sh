@@ -318,7 +318,7 @@ oatdump_repair() {
   do
     jarFile="$(basename "$file" | cut -d '-' -f2- | sed 's#.oat#.jar#')"
     BOOTJARS=("${BOOTJARS[@]-}" "$jarFile")
-  done < <(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot-*.oat")
+  done < <(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot*.oat")
 
   while read -r file
   do
