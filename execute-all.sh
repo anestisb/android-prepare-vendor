@@ -226,28 +226,31 @@ if [[ "$USER_JAVA_PATH" != "" ]]; then
 fi
 
 # Resolve Java location
+__JAVAPATH=""
+__JAVADIR=""
+__JAVA_HOME=""
 if [[ "$USER_JAVA_PATH" != "" ]]; then
-  readonly JAVAPATH=$(_realpath "$USER_JAVA_PATH")
-  readonly JAVADIR=$(dirname "$JAVAPATH")
-  export JAVA_HOME="$JAVAPATH"
-  export PATH="$JAVADIR":$PATH
+  __JAVAPATH=$(_realpath "$USER_JAVA_PATH")
+  __JAVADIR=$(dirname "$__JAVAPATH")
+  __JAVA_HOME="$__JAVAPATH"
 else
-  readonly JAVALINK=$(which java)
-  if [[ "$JAVALINK" == "" ]]; then
+  readonly __JAVALINK=$(which java)
+  if [[ "$__JAVALINK" == "" ]]; then
     # We don't fail since Java is required only when oat2dex method is used
     echo "[-] Java not found in system"
   else
     if [[ "$HOST_OS" == "Darwin" ]]; then
-      export JAVA_HOME="$(/usr/libexec/java_home)"
-      export PATH="$JAVA_HOME/bin":$PATH
+      __JAVA_HOME="$(/usr/libexec/java_home)"
+      __JAVADIR="$__JAVA_HOME/bin"
     else
-      readonly JAVAPATH=$(_realpath "$JAVALINK")
-      readonly JAVADIR=$(dirname "$JAVAPATH")
-      export JAVA_HOME="$JAVAPATH"
-      export PATH="$JAVADIR":$PATH
+      __JAVAPATH=$(_realpath "$__JAVALINK")
+      __JAVADIR=$(dirname "$__JAVAPATH")
+      __JAVA_HOME="$__JAVAPATH"
     fi
   fi
 fi
+export JAVA_HOME="$__JAVA_HOME"
+export PATH="$__JAVADIR":$PATH
 
 # Check if supported device
 deviceOK=false
