@@ -764,6 +764,11 @@ fi
 # JARs under /system/framework are always repaired for safety
 if [[ "$BYTECODE_LIST_FILE" != "" ]]; then
   readarray -t BYTECODE_LIST < <(grep -Ev '(^#|^$)' "$BYTECODE_LIST_FILE")
+  if [ ${#BYTECODE_LIST[@]} -eq 0 ]; then
+    echo "[!] No bytecode files selected for repairing - link to original partition"
+    ln -sfn "$INPUT_DIR" "$OUTPUT_SYS"
+    abort 0
+  fi
   echo "[*] '${#BYTECODE_LIST[@]}' bytecode archive files will be repaired"
   hasBytecodeList=true
 else
