@@ -744,14 +744,11 @@ OUTPUT_SYS="$OUTPUT_DIR/system"
 if [[ -d "$OUTPUT_SYS" && $(ls -A "$OUTPUT_SYS" | grep -v '^\.') ]]; then
   echo "[!] Output directory should be empty to avoid merge problems with old extracts"
   abort 1
-else
-  mkdir -p "$OUTPUT_SYS"
 fi
 
 # Verify image contains pre-optimized oat files
 if [ ! -d "$INPUT_DIR/framework/oat" ]; then
   echo "[!] System partition doesn't contain any pre-optimized files - link to original partition"
-  rmdir "$OUTPUT_SYS"
   ln -sfn "$INPUT_DIR" "$OUTPUT_SYS"
   abort 0
 fi
@@ -759,7 +756,6 @@ fi
 # No repairing
 if [[ "$REPAIR_METHOD" == "NONE" ]]; then
   echo "[*] No repairing enabled - link to original partition"
-  rmdir "$OUTPUT_SYS"
   ln -sfn "$INPUT_DIR" "$OUTPUT_SYS"
   abort 0
 fi
@@ -773,6 +769,9 @@ if [[ "$BYTECODE_LIST_FILE" != "" ]]; then
 else
   echo "[*] All bytecode files under system partition will be repaired"
 fi
+
+# Prepare output directory base
+mkdir -p "$OUTPUT_SYS"
 
 # oat2dex repairing
 if [[ "$REPAIR_METHOD" == "OAT2DEX" ]]; then
