@@ -12,6 +12,11 @@ flounder/*
 
 # Due to large files they're downloaded at manual step
 # and not part of git files
+hostTools/Linux/api*
+hostTools/Darwin/api*
+
+# Old hostTools dir structure - keep them excluded for now until
+# new layout is finalized
 hostTools/Linux/*.zip
 hostTools/Linux/bin/oatdump
 hostTools/Linux/lib*
