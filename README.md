@@ -138,7 +138,6 @@ target device before any pull request.
 
 ## Change Log
 * 0.1.7 - TBC
- * Wrap `device-vendor.mk` under target device ifdef to avoid possible conflicts
  * Nexus 9 LTE (volantisg) support
  * Offer option to de-optimize all packages under /system despite configuration settings
  * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode

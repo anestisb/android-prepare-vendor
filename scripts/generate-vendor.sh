@@ -759,10 +759,20 @@ gen_mk_for_shared_libs() {
 }
 
 gen_android_mk() {
-  local root path
+  local root path targetProductDevice
+  targetProductDevice="$DEVICE"
   {
     echo 'LOCAL_PATH := $(call my-dir)'
-    echo "ifeq (\$(TARGET_DEVICE),$DEVICE)"
+
+    # Special handling for flounder dual target boards
+    if [[ "$DEVICE" == "flounder_lte" ]]; then
+      echo 'ifneq ("$(wildcard vendor/htc/flounder/Android.mk)","")'
+      echo '  $(error "volantis & volantisg vendor blobs cannot co-exist under AOSP root since definitions conflict")'
+      echo 'endif'
+      targetProductDevice="flounder"
+    fi
+
+    echo "ifeq (\$(TARGET_DEVICE),$targetProductDevice)"
     echo ""
     echo "include vendor/$VENDOR/$DEVICE/AndroidBoardVendor.mk"
   } >> "$ANDROID_MK"
