@@ -963,10 +963,7 @@ update_vendor_blobs_mk "$BLOBS_LIST"
 
 # Generate device-vendor.mk makefile (will be updated later)
 echo "[*] Generating 'device-vendor.mk'"
-{
-  echo -e "ifeq (\$(TARGET_DEVICE),$DEVICE)\n"
-  echo -e "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)\n"
-} >> "$DEVICE_VENDOR_MK"
+echo -e "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
 echo "[*] Generating 'AndroidBoardVendor.mk'"
@@ -1001,9 +998,6 @@ if [ -f "$RUNTIME_EXTRA_BLOBS_LIST" ]; then
   sort "$BLOBS_LIST" > "$BLOBS_LIST.tmp"
   mv "$BLOBS_LIST.tmp" "$BLOBS_LIST"
 fi
-
-# Close device-vendor.mk
-echo "endif" >> "$DEVICE_VENDOR_MK"
 
 # Generate file signatures list
 echo "[*] Generating signatures file"
