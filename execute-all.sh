@@ -63,6 +63,7 @@ cat <<_EOF
       --oatdump    : [OPTIONAL] Force use of oatdump method to revert preoptimized bytecode
       --smali      : [OPTIONAL] Force use of smali/baksmali to revert preoptimized bytecode
       --smaliex    : [OPTIONAL] Force use of smaliEx to revert preoptimized bytecode [DEPRECATED]
+      --deodex-all : [OPTIONAL] De-optimize all packages under /system
 
     INFO:
       * Default configuration is naked. Use "-g|--gplay" if you plan to install Google Play Services.
@@ -135,6 +136,7 @@ FORCE_SMALI=false
 FORCE_OATDUMP=false
 FORCE_SMALIEX=false
 BYTECODE_REPAIR_METHOD=""
+DEODEX_ALL=false
 
 # Compatibility
 HOST_OS=$(uname)
@@ -213,6 +215,9 @@ do
     --oatdump)
       FORCE_OATDUMP=true
       ;;
+    --deodex-all)
+      DEODEX_ALL=true
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -221,6 +226,7 @@ do
   shift
 done
 
+# Check user input args
 if [[ "$DEVICE" == "" ]]; then
   echo "[-] device codename cannot be empty"
   usage
@@ -246,6 +252,13 @@ if [[ "$USER_JAVA_PATH" != "" ]]; then
     echo "[-] Invalid java path"
     abort 1
   fi
+fi
+
+# Some business logic related checks
+if [[ $DEODEX_ALL = true && $KEEP_DATA = false ]]; then
+  echo "[!] It's pointless to deodex all if not keeping runtime generated data"
+  echo "    After vendor generate finishes all files not part of configs will be deleted"
+  abort 1
 fi
 
 # Resolve Java location
@@ -455,10 +468,13 @@ case $BYTECODE_REPAIR_METHOD in
     ;;
 esac
 
+# If deodex all not set provide a list of packages to repair
+if [ $DEODEX_ALL = false ]; then
+  REPAIR_SCRIPT+="--bytecode-list $SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt"
+fi
+
 $REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$FACTORY_IMGS_DATA/system" \
-     --output "$FACTORY_IMGS_R_DATA" \
-     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt" \
-     $REPAIR_SCRIPT_ARG || {
+     --output "$FACTORY_IMGS_R_DATA" $REPAIR_SCRIPT_ARG || {
   echo "[-] System partition bytecode repair failed"
   abort 1
 }
