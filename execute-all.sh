@@ -470,7 +470,7 @@ esac
 
 # If deodex all not set provide a list of packages to repair
 if [ $DEODEX_ALL = false ]; then
-  REPAIR_SCRIPT_ARG+="--bytecode-list $SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt"
+  REPAIR_SCRIPT_ARG+=" --bytecode-list $SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt"
 fi
 
 $REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$FACTORY_IMGS_DATA/system" \
