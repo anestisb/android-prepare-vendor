@@ -214,10 +214,18 @@ oat2dex_repair() {
       cp -a "$file" "$OUTPUT_SYS/$relDir"
     else
       # If pre-compiled, de-optimize to original DEX bytecode
+      deoptSuccess=false
       for abi in ${ABIS[@]}
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ -f "$curOdex" ]; then
+          # If we already have bytecode de-optimized for one ABI don't redo the work
+          # just create the dir annotation to pickup multi-lib both scenarios
+          if [ $deoptSuccess = true ]; then
+            mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
+            continue
+          fi
+
           # If odex present de-optimize it
           java -jar "$OAT2DEX_JAR" -o "$TMP_WORK_DIR" "$curOdex" \
                "$TMP_WORK_DIR/$abi/dex" &>/dev/null || {
@@ -234,9 +242,7 @@ oat2dex_repair() {
           # Generate an empty directory under package dir with the detected ABI
           # so that vendor generate script can detect possible multilib scenarios
           mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
-
-          # Abort inner loop at first match
-          break
+          deoptSuccess=true
         elif [ -f "$TMP_WORK_DIR/$abi/dex/$pkgName.dex" ]; then
           # boot classes bytecode is available from boot.oat extracts - copy
           # them with wildcard so following multi-dex detection logic can pick
@@ -378,10 +384,18 @@ oatdump_repair() {
       # If pre-compiled, dump bytecode from oat .rodata section
       # If bytecode compiled for more than one ABIs - only the first is kept
       # (shouldn't make any difference)
+      deoptSuccess=false
       for abi in ${ABIS[@]}
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ ! -f "$curOdex" ]; then
+          continue
+        fi
+
+        # If we already have bytecode de-optimized for one ABI don't redo the work
+        # just create the dir annotation to pickup multi-lib both scenarios
+        if [ $deoptSuccess = true ]; then
+          mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
           continue
         fi
 
@@ -400,9 +414,7 @@ oatdump_repair() {
           # Generate an empty directory under package dir with the detected ABI
           # so that vendor generate script can detect possible multilib scenarios
           mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
-
-          # Abort inner loop at first match
-          break
+          deoptSuccess=true
         fi
       done
 
@@ -532,6 +544,7 @@ smali_repair() {
       mkdir -p "$deoptDir"
 
       # If pre-compiled, de-optimize to original DEX bytecode
+      deoptSuccess=false
       for abi in ${ABIS[@]}
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
@@ -539,8 +552,15 @@ smali_repair() {
           continue
         fi
 
+        # If we already have bytecode de-optimized for one ABI don't redo the work
+        # just create the dir annotation to pickup multi-lib both scenarios
+        if [ $deoptSuccess = true ]; then
+          mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
+          continue
+        fi
+
         # clean bits that might have left from previous ABI run
-        rm -rf "$deoptDir/*"
+        rm -rf "{$deoptDir/*:?}"
 
         # Since baksmali is not automatically picking all dex entries inside an OAT
         # file, we first need to enumerate them. For that purpose we use oatdump tool
@@ -585,9 +605,7 @@ smali_repair() {
         # Generate an empty directory under package dir with the detected ABI
         # so that vendor generate script can detect possible multilib scenarios
         mkdir -p "$OUTPUT_SYS/$relDir/oat/$abi"
-
-        # Abort inner loop at first match
-        break
+        deoptSuccess=true
       done
 
       # Copy APK/jar to workspace for repair

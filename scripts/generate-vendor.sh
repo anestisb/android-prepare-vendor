@@ -575,8 +575,11 @@ gen_mk_for_bytecode() {
         echo "LOCAL_DEX_PREOPT := false"
       fi
 
-      # Check if not building against first target when 64bit
-      if [[ -d "$appDir/oat/arm" || -d "$appDir/oat/x86" ]]; then
+      # Deal with multi-lib
+      if [[ ( -d "$appDir/oat/arm" && -d "$appDir/oat/arm64" ) ||
+            ( -d "$appDir/oat/x86" && -d "$appDir/oat/x86_64" ) ]]; then
+        echo "LOCAL_MULTILIB := both"
+      elif [[ -d "$appDir/oat/arm" || -d "$appDir/oat/x86" ]]; then
         echo "LOCAL_MULTILIB := 32"
       fi
 
