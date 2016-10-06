@@ -18,7 +18,7 @@ into a total nightmare considering that all recent factory images have their
 bytecode (APKs, JARs) pre-optimized to reduce boot time and their original
 `classes.dex` stripped to reduce disk size. As such, these missing pre-built
 components need to be repaired/de-optimized prior to be included, since AOSP build
-is not capable to import pre-optimized modules as part of the makefile tree.
+is not capable to import pre-optimized bytecode modules as part of the makefile tree.
 
 Scripts & tools included in this repository aim to automate the extraction,
 processing and generation of vendor specific data using factory images as
@@ -42,19 +42,17 @@ The process to extract and import vendor proprietary blobs requires to:
 
 1. Obtain device matching factory images archive from Google developer website
 (`scripts/download-nexus-image.sh`)
-2. Extract images from archive, convert from sparse to raw, mount to with fuse-ext2 &
+2. Extract images from archive, convert from sparse to raw, mount with fuse-ext2 &
 extract data (`scripts/extract-factory-images.sh`)
-  * All vendor partition data are mirror in order to generate a production identical `vendor.img`
-3. Repair bytecode (APKs/JARs) from factory system image (`scripts/system-img-repair.sh`)
-  * **API >= 24**: Use oatdump ART host tool to extract DEX from OAT ELF .rodata section
-  & dexRepair to fix signatures (more info [here](https://github.com/anestisb/android-prepare-vendor/issues/22))
-  * **API = 23**: Use SmaliEx to de-odex bytecode
+  * All vendor partition data are mirrored in order to generate a production identical `vendor.img`
+3. Repair bytecode (APKs/JARs) from factory system image (`scripts/system-img-repair.sh`) using one
+of supported bytecode de-optimization methods (see later paragraph)
 4. Generate vendor proprietary includes & makefiles compatible with AOSP build tree
 (`scripts/generate-vendor.sh`)
   * Extra care in Makefile rules to not break compatibility among AOSP versions
 
 `execute-all.sh` runs all previous steps with required order. As an alternative to
-download images from Google's websize, script can also read factory images from
+download images from Google's website, script can also read factory images from
 file-system location using the `-i|--img` flag.
 
 `-k|--keep` flag can be used if you want to keep extracted intermediate files for further
@@ -68,6 +66,27 @@ abort if any of the required tools is missing from the host.
 Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
 
+## Supported bytecode de-optimization methods
+### oatdump
+Use oatdump host tool (`platform/art` project from AOSP) to extract DEX bytecode from OAT's
+ELF `.rodata` section. Extracted DEX is not identical to original since DEX-to-DEX compiler
+transformations have already been applied when code was pre-optimized
+(more info [here](https://github.com/anestisb/oatdump_plus#dex-to-dex-optimisations)).
+[dexrepair](https://github.com/anestisb/dexRepair) is also used to repair the extracted
+DEX file CRC checksum prior to appending bytecode back to matching APK package from which
+it has been originally stripped. More info about this method [here](https://github.com/anestisb/android-prepare-vendor/issues/22).
+
+### baksmali / smali
+Use baksmali disassembler against target OAT file to generate a smali syntaxed output.
+Disassembling process relies on boot framework files (which are automatically include)
+to resolve class dependencies. Baksmali output is then forwarded to smali assembler
+to generate a functionally equivalent DEX bytecode file.
+
+### SmaliEx *[DEPRECATED]*
+SmaliEx is an automation tool that is using baksmali/smali at the background and is
+smoothly handling all the required disassembler/assembler iterations and error handling.
+Unfortunately due to not quickly catching-up with upstream smali & dexlib it has been
+deprecated for now.
 
 ## Configuration files explained
 ### Naked vs GPlay
@@ -119,7 +138,8 @@ target device before any pull request.
 
 ## Change Log
 * 0.1.7 - TBC
- * [EXPERIMENTAL] Deprecate SmaliEx and use Baksmali/Smali to deodex bytecode
+ * Offer option to de-optimize all packages under /system despite configuration settings
+ * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode
  * Improve supported bytecode deodex methods modularity - users can now override default methods
  * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor generate script
  * Respect LOCAL_MULTILIB when 32bit bytecode prebuilts detected against a 64bit device
@@ -182,7 +202,7 @@ proprietary LG code.
 ### fuse-ext2
 * `fusermount: failed to open /etc/fuse.conf: Permission denied`
  * FIX-1: Add low privilege username to fuse group (e.g.: `# usermod -a -G fuse anestisb`)
- * FIX-2: Change file permissions - `# chmod +r /etc/fuse.conf
+ * FIX-2: Change file permissions - `# chmod +r /etc/fuse.conf`
 * `fusermount: option allow_other only allowed if 'user_allow_other' is set in /etc/fuse.conf`
  * Edit `/etc/fuse.conf` and write/uncomment the `user_allow_other` flag
 
