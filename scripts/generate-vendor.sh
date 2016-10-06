@@ -204,15 +204,26 @@ extract_blobs() {
     if [ ! -d "$outBase/$dstDir" ]; then
       mkdir -p "$outBase/$dstDir"
     fi
-    cp "$INDIR/$src" "$outBase/$dst"
+    cp "$INDIR/$src" "$outBase/$dst" || {
+      echo "[-] Failed to copy '$src'"
+      abort 1
+    }
 
     # Some vendor xml files don't satisfy xmllint so fix here
     if [[ "${file##*.}" == "xml" ]]; then
-      openTag=$(grep '^<?xml version' "$outBase/$dst")
-      grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp"
-      echo "$openTag" > "$outBase/$dst"
-      cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
-      rm "$TMP_WORK_DIR/xml_fixup.tmp"
+      openTag=""
+      openTag=$(grep '^<?xml version' "$outBase/$dst" || true )
+      if [[ "$openTag" == "" ]]; then
+        cp "$INDIR/$src" "$outBase/$dst" || {
+          echo "[-] Failed to copy '$src'"
+          abort 1
+        }
+      else
+        grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp"
+        echo "$openTag" > "$outBase/$dst"
+        cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
+        rm "$TMP_WORK_DIR/xml_fixup.tmp"
+      fi
     fi
   done < <(grep -Ev '(^#|^$)' "$BLOBS_LIST")
 }
