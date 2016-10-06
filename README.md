@@ -129,7 +129,7 @@ be appended at master vendor `Android.mk`.
 | N5x bullhead                    | smaliex<br>smali<br>oatdump | smali<br>oatdump |
 | N6p angler                      | smaliex<br>smali<br>oatdump | smali<br>oatdump |
 | N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | smali<br>oatdump |
-| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | *PENDING*        |
+| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | smali<br>oatdump |
 
 ## Contributing
 
@@ -138,6 +138,8 @@ target device before any pull request.
 
 ## Change Log
 * 0.1.7 - TBC
+ * Wrap `device-vendor.mk` under target device ifdef to avoid possible conflicts
+ * Nexus 9 LTE (volantisg) support
  * Offer option to de-optimize all packages under /system despite configuration settings
  * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode
  * Improve supported bytecode deodex methods modularity - users can now override default methods
@@ -254,7 +256,6 @@ s/flounder/nrd91d/volantis-nrd91d-factory-a27db9bc.zip  96%[====================
 [*] Generating signatures file
 [*] All actions completed successfully
 [*] Import '/fast-datavault/nexus-vendor-blobs/flounder/nrd91d/vendor' to AOSP root
-
 ```
 
 ### API-23 (Marshmallow) N5x vendor generation using factory image from file-system
