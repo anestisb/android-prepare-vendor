@@ -1,12 +1,11 @@
 ## Introduction
-
 For latest Android Nexus devices (N5x, N6p, N9 LTE/WiFi), Google is no longer
 providing vendor binary archives to be included into AOSP build tree.
 Officially it is claimed that all vendor proprietary blobs have been moved to
 `/vendor` partition, which allegedly doesn't need building from users.
-Unfortunately, that is not the case since quite a few vendor executables, DSOs
-and APKs/JARs required in order to have a fully functional set of images, are present
-under `/system`, although missing from AOSP public tree. Additionally, if
+Unfortunately, that is not the case since quite a few proprietary executables, DSOs
+and APKs/JARs located under `/system` are required in order to have a fully
+functional set of images, although missing from AOSP public tree. Additionally, if
 `vendor.img` is not generated when `system.img` is prepared for build, a few bits
 are broken that also require manual fixing (various symbolic links between two
 partitions, bytecode product packages, vendor shared libs dependencies, etc.).
@@ -16,7 +15,7 @@ However until then, missing blobs need to be manually extracted from factory
 images, processed and included into AOSP tree. These processing steps are evolving
 into a total nightmare considering that all recent factory images have their
 bytecode (APKs, JARs) pre-optimized to reduce boot time and their original
-`classes.dex` stripped to reduce disk size. As such, these missing pre-built
+`classes.dex` stripped to reduce disk size. As such, these missing prebuilt
 components need to be repaired/de-optimized prior to be included, since AOSP build
 is not capable to import pre-optimized bytecode modules as part of the makefile tree.
 
@@ -37,19 +36,19 @@ patches are more than welcome though.
 
 
 ## Required steps summary
-
 The process to extract and import vendor proprietary blobs requires to:
 
 1. Obtain device matching factory images archive from Google developer website
 (`scripts/download-nexus-image.sh`)
+  * Users need to accept Google ToS for Nexus factory images
 2. Extract images from archive, convert from sparse to raw, mount with fuse-ext2 &
 extract data (`scripts/extract-factory-images.sh`)
   * All vendor partition data are mirrored in order to generate a production identical `vendor.img`
 3. Repair bytecode (APKs/JARs) from factory system image (`scripts/system-img-repair.sh`) using one
-of supported bytecode de-optimization methods (see later paragraph)
+of supported bytecode de-optimization methods (see next paragraph for details)
 4. Generate vendor proprietary includes & makefiles compatible with AOSP build tree
 (`scripts/generate-vendor.sh`)
-  * Extra care in Makefile rules to not break compatibility among AOSP versions
+  * Extra care in Makefile rules to not break compatibility among supported AOSP branches
 
 `execute-all.sh` runs all previous steps with required order. As an alternative to
 download images from Google's website, script can also read factory images from
@@ -67,7 +66,7 @@ Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
 
 ## Supported bytecode de-optimization methods
-### oatdump
+### oatdump (Default for API-24 or `--oatdump` flag)
 Use oatdump host tool (`platform/art` project from AOSP) to extract DEX bytecode from OAT's
 ELF `.rodata` section. Extracted DEX is not identical to original since DEX-to-DEX compiler
 transformations have already been applied when code was pre-optimized
@@ -76,13 +75,13 @@ transformations have already been applied when code was pre-optimized
 DEX file CRC checksum prior to appending bytecode back to matching APK package from which
 it has been originally stripped. More info about this method [here](https://github.com/anestisb/android-prepare-vendor/issues/22).
 
-### baksmali / smali
+### baksmali / smali (`--smali` flag)
 Use baksmali disassembler against target OAT file to generate a smali syntaxed output.
 Disassembling process relies on boot framework files (which are automatically include)
 to resolve class dependencies. Baksmali output is then forwarded to smali assembler
 to generate a functionally equivalent DEX bytecode file.
 
-### SmaliEx *[DEPRECATED]*
+### SmaliEx *[DEPRECATED]* (Default for API-23 or `--smaliex` flag)
 SmaliEx is an automation tool that is using baksmali/smali at the background and is
 smoothly handling all the required disassembler/assembler iterations and error handling.
 Unfortunately due to not quickly catching-up with upstream smali & dexlib it has been
@@ -126,13 +125,12 @@ be appended at master vendor `Android.mk`.
 ## Supported devices
 | Device                          | API 23                      | API 24           |
 | ------------------------------- | --------------------------- | -----------------|
-| N5x bullhead                    | smaliex<br>smali<br>oatdump | smali<br>oatdump |
-| N6p angler                      | smaliex<br>smali<br>oatdump | smali<br>oatdump |
-| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | smali<br>oatdump |
-| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | smali<br>oatdump |
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali |
+| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali |
+| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali |
+| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali |
 
 ## Contributing
-
 If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
@@ -143,7 +141,7 @@ target device before any pull request.
  * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode
  * Improve supported bytecode deodex methods modularity - users can now override default methods
  * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor generate script
- * Respect LOCAL_MULTILIB when 32bit bytecode prebuilts detected against a 64bit device
+ * Respect `LOCAL_MULTILIB` `32` or `both` when 32bit bytecode prebuilts detected at 64bit devices
 * 0.1.6 - 4 Oct 2016
  * Download automation compatibility with refactored Google Nexus images website
  * Bug fixes when generating from MAC
@@ -175,7 +173,8 @@ target device before any pull request.
  * AOSP compatibility bug fixes & performance optimizations
 
 ## Warnings
-
+* Scripts do **NOT** require root permissions to run. If you're facing problems
+with `fuse-ext2` configuration at your environment, check the following FAQ section.
 * No binary vendor data against supported devices will be maintained in this
 repository. Scripts provide all necessary automation to generate them yourself.
 * No promises on how the device configuration files will be maintained. Feel free
@@ -187,14 +186,15 @@ keep them updated.
 included, you have other vendor makefiles that define the same packages (e.g.
 hammerhead vs bullhead from LGE). This issue is due to the developers of
 conflicted vendor makefiles didn't bother to wrap them with
-`ifeq ($TARGET_DEVICE),<device_model>)`. Wrap conflicting makefiles with
+`ifeq ($(TARGET_DEVICE),<device_model>)`. Wrap conflicting makefiles with
 device matching clauses to resolve the issue.
-* If deprecated SmaliEx method for API-23 is chosen, Java 8 is required for
-the bytecode de-optimization process to work.
-* Bytecode repaired with oatdump method cannot be pre-optimized. As such generated
-rules have `LOCAL_DEXPREOPT := false`. This is because host dex2oatd is invoked with
-more strict flags and results into aborting when front-end reaches already optimized
-instructions.
+* If Smali or SmaliEx de-optimization method is chosen, Java 8 is required for
+the bytecode repair process to work.
+* Bytecode repaired with oatdump method cannot be pre-optimized when building AOSP.
+As such generated targets have `LOCAL_DEXPREOPT := false`. This is because host
+dex2oat is invoked with more strict flags and results into aborting when front-end
+reaches already optimized instructions. You can use `--force-opt` flag if you have
+modified the defailt host dex2oat bytecode precompile flags.
 * If you're planning to deliver OTA updates for Nexus 5x, you need to manually extract
 `update-binary` from a factory OTA archive since it's missing from AOSP tree due to some
 proprietary LG code.
