@@ -135,7 +135,7 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.1.7 - TBC
+* 0.1.7 - 8 Oct 2016
  * Nexus 9 LTE (volantisg) support
  * Offer option to de-optimize all packages under /system despite configuration settings
  * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode
@@ -144,7 +144,7 @@ target device before any pull request.
  * Respect `LOCAL_MULTILIB` `32` or `both` when 32bit bytecode prebuilts detected at 64bit devices
 * 0.1.6 - 4 Oct 2016
  * Download automation compatibility with refactored Google Nexus images website
- * Bug fixes when generating from MAC
+ * Bug fixes when generating from OS X
 * 0.1.5 - 25 Sep 2016
  * Fixes issue with symlinks resolve when output path with spaces
  * Fixes bug when repairing multi-dex APKs with oatdump method
@@ -198,6 +198,12 @@ modified the defailt host dex2oat bytecode precompile flags.
 * If you're planning to deliver OTA updates for Nexus 5x, you need to manually extract
 `update-binary` from a factory OTA archive since it's missing from AOSP tree due to some
 proprietary LG code.
+* Nexus 9 WiFi (volantis) & Nexus 9 LTE (volantisg) vendor blobs cannot co-exist under
+same AOSP root directory. Since AOSP defines a single flounder target for both boards
+lots of definitions will conflict and create problems when building. As such ensure
+that only one of them is present when building for desired target. Generated makefiles
+include an additional defensive check that will raise a compiler error when both are
+detected under same AOSP root.
 
 ## Frequently Spotted Issues
 ### fuse-ext2
