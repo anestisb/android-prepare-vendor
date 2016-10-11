@@ -125,15 +125,6 @@ check_file() {
 
 trap "abort 1" SIGINT SIGTERM
 
-# Check that system tools exist
-for i in "${sysTools[@]}"
-do
-  if ! command_exists "$i"; then
-    echo "[-] '$i' command not found"
-    abort 1
-  fi
-done
-
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 SIMG2IMG=""
@@ -154,6 +145,15 @@ else
   sysTools+=("fuse-ext2")
   _MOUNT="fuse-ext2"
 fi
+
+# Check that system tools exist
+for i in "${sysTools[@]}"
+do
+  if ! command_exists "$i"; then
+    echo "[-] '$i' command not found"
+    abort 1
+  fi
+done
 
 while [[ $# -gt 1 ]]
 do
