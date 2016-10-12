@@ -77,6 +77,13 @@ command_exists() {
   type "$1" &> /dev/null
 }
 
+check_bash_version() {
+  if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+    echo "[-] Minimum supported version of bash is 4.x"
+    abort 1
+  fi
+}
+
 unmount_raw_image() {
   local MOUNT_POINT="$1"
 
@@ -139,6 +146,7 @@ BYTECODE_REPAIR_METHOD=""
 DEODEX_ALL=false
 
 # Compatibility
+check_bash_version
 HOST_OS=$(uname)
 if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
   echo "[-] '$HOST_OS' OS is not supported"

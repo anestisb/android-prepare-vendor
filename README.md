@@ -59,8 +59,8 @@ investigation. Keep in mind that if used the mount-points from fuse-ext2 are not
 So be sure that you manually remove them (or run the script again without the flag) when done.
 
 All scripts can be executed from OS X, Linux & other Unix-based systems as long
-as `fuse-ext2` and other utilized command line tools are installed. Scripts will
-abort if any of the required tools is missing from the host.
+as `fuse-ext2`, bash 4.x and other utilized command line tools are installed.
+Scripts will abort if any of the required tools is missing from the host.
 
 Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
