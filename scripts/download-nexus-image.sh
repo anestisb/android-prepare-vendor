@@ -150,7 +150,7 @@ done
 
 # Accept news ToS page
 accept_tos
-xsrf_token=$(curl -b "$COOKIE_FILE" --silent "$GURL" | \
+xsrf_token=$(curl -L -b "$COOKIE_FILE" --silent "$GURL" | \
              grep -io "<meta name=\"xsrf_token\" content=\".*\" />" | \
              cut -d '"' -f4)
 response=$(curl -b "$COOKIE_FILE" -X POST -d "notification_id=wall-nexus-image-tos" \
@@ -162,7 +162,7 @@ if [[ "$response" != "200" ]]; then
 fi
 
 # Then retrieve the index page
-url=$(curl -b "$COOKIE_FILE" --silent -H "X_XSRFToken: $xsrf_token" "$GURL" | \
+url=$(curl -L -b "$COOKIE_FILE" --silent -H "X_XSRFToken: $xsrf_token" "$GURL" | \
       grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | cut -d '"' -f2)
 if [ "$url" == "" ]; then
   echo "[-] Image URL not found"
