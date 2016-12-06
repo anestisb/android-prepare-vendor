@@ -32,6 +32,7 @@ readonly L_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 readonly D_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21493&authkey=AJ0rWu5Ci8tQNLY'
 readonly L_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21492&authkey=AE4uqwH-THvvkSQ'
 readonly D_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21491&authkey=AHvCaYwFBPYD4Fs'
+readonly L_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21503&authkey=AKDpBAzhzum6d7w'
 
 declare -a sysTools=("mkdir" "dirname" "wget" "mount")
 declare -a availDevices=("bullhead" "flounder" "angler")
@@ -380,8 +381,8 @@ if [[ "$API_LEVEL" == "" ]]; then
   abort 1
 fi
 
-if [ $API_LEVEL -ge 25 ]; then
-  echo "[-] 7.1 (API 25) releases are not supported yet"
+if [[ $API_LEVEL -ge 25 && "$HOST_OS" == "Darwin" ]]; then
+  echo "[-] 7.1 (API 25) releases blobs generation under Darwin is not supported yet"
   abort 1
 fi
 
