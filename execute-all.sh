@@ -33,6 +33,7 @@ readonly D_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 readonly L_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21492&authkey=AE4uqwH-THvvkSQ'
 readonly D_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21491&authkey=AHvCaYwFBPYD4Fs'
 readonly L_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21503&authkey=AKDpBAzhzum6d7w'
+readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21504&authkey=AC5YFNSAZ31-W3o'
 
 declare -a sysTools=("mkdir" "dirname" "wget" "mount")
 declare -a availDevices=("bullhead" "flounder" "angler")
@@ -378,11 +379,6 @@ API_LEVEL=$(grep 'ro.build.version.sdk' "$FACTORY_IMGS_DATA/system/build.prop" |
             cut -d '=' -f2 | tr '[:upper:]' '[:lower:]' || true)
 if [[ "$API_LEVEL" == "" ]]; then
   echo "[-] Failed to extract API level from build.propr"
-  abort 1
-fi
-
-if [[ $API_LEVEL -ge 25 && "$HOST_OS" == "Darwin" ]]; then
-  echo "[-] 7.1 (API 25) releases blobs generation under Darwin is not supported yet"
   abort 1
 fi
 
