@@ -135,8 +135,8 @@ readonly OUT_BLOBS_FILE="$OUTPUT_DIR/proprietary-blobs.txt"
 > "$OUT_BLOBS_FILE"
 > "$OUT_BLOBS_FILE_TMP"
 
-# First add all regular files from /vendor partition
-find "$INPUT_DIR" -type f | sed "s#^$INPUT_DIR/##" | while read -r FILE
+# First add all regular files or symbolic links from /vendor partition
+find "$INPUT_DIR" -not -type d | sed "s#^$INPUT_DIR/##" | while read -r FILE
 do
   # Skip "build.prop" since it will be re-generated at build time
   if [[ "$FILE" == "build.prop" ]]; then
