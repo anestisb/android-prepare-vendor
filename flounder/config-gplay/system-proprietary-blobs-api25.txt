@@ -1,0 +1,3 @@
+system/etc/RT5506
+system/etc/fmas_eq.dat
+system/lib/soundfx/libfmas.so
