@@ -352,25 +352,6 @@ if [[ "$factoryImgArchive" == "" ]]; then
   abort 1
 fi
 
-# Define API level from first char of build tag
-magicChar=$(echo "${BUILDID:0:1}" | tr '[:upper:]' '[:lower:]')
-case "$magicChar" in
-  "l")
-    API_LEVEL=22
-    ;;
-  "m")
-    API_LEVEL=23
-    ;;
-  "n")
-    API_LEVEL=24
-    ;;
-  *)
-    echo "[-] Unsupported API level for magic '$magicChar'"
-    abort 1
-    ;;
-esac
-echo "[*] Processing with 'API-$API_LEVEL $CONFIG' configuration"
-
 # Clear old data if present & extract data from factory images
 if [ -d "$FACTORY_IMGS_DATA" ]; then
   # Previous run might have been with --keep which keeps the mount-points. Check
@@ -390,6 +371,21 @@ $EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
   echo "[-] Factory images data extract failed"
   abort 1
 }
+
+# Extract API level from 'ro.build.version.sdk' field of system/build.prop
+API_LEVEL=$(grep 'ro.build.version.sdk' "$FACTORY_IMGS_DATA/system/build.prop" |
+            cut -d '=' -f2 | tr '[:upper:]' '[:lower:]' || true)
+if [[ "$API_LEVEL" == "" ]]; then
+  echo "[-] Failed to extract API level from build.propr"
+  abort 1
+fi
+
+if [ $API_LEVEL -ge 25 ]; then
+  echo "[-] 7.1 (API 25) releases are not supported yet"
+  abort 1
+fi
+
+echo "[*] Processing with 'API-$API_LEVEL $CONFIG' configuration"
 
 # Generate unified readonly "proprietary-blobs.txt"
 $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
