@@ -35,6 +35,17 @@ Repository data are LICENSE free, use them as you want at your own risk. Feedbac
 patches are more than welcome though.
 
 
+### Status update (17 Dec 2016)
+As of 7.1 release Google has started publishing again a set of vendor blobs for
+supported Nexus & Pixel devices. Unfortunately the distributed blobs still miss
+some functionality when compiled under AOSP:
+
+* Vendor partition is distributed in a form that does not allow to enable verified
+boot (dm-verity) against it
+* Distributed blobs do not include APK bytecode vendor packages, only some jar files. It
+is still unclear to what extend device functionalities are broken.
+
+
 ## Required steps summary
 The process to extract and import vendor proprietary blobs requires to:
 
@@ -123,12 +134,14 @@ be appended at master vendor `Android.mk`.
 
 
 ## Supported devices
-| Device                          | API 23                      | API 24           |
-| ------------------------------- | --------------------------- | -----------------|
-| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali |
-| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali |
-| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali |
-| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali |
+| Device                          | API 23                      | API 24           | API 25           |
+| ------------------------------- | --------------------------- | -----------------| -----------------|
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
+| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
+| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
+| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
+| Pixel sailfish                  | N/A                         | N/A              | Testing          |
+| Pixel XL marlin                 | N/A                         | N/A              | Testing          |
 
 ## Contributing
 If you want to contribute to device configuration files, please test against the
