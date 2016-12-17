@@ -1,0 +1,6 @@
+# Bytecode archive files to extract from factory images
+
+system/framework/embmslibrary.jar
+system/framework/qcrilhook.jar
+system/framework/QtiTelephonyServicelibrary.jar
+system/framework/rcsservice.jar

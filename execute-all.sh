@@ -36,7 +36,7 @@ readonly L_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21504&authkey=AC5YFNSAZ31-W3o'
 
 declare -a sysTools=("mkdir" "dirname" "wget" "mount")
-declare -a availDevices=("bullhead" "flounder" "angler")
+declare -a availDevices=("bullhead" "flounder" "angler" "sailfish")
 
 abort() {
   # Remove mount points in case of error
@@ -89,7 +89,7 @@ check_bash_version() {
 unmount_raw_image() {
   local MOUNT_POINT="$1"
 
-  if [[ -d "$MOUNT_POINT" && -f "$MOUNT_POINT/build.prop" ]]; then
+  if [ -d "$MOUNT_POINT" ]; then
     $_UMOUNT "$MOUNT_POINT" || {
       echo "[-] '$MOUNT_POINT' unmount failed"
       exit 1
@@ -374,11 +374,17 @@ $EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
   abort 1
 }
 
+# system.img contents are different between Nexus & Pixel
+SYSTEM_ROOT="$FACTORY_IMGS_DATA/system"
+if [[ -d "$FACTORY_IMGS_DATA/system/system" && -f "$FACTORY_IMGS_DATA/system/system/build.prop" ]]; then
+  SYSTEM_ROOT="$FACTORY_IMGS_DATA/system/system"
+fi
+
 # Extract API level from 'ro.build.version.sdk' field of system/build.prop
-API_LEVEL=$(grep 'ro.build.version.sdk' "$FACTORY_IMGS_DATA/system/build.prop" |
+API_LEVEL=$(grep 'ro.build.version.sdk' "$SYSTEM_ROOT/build.prop" |
             cut -d '=' -f2 | tr '[:upper:]' '[:lower:]' || true)
 if [[ "$API_LEVEL" == "" ]]; then
-  echo "[-] Failed to extract API level from build.propr"
+  echo "[-] Failed to extract API level from build.prop"
   abort 1
 fi
 
@@ -474,7 +480,7 @@ if [ $DEODEX_ALL = false ]; then
   REPAIR_SCRIPT_ARG+=" --bytecode-list $SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt"
 fi
 
-$REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$FACTORY_IMGS_DATA/system" \
+$REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$SYSTEM_ROOT" \
      --output "$FACTORY_IMGS_R_DATA" $REPAIR_SCRIPT_ARG || {
   echo "[-] System partition bytecode repair failed"
   abort 1

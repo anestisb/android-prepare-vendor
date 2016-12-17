@@ -10,6 +10,9 @@ bullhead/*
 flounder/*
 !flounder/config-*
 
+sailfish/*
+!sailfish/config-*
+
 # Due to large files they're downloaded at manual step
 # and not part of git files
 hostTools/Linux/api*

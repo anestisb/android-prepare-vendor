@@ -127,7 +127,7 @@ has_vendor_size() {
 read_invalid_symlink() {
   local INBASE="$1"
   local RELTARGET="$2"
-  _resolve_symlinks "$INBASE/$RELTARGET"
+  ls -l "$INBASE/$RELTARGET" | sed -e 's/.* -> //'
 }
 
 array_contains() {
@@ -179,7 +179,10 @@ extract_blobs() {
         echo "[-] Symbolic links cannot have their destination path altered"
         abort 1
       fi
-      symLinkSrc="$(read_invalid_symlink "$INDIR" "$src" | sed 's#^/##')"
+      symLinkSrc="$(read_invalid_symlink "$INDIR" "$src")"
+      if [[ "$symLinkSrc" != /* ]]; then
+        symLinkSrc="/$(dirname $src)/$symLinkSrc"
+      fi
       S_SLINKS_SRC=("${S_SLINKS_SRC[@]-}" "$symLinkSrc")
       S_SLINKS_DST=("${S_SLINKS_DST[@]-}" "$src")
       hasStandAloneSymLinks=true
@@ -231,8 +234,8 @@ extract_blobs() {
 update_vendor_blobs_mk() {
   local BLOBS_LIST="$1"
 
-  local RELDIR_PROP="vendor/$VENDOR/$DEVICE/proprietary"
-  local RELDIR_VENDOR="vendor/$VENDOR/$DEVICE/vendor"
+  local RELDIR_PROP="vendor/$VENDOR_DIR/$DEVICE/proprietary"
+  local RELDIR_VENDOR="vendor/$VENDOR_DIR/$DEVICE/vendor"
 
   local src="" srcRelDir="" dst="" dstRelDir="" fileExt=""
 
@@ -312,6 +315,16 @@ update_dev_vendor_mk() {
   strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
 }
 
+gen_dev_family_vendor_mk() {
+  if [ $IS_PIXEL = false ]; then
+    return
+  fi
+
+  if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
+    echo "\$(call inherit-product-if-exists, vendor/$VENDOR_DIR/$DEVICE/device-vendor.mk)" >> "$DEVICE_FAMILY_VENDOR_MK"
+  fi
+}
+
 gen_board_vendor_mk() {
   {
     echo 'LOCAL_PATH := $(call my-dir)'
@@ -346,13 +359,31 @@ gen_board_cfg_mk() {
   fi
 
   {
-    echo "TARGET_BOARD_INFO_FILE := vendor/$VENDOR/$DEVICE/vendor-board-info.txt"
+    echo "TARGET_BOARD_INFO_FILE := vendor/$VENDOR_DIR/$DEVICE/vendor-board-info.txt"
     echo 'BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4'
     echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz"
 
     # Update with user selected extra flags
     grep -Ev '(^#|^$)' "$MK_FLAGS_LIST" || true
   } >> "$BOARD_CONFIG_VENDOR_MK"
+}
+
+gen_board_family_cfg_mk() {
+  if [ $IS_PIXEL = false ]; then
+    return
+  fi
+
+  if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
+    {
+      echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
+      echo '  LOCAL_STEM := sailfish/BoardConfigVendor.mk'
+      echo 'else'
+      echo '  LOCAL_STEM := marlin/BoardConfigVendor.mk'
+      echo 'endif'
+      echo ''
+      echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
+    } >> "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
+  fi
 }
 
 gen_board_info_txt() {
@@ -386,13 +417,12 @@ gen_apk_dso_symlink() {
   local DSO_ROOT=$3
   local APK_DIR=$4
   local DSO_ABI=$5
-  local MANF=$6
 
   echo "\ninclude \$(CLEAR_VARS)"
   echo "LOCAL_MODULE := $DSO_MNAME"
   echo "LOCAL_MODULE_CLASS := FAKE"
   echo "LOCAL_MODULE_TAGS := optional"
-  echo "LOCAL_MODULE_OWNER := $MANF"
+  echo "LOCAL_MODULE_OWNER := $VENDOR"
   echo 'include $(BUILD_SYSTEM)/base_rules.mk'
   echo "\$(LOCAL_BUILT_MODULE): TARGET := $DSO_ROOT/$DSO_NAME"
   echo "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
@@ -412,7 +442,7 @@ gen_standalone_symlinks() {
 
   local -a PKGS_SSLINKS
   local pkgName=""
-  local cnt=1
+  local cnt=0 # First element is always empty string due to dynamic append mechanism
 
   if [ ${#S_SLINKS_SRC[@]} -ne ${#S_SLINKS_DST[@]} ]; then
     echo "[-] Standalone symlinks arrays corruption - inspect paths manually"
@@ -421,7 +451,20 @@ gen_standalone_symlinks() {
 
   for link in ${S_SLINKS_SRC[@]}
   do
-    pkgName=$(basename $link)
+    let cnt=cnt+1
+
+    # Skip symbolic links the destination of which is under bytecode directories
+    if [[ "${S_SLINKS_DST[$cnt]}" == *app/* ]]; then
+      continue
+    fi
+
+    if [[ "$link" == *lib64/*.so ]]; then
+      pkgName="$(basename "$link" .so)_64.so"
+    elif [[ "$link" == *lib/*.so ]]; then
+      pkgName="$(basename "$link" .so)_32.so"
+    else
+      pkgName=$(basename "$link")
+    fi
     PKGS_SSLINKS=("${PKGS_SSLINKS[@]-}" "$pkgName")
 
     {
@@ -431,7 +474,7 @@ gen_standalone_symlinks() {
       echo -e "LOCAL_MODULE_TAGS := optional"
       echo -e "LOCAL_MODULE_OWNER := $VENDOR"
       echo -e 'include $(BUILD_SYSTEM)/base_rules.mk'
-      echo -e "\$(LOCAL_BUILT_MODULE): TARGET := /${S_SLINKS_SRC[$cnt]}"
+      echo -e "\$(LOCAL_BUILT_MODULE): TARGET := ${S_SLINKS_SRC[$cnt]}"
       echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}"
       echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
       echo -e "\$(LOCAL_BUILT_MODULE):"
@@ -443,7 +486,6 @@ gen_standalone_symlinks() {
       echo -e "\t\$(hide) touch \$@"
     } >> "$ANDROID_MK"
 
-    let cnt=cnt+1
   done
 
   {
@@ -556,7 +598,7 @@ gen_mk_for_bytecode() {
         # Generate symlink fake rule & cache module_names to append later to vendor mk
         PKGS_SLINKS=("${PKGS_SLINKS[@]-}" "$dsoMName")
         apk_lib_slinks="$apk_lib_slinks\n$(gen_apk_dso_symlink "$dsoName" \
-                        "$dsoMName" "$dsoRoot" "$lcMPath/$pkgName" "$arch" "$VENDOR")"
+                        "$dsoMName" "$dsoRoot" "$lcMPath/$pkgName" "$arch")"
       done < <(find -L "$appDir/lib" -type l -iname '*.so')
     fi
 
@@ -785,7 +827,7 @@ gen_android_mk() {
 
     echo "ifeq (\$(TARGET_DEVICE),$targetProductDevice)"
     echo ""
-    echo "include vendor/$VENDOR/$DEVICE/AndroidBoardVendor.mk"
+    echo "include vendor/$VENDOR_DIR/$DEVICE/AndroidBoardVendor.mk"
   } >> "$ANDROID_MK"
 
   for root in "vendor" "proprietary"
@@ -875,7 +917,11 @@ EXTRA_MODULES=""
 ALLOW_PREOPT=false
 
 DEVICE=""
+DEVICE_FAMILY=""
+IS_PIXEL=false
 VENDOR=""
+DEV_FAMILY_BOARD_CONFIG_VENDOR_MK=""
+DEVICE_FAMILY_VENDOR_MK=""
 RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
 
 # Check that system tools exist
@@ -942,13 +988,23 @@ verify_input "$INPUT_DIR"
 # Get device details
 DEVICE=$(get_device_codename "$INPUT_DIR/system/build.prop")
 VENDOR=$(get_vendor "$INPUT_DIR/system/build.prop")
+VENDOR_DIR="$VENDOR"
 RADIO_VER=$(get_radio_ver "$INPUT_DIR/system/build.prop")
 BOOTLOADER_VER=$(get_bootloader_ver "$INPUT_DIR/system/build.prop")
 
-echo "[*] Generating blobs for vendor/$VENDOR/$DEVICE"
+if [[ "$VENDOR" == "google" ]]; then
+  VENDOR_DIR="google_devices"
+  IS_PIXEL=true
+  if [[ "$DEVICE" == "marlin" || "$DEVICE" == "sailfish" ]]; then
+    DEVICE_FAMILY="marlin"
+  fi
+  mkdir -p "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
+fi
+
+echo "[*] Generating blobs for vendor/$VENDOR_DIR/$DEVICE"
 
 # Clean-up output
-OUTPUT_VENDOR="$OUTPUT_DIR/vendor/$VENDOR/$DEVICE"
+OUTPUT_VENDOR="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE"
 PROP_EXTRACT_BASE="$OUTPUT_VENDOR/proprietary"
 if [ -d "$OUTPUT_VENDOR" ]; then
   rm -rf "${OUTPUT_VENDOR:?}"/*
@@ -962,8 +1018,16 @@ BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";    touch "$BOARD_C
 ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";  touch "$ANDROID_BOARD_VENDOR_MK"
 ANDROID_MK="$OUTPUT_VENDOR/Android.mk";                          touch "$ANDROID_MK"
 
+if [ $IS_PIXEL = true ]; then
+  DEV_FAMILY_BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
+  touch "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
+
+  DEVICE_FAMILY_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
+  touch "$DEVICE_FAMILY_VENDOR_MK"
+fi
+
 # And prefix them
-for file in "$OUTPUT_VENDOR/"*.mk
+find "$OUTPUT_DIR/vendor/$VENDOR_DIR" -type f -name '*.mk' | while read -r file
 do
   echo -e "# [$(date +%Y-%m-%d)] Auto-generated file, do not edit\n" > "$file"
 done
@@ -987,7 +1051,8 @@ update_vendor_blobs_mk "$BLOBS_LIST"
 
 # Generate device-vendor.mk makefile (will be updated later)
 echo "[*] Generating 'device-vendor.mk'"
-echo -e "\$(call inherit-product, vendor/$VENDOR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
+gen_dev_family_vendor_mk
+echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
 echo "[*] Generating 'AndroidBoardVendor.mk'"
@@ -1000,6 +1065,7 @@ fi
 # Generate BoardConfigVendor.mk (vendor partition type)
 echo "[*] Generating 'BoardConfigVendor.mk'"
 gen_board_cfg_mk "$INPUT_DIR"
+gen_board_family_cfg_mk
 
 # Generate vendor-board-info.txt with baseband & bootloader versions
 echo "[*] Generating 'vendor-board-info.txt'"
