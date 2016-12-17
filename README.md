@@ -148,7 +148,9 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.1.8 - TBC
+* 0.2.0 - TBC
+ * Initial support for Pixel devices (still beta)
+ * Bug fixes when processing symbolic links from vendor partition
  * Preserve symbolic links when processing vendor partition
  * Android 7.1 support for Nexus devices (API-25)
  * Follow HTTP redirects when downloading factory images
