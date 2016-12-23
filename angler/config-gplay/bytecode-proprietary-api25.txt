@@ -1,5 +1,6 @@
 # Bytecode archive files to extract from factory images
 
+system/app/HwMMITest/HwMMITest.apk
 system/app/HwSarControlService/HwSarControlService.apk
 system/app/SetupSmartDeviceOverlay/SetupSmartDeviceOverlay.apk
 system/app/Tycho/Tycho.apk
