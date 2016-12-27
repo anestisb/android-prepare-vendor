@@ -237,9 +237,10 @@ update_vendor_blobs_mk() {
   local RELDIR_PROP="vendor/$VENDOR_DIR/$DEVICE/proprietary"
   local RELDIR_VENDOR="vendor/$VENDOR_DIR/$DEVICE/vendor"
 
-  local src="" srcRelDir="" dst="" dstRelDir="" fileExt=""
+  local src="" srcRelDir="" dst="" dstRelDir="" fileExt="" dstMk
 
   echo 'PRODUCT_COPY_FILES += \' >> "$DEVICE_VENDOR_BLOBS_MK"
+  echo 'PRODUCT_COPY_FILES := \' >> "$BOARD_CONFIG_VENDOR_MK"
 
   while read -r file
   do
@@ -282,18 +283,21 @@ update_vendor_blobs_mk() {
     if [[ $dst == system/* ]]; then
       dstRelDir='$(TARGET_COPY_OUT_SYSTEM)'
       dst=$(echo "$dst" | sed 's#^system/##')
+      dstMk="$DEVICE_VENDOR_BLOBS_MK"
     elif [[ $dst == vendor/* ]]; then
       dstRelDir='$(TARGET_COPY_OUT_VENDOR)'
       dst=$(echo "$dst" | sed 's#^vendor/##')
+      dstMk="$BOARD_CONFIG_VENDOR_MK"
     else
       echo "[-] Invalid dst path detected at '$BLOBS_LIST'"
       abort 1
     fi
 
-    echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$DEVICE_VENDOR_BLOBS_MK"
+    echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$dstMk"
   done < <(grep -Ev '(^#|^$)' "$BLOBS_LIST")
 
   strip_trail_slash_from_file "$DEVICE_VENDOR_BLOBS_MK"
+  echo '    $(PRODUCT_COPY_FILES)' >> "$BOARD_CONFIG_VENDOR_MK"
 }
 
 update_dev_vendor_mk() {
