@@ -375,13 +375,12 @@ gen_board_family_cfg_mk() {
 
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
     {
+      echo ''
       echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
       echo '  LOCAL_STEM := sailfish/BoardConfigVendor.mk'
-      echo 'else'
-      echo '  LOCAL_STEM := marlin/BoardConfigVendor.mk'
+      echo "  -include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
       echo 'endif'
       echo ''
-      echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
     } >> "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
   fi
 }
