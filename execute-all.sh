@@ -36,7 +36,7 @@ readonly L_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21504&authkey=AC5YFNSAZ31-W3o'
 
 declare -a sysTools=("mkdir" "dirname" "wget" "mount")
-declare -a availDevices=("bullhead" "flounder" "angler" "sailfish")
+declare -a availDevices=("bullhead" "flounder" "angler" "sailfish" "marlin")
 
 abort() {
   # Remove mount points in case of error
