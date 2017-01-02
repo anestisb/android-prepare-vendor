@@ -223,6 +223,10 @@ lots of definitions will conflict and create problems when building. As such ens
 that only one of them is present when building for desired target. Generated makefiles
 include an additional defensive check that will raise a compiler error when both are
 detected under same AOSP root.
+* If tool output is not set to AOSP root directory, prefer `rsync` instead of
+`cp` or `mv` commands to copy the generated directory structure to different
+location. Some device configurations (e.g. Pixel/Pixel XL) share some root
+directories and might break if `cp` or `mv` are against the wrong base paths.
 
 ## Frequently Spotted Issues
 ### fuse-ext2
