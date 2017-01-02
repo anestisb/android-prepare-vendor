@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
+declare -a sysTools=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut" "fuse-ext2")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -81,24 +81,44 @@ extract_vendor_partition_size() {
   echo "$size" > "$OUT_FILE"
 }
 
+mount_darwin() {
+  local IMGFILE="$1"
+  local MOUNTPOINT="$2"
+  #fuse-ext2.wait "$MOUNTPOINT" 2 "$(which fuse-ext2)" "$IMGFILE" "$MOUNTPOINT" -o uid=$EUID
+  fuse-ext2 -o uid=$EUID "$IMGFILE" "$MOUNTPOINT"
+
+  # For some reason 'fuse-ext2.wait' sometimes fails under macOS 10.12.x, thus
+  # this ugly hack
+  sleep 2
+}
+
+mount_linux() {
+  local IMGFILE="$1"
+  local MOUNTPOINT="$2"
+  local MOUNT_LOG
+  fuse-ext2 -o uid=$EUID "$IMGFILE" "$MOUNTPOINT" &>"$MOUNT_LOG" || {
+    echo "[-] '$IMAGE_FILE' mount failed"
+    cat "$MOUNT_LOG"
+    abort 1
+  }
+}
+
 mount_img() {
   local IMAGE_FILE="$1"
   local MOUNT_DIR="$2"
-  local MOUNT_LOG="$TMP_WORK_DIR/mount.log"
 
   if [ ! -d "$MOUNT_DIR" ]; then
     mkdir -p "$MOUNT_DIR"
   fi
 
-  $_MOUNT -o uid=$EUID "$IMAGE_FILE" "$MOUNT_DIR" &>"$MOUNT_LOG" || {
-    echo "[-] '$IMAGE_FILE' mount failed"
-    cat "$MOUNT_LOG"
-    abort 1
-  }
+  if [[ "$HOST_OS" == "Darwin" ]]; then
+    mount_darwin "$IMAGE_FILE" "$MOUNT_DIR"
+  else
+    mount_linux "$IMAGE_FILE" "$MOUNT_DIR"
+  fi
 
   if ! mount | grep -qs "$MOUNT_DIR"; then
     echo "[-] '$IMAGE_FILE' mount point missing indicates fuse mount error"
-    cat "$MOUNT_LOG"
     abort 1
   fi
 }
@@ -128,7 +148,6 @@ trap "abort 1" SIGINT SIGTERM
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 SIMG2IMG=""
-_MOUNT=""
 
 # Compatibility
 HOST_OS=$(uname)
@@ -139,11 +158,7 @@ fi
 
 # Platform specific commands
 if [[ "$HOST_OS" == "Darwin" ]]; then
-  sysTools+=("mount")
-  _MOUNT="mount -t fuse-ext2"
-else
-  sysTools+=("fuse-ext2")
-  _MOUNT="fuse-ext2"
+  sysTools+=("fuse-ext2.wait")
 fi
 
 # Check that system tools exist
