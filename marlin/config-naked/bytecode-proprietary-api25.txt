@@ -1,6 +1,5 @@
 # Bytecode archive files to extract from factory images
 
-system/framework/com.android.ims.rcsmanager.jar
 system/framework/embmslibrary.jar
 system/framework/qcrilhook.jar
 system/framework/QtiTelephonyServicelibrary.jar
