@@ -13,6 +13,9 @@ flounder/*
 sailfish/*
 !sailfish/config-*
 
+marlin/*
+!marlin/config-*
+
 # Due to large files they're downloaded at manual step
 # and not part of git files
 hostTools/Linux/api*

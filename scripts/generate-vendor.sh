@@ -319,16 +319,6 @@ update_dev_vendor_mk() {
   strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
 }
 
-gen_dev_family_vendor_mk() {
-  if [ $IS_PIXEL = false ]; then
-    return
-  fi
-
-  if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
-    echo "\$(call inherit-product-if-exists, vendor/$VENDOR_DIR/$DEVICE/device-vendor.mk)" >> "$DEVICE_FAMILY_VENDOR_MK"
-  fi
-}
-
 gen_board_vendor_mk() {
   {
     echo 'LOCAL_PATH := $(call my-dir)'
@@ -380,11 +370,10 @@ gen_board_family_cfg_mk() {
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
     {
       echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
-      echo '  LOCAL_STEM := sailfish/BoardConfigVendor.mk'
+      echo '  LOCAL_STEM := sailfish/BoardConfigVendorPartial.mk'
       echo 'else'
-      echo '  LOCAL_STEM := marlin/BoardConfigVendor.mk'
+      echo '  LOCAL_STEM := marlin/BoardConfigVendorPartial.mk'
       echo 'endif'
-      echo ''
       echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
     } >> "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
   fi
@@ -925,7 +914,6 @@ DEVICE_FAMILY=""
 IS_PIXEL=false
 VENDOR=""
 DEV_FAMILY_BOARD_CONFIG_VENDOR_MK=""
-DEVICE_FAMILY_VENDOR_MK=""
 RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
 
 # Check that system tools exist
@@ -1026,8 +1014,12 @@ if [ $IS_PIXEL = true ]; then
   DEV_FAMILY_BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
   touch "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
 
-  DEVICE_FAMILY_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
-  touch "$DEVICE_FAMILY_VENDOR_MK"
+  BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendorPartial.mk"
+  touch "$BOARD_CONFIG_VENDOR_MK"
+
+  rm "$DEVICE_VENDOR_MK"
+  DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
+  touch "$DEVICE_VENDOR_MK"
 fi
 
 # And prefix them
@@ -1054,8 +1046,7 @@ extract_blobs "$BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
 update_vendor_blobs_mk "$BLOBS_LIST"
 
 # Generate device-vendor.mk makefile (will be updated later)
-echo "[*] Generating 'device-vendor.mk'"
-gen_dev_family_vendor_mk
+echo "[*] Generating '$(basename $DEVICE_VENDOR_MK)'"
 echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
