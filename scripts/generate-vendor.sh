@@ -477,7 +477,7 @@ gen_standalone_symlinks() {
 
   done
 
-  {
+  [ -z ${PKGS_SSLINKS-} ] || {
     echo "# Standalone symbolic links"
     echo 'PRODUCT_PACKAGES += \'
     for module in ${PKGS_SSLINKS[@]}
