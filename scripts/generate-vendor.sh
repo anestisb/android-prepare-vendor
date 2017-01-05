@@ -207,21 +207,15 @@ extract_blobs() {
     if [ ! -d "$outBase/$dstDir" ]; then
       mkdir -p "$outBase/$dstDir"
     fi
-    cp "$INDIR/$src" "$outBase/$dst" || {
+    cp -a "$INDIR/$src" "$outBase/$dst" || {
       echo "[-] Failed to copy '$src'"
       abort 1
     }
 
     # Some vendor xml files don't satisfy xmllint so fix here
     if [[ "${file##*.}" == "xml" ]]; then
-      openTag=""
       openTag=$(grep '^<?xml version' "$outBase/$dst" || true )
-      if [[ "$openTag" == "" ]]; then
-        cp "$INDIR/$src" "$outBase/$dst" || {
-          echo "[-] Failed to copy '$src'"
-          abort 1
-        }
-      else
+      if [[ "$openTag" != "" ]]; then
         grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp"
         echo "$openTag" > "$outBase/$dst"
         cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
@@ -478,10 +472,9 @@ gen_standalone_symlinks() {
       echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
       echo -e "\t\$(hide) touch \$@"
     } >> "$ANDROID_MK"
-
   done
 
-  {
+  [ -z ${PKGS_SSLINKS-} ] || {
     echo "# Standalone symbolic links"
     echo 'PRODUCT_PACKAGES += \'
     for module in ${PKGS_SSLINKS[@]}
