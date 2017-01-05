@@ -84,12 +84,31 @@ extract_vendor_partition_size() {
 mount_darwin() {
   local IMGFILE="$1"
   local MOUNTPOINT="$2"
-  #fuse-ext2.wait "$MOUNTPOINT" 2 "$(which fuse-ext2)" "$IMGFILE" "$MOUNTPOINT" -o uid=$EUID
-  fuse-ext2 -o uid=$EUID "$IMGFILE" "$MOUNTPOINT"
+  local MOUNT_LOG="$TMP_WORK_DIR/mount.log"
+  local WAIT_TMOUT=2
+  local -a OSXFUSE_VER
 
-  # For some reason 'fuse-ext2.wait' sometimes fails under macOS 10.12.x, thus
-  # this ugly hack
-  sleep 2
+  local readonly OS_MAJOR_VER="$(sw_vers -productVersion | cut -d '.' -f2)"
+  if [ $OS_MAJOR_VER -ge 12 ]; then
+    # If Sierra and above, check that latest supported (3.5.4) osxfuse version is installed
+    local readonly OSXFUSE_PLIST="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
+    IFS='.' read -r -a OSXFUSE_VER <<< "$(grep '<key>CFBundleVersion</key>' -A1 "$OSXFUSE_PLIST" | \
+      grep -o '<string>.*</string>' | cut -d '>' -f2 | cut -d '<' -f1)"
+
+    if [[ ("${OSXFUSE_VER[0]}" -lt 3 ) || \
+          ("${OSXFUSE_VER[0]}" -eq 3 && "${OSXFUSE_VER[1]}" -lt 5) || \
+          ("${OSXFUSE_VER[0]}" -eq 3 && "${OSXFUSE_VER[1]}" -eq 5 && "${OSXFUSE_VER[2]}" -lt 4) ]]; then
+      echo "[!] Detected osxfuse version is '$(echo  ${OSXFUSE_VER[@]} | tr ' ' '.')'"
+      echo "[-] Update to latest or disable the check if you know that you're doing"
+      abort 1
+    fi
+  fi
+
+  fuse-ext2 -o uid=$EUID,ro "$IMGFILE" "$MOUNTPOINT" &>"$MOUNT_LOG" || {
+    echo "[-] '$IMAGE_FILE' mount failed"
+    cat "$MOUNT_LOG"
+    abort 1
+  }
 }
 
 mount_linux() {
@@ -158,7 +177,7 @@ fi
 
 # Platform specific commands
 if [[ "$HOST_OS" == "Darwin" ]]; then
-  sysTools+=("fuse-ext2.wait")
+  sysTools+=("sw_vers")
 fi
 
 # Check that system tools exist
