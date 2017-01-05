@@ -96,7 +96,7 @@ mount_linux() {
   local IMGFILE="$1"
   local MOUNTPOINT="$2"
   local MOUNT_LOG="$TMP_WORK_DIR/mount.log"
-  fuse-ext2 -o uid=$EUID "$IMGFILE" "$MOUNTPOINT" &>"$MOUNT_LOG" || {
+  fuse-ext2 -o uid=$EUID,ro "$IMGFILE" "$MOUNTPOINT" &>"$MOUNT_LOG" || {
     echo "[-] '$IMAGE_FILE' mount failed"
     cat "$MOUNT_LOG"
     abort 1
