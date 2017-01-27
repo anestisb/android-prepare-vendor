@@ -359,6 +359,7 @@ gen_board_family_cfg_mk() {
 
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
     {
+      echo 'AB_OTA_PARTITIONS += vendor'
       echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
       echo '  LOCAL_STEM := sailfish/BoardConfigVendorPartial.mk'
       echo 'else'
