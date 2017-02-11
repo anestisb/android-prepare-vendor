@@ -1,3 +1,4 @@
+system/bin/adsprpcd
 system/bin/ATFWD-daemon
 system/bin/athdiag
 system/bin/cnd
@@ -28,6 +29,7 @@ system/bin/nanotool
 system/bin/netmgrd
 system/bin/nl_listener
 system/bin/pktlogconf
+system/bin/PktRspTest
 system/bin/pm-proxy
 system/bin/pm-service
 system/bin/port-bridge
@@ -105,6 +107,7 @@ system/lib64/libloc_ds_api.so
 system/lib64/libloc_eng.so
 system/lib64/libminui.so
 system/lib64/libtinyxml.so
+system/lib64/libwifi-hal-qcom.so
 system/lib/hw/gps.default.so
 system/lib/libgps.utils.so
 system/lib/libion.so
