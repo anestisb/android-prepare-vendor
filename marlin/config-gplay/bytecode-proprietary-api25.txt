@@ -1,0 +1,20 @@
+# Bytecode archive files to extract from factory images
+
+# Radio
+system/framework/embmslibrary.jar
+system/framework/qcrilhook.jar
+system/framework/QtiTelephonyServicelibrary.jar
+system/framework/rcsservice.jar
+
+# Sprint
+system/priv-app/SprintDM/SprintDM.apk
+system/priv-app/SprintHM/SprintHM.apk
+
+# Verizon
+system/app/VZWAPNLib/VZWAPNLib.apk
+system/app/vzw_msdc_api/vzw_msdc_api.apk
+system/priv-app/VZWAPNService/VZWAPNService.apk
+system/priv-app/VZWAVS/VZWAVS.apk
+system/priv-app/VzwLcSilent/VzwLcSilent.apk
+system/priv-app/VzwOmaTrigger/VzwOmaTrigger.apk
+system/framework/VerizonUnifiedSettings.jar

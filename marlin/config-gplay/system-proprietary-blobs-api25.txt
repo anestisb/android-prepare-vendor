@@ -88,12 +88,17 @@ system/etc/flp.conf
 system/etc/izat.conf
 system/etc/lowi.conf
 system/etc/permissions/com.android.ims.rcsmanager.xml
+system/etc/permissions/com.verizon.apn.xml
+system/etc/permissions/com.verizon.embms.xml
+system/etc/permissions/com.verizon.provider.xml
 system/etc/permissions/embms.xml
 system/etc/permissions/imscm.xml
 system/etc/permissions/qcrilhook.xml
 system/etc/permissions/qti_permissions.xml
+system/etc/permissions/qti-vzw-ims-internal.xml
 system/etc/permissions/rcsservice.xml
 system/etc/permissions/telephonyservice.xml
+system/etc/permissions/vzw_sso_permissions.xml
 system/etc/qdcm_calib_data_M1_WQHD_SAMSUNG_S6E3HA3_5.5_command_mode_panel.xml
 system/etc/sap.conf
 system/lib64/hw/gps.default.so
