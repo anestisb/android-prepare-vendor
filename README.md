@@ -149,7 +149,8 @@ target device before any pull request.
 
 ## Change Log
 * 0.2.0 - TBC
- * Initial support for Pixel devices (still beta)
+ * Support for Pixel devices
+ * Output can be directly set to AOSP SRC ROOT
  * Bug fixes when processing symbolic links from vendor partition
  * Preserve symbolic links when processing vendor partition
  * Android 7.1 support for Nexus devices (API-25)
