@@ -35,6 +35,8 @@ readonly D_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 readonly L_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21503&authkey=AKDpBAzhzum6d7w'
 readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21504&authkey=AC5YFNSAZ31-W3o'
 
+readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
+
 declare -a sysTools=("mkdir" "dirname" "wget" "mount")
 declare -a availDevices=("bullhead" "flounder" "angler" "sailfish" "marlin")
 
@@ -44,6 +46,7 @@ abort() {
     unmount_raw_image "$FACTORY_IMGS_DATA/system"
     unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
   fi
+  rm -rf "$TMP_WORK_DIR"
   exit "$1"
 }
 
@@ -122,6 +125,14 @@ oatdump_prepare_env() {
   }
 }
 
+is_aosp_root() {
+  local targetDir="$1"
+  if [ -f "$targetDir/.repo/project.list" ]; then
+    return 0
+  fi
+  return 1
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 
@@ -146,6 +157,7 @@ FORCE_OATDUMP=false
 FORCE_SMALIEX=false
 BYTECODE_REPAIR_METHOD=""
 DEODEX_ALL=false
+AOSP_ROOT=""
 
 # Compatibility
 check_bash_version
@@ -269,6 +281,16 @@ if [[ $DEODEX_ALL = true && $KEEP_DATA = false ]]; then
   echo "[!] It's pointless to deodex all if not keeping runtime generated data"
   echo "    After vendor generate finishes all files not part of configs will be deleted"
   abort 1
+fi
+
+# Check if output directory is AOSP root
+if is_aosp_root "$OUTPUT_DIR"; then
+  if [[ $KEEP_DATA = true ]]; then
+    echo "[!] Cannot keep data when output directory is AOSP root - choose different path"
+    abort 1
+  fi
+  AOSP_ROOT="$OUTPUT_DIR"
+  OUTPUT_DIR="$TMP_WORK_DIR"
 fi
 
 # Resolve Java location
@@ -521,7 +543,15 @@ if [ "$KEEP_DATA" = false ]; then
   rm -rf "$FACTORY_IMGS_R_DATA"
 fi
 
-echo "[*] All actions completed successfully"
-echo "[*] Import '$OUT_BASE/vendor' to AOSP root"
+if [[ "$AOSP_ROOT" != "" ]]; then
+  rsync -aruz "$OUT_BASE/vendor/" "$AOSP_ROOT/vendor" || {
+    echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor')"
+    abort 1
+  }
+  echo "[*] Vendor blobs copied to AOSP root"
+else
+  echo "[*] Import '$OUT_BASE/vendor' to AOSP root"
+fi
 
+echo "[*] All actions completed successfully"
 abort 0
