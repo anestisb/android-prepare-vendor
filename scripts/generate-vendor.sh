@@ -353,7 +353,7 @@ gen_board_cfg_mk() {
 }
 
 gen_board_family_cfg_mk() {
-  if [ $IS_PIXEL = false ]; then
+  if [ "$IS_PIXEL" = false ]; then
     return
   fi
 
@@ -999,7 +999,7 @@ BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";    touch "$BOARD_C
 ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";  touch "$ANDROID_BOARD_VENDOR_MK"
 ANDROID_MK="$OUTPUT_VENDOR/Android.mk";                          touch "$ANDROID_MK"
 
-if [ $IS_PIXEL = true ]; then
+if [ "$IS_PIXEL" = true ]; then
   DEV_FAMILY_BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
   touch "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
 
