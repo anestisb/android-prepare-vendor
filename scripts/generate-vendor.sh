@@ -183,8 +183,8 @@ extract_blobs() {
       if [[ "$symLinkSrc" != /* ]]; then
         symLinkSrc="/$(dirname $src)/$symLinkSrc"
       fi
-      S_SLINKS_SRC=("${S_SLINKS_SRC[@]-}" "$symLinkSrc")
-      S_SLINKS_DST=("${S_SLINKS_DST[@]-}" "$src")
+      S_SLINKS_SRC+=("$symLinkSrc")
+      S_SLINKS_DST+=("$src")
       hasStandAloneSymLinks=true
       continue
     fi
@@ -426,16 +426,20 @@ gen_standalone_symlinks() {
 
   local -a PKGS_SSLINKS
   local pkgName=""
-  local cnt=0 # First element is always empty string due to dynamic append mechanism
+  local cnt
 
   if [ ${#S_SLINKS_SRC[@]} -ne ${#S_SLINKS_DST[@]} ]; then
     echo "[-] Standalone symlinks arrays corruption - inspect paths manually"
     abort 1
   fi
 
-  for link in ${S_SLINKS_SRC[@]}
+  for link in "${S_SLINKS_SRC[@]}"
   do
-    let cnt=cnt+1
+    if [ -z "${cnt-}" ]; then
+      cnt=0
+    else
+      let cnt=cnt+1
+    fi
 
     # Skip symbolic links the destination of which is under bytecode directories
     if [[ "${S_SLINKS_DST[$cnt]}" == *app/* ]]; then
@@ -449,7 +453,7 @@ gen_standalone_symlinks() {
     else
       pkgName=$(basename "$link")
     fi
-    PKGS_SSLINKS=("${PKGS_SSLINKS[@]-}" "$pkgName")
+    PKGS_SSLINKS+=("$pkgName")
 
     {
       echo -e "\ninclude \$(CLEAR_VARS)"
@@ -471,14 +475,16 @@ gen_standalone_symlinks() {
     } >> "$ANDROID_MK"
   done
 
-  [ -z ${PKGS_SSLINKS-} ] || {
-    echo "# Standalone symbolic links"
-    echo 'PRODUCT_PACKAGES += \'
-    for module in ${PKGS_SSLINKS[@]}
-    do
-      echo "    $module \\"
-    done
-  } >> "$DEVICE_VENDOR_MK"
+  if [ ! -z "${PKGS_SSLINKS-}" ]; then
+    {
+      echo "# Standalone symbolic links"
+      echo 'PRODUCT_PACKAGES += \'
+      for module in "${PKGS_SSLINKS[@]}"
+      do
+        echo "    $module \\"
+      done
+    } >> "$DEVICE_VENDOR_MK"
+  fi
   strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
 }
 
@@ -492,7 +498,7 @@ gen_mk_for_bytecode() {
 
   local origin="" zipName="" fileExt="" pkgName="" src="" class="" suffix=""
   local priv="" cert="" stem="" lcMPath="" appDir="" dsoRootBase="" dsoRoot=""
-  local dsoName="" dsoMName="" arch="" apk_lib_slinks="" hasApkSymLinks=false
+  local dsoName="" dsoMName="" arch="" apk_lib_slinks=""
 
   # Set module path (output)
   if [[ "$RELROOT" == "vendor" ]]; then
@@ -565,8 +571,6 @@ gen_mk_for_bytecode() {
       # same file twice.
       while read -r lib
       do
-        hasApkSymLinks=true
-
         # We don't expect a depth bigger than 1 here
         dsoName=$(basename "$lib")
         arch=$(dirname "$lib" | sed "s#$appDir/lib/##" | cut -d '/' -f1)
@@ -579,7 +583,7 @@ gen_mk_for_bytecode() {
         fi
 
         # Generate symlink fake rule & cache module_names to append later to vendor mk
-        PKGS_SLINKS=("${PKGS_SLINKS[@]-}" "$dsoMName")
+        PKGS_SLINKS+=("$dsoMName")
         apk_lib_slinks="$apk_lib_slinks\n$(gen_apk_dso_symlink "$dsoName" \
                         "$dsoMName" "$dsoRoot" "$lcMPath/$pkgName" "$arch")"
       done < <(find -L "$appDir/lib" -type l -iname '*.so')
@@ -599,7 +603,7 @@ gen_mk_for_bytecode() {
       if [[ "$apk_lib_slinks" != "" ]]; then
         # Force symlink modules dependencies to avoid omissions from wrong cleans
         # for pre-ninja build envs
-        echo "LOCAL_REQUIRED_MODULES := ${PKGS_SLINKS[@]-}"
+        echo "LOCAL_REQUIRED_MODULES := ${PKGS_SLINKS[@]}"
       fi
       echo "LOCAL_CERTIFICATE := $cert"
       echo "LOCAL_MODULE_CLASS := $class"
@@ -628,7 +632,7 @@ gen_mk_for_bytecode() {
     } >> "$ANDROID_MK"
 
     # Also add pkgName to runtime array to append later the vendor mk
-    PKGS=("${PKGS[@]-}" "$pkgName")
+    PKGS+=("$pkgName")
   done < <(find "$OUTBASE/$RELROOT/$RELSUBROOT" -maxdepth 2 \
            -type f -iname '*.apk' -o -iname '*.jar' | sort)
 
@@ -636,7 +640,7 @@ gen_mk_for_bytecode() {
   {
     echo "# Prebuilt APKs/JARs from '$RELROOT/$RELSUBROOT'"
     echo 'PRODUCT_PACKAGES += \'
-    for pkg in ${PKGS[@]}
+    for pkg in "${PKGS[@]}"
     do
       echo "    $pkg \\"
     done
@@ -644,11 +648,11 @@ gen_mk_for_bytecode() {
   strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
 
   # Update vendor mk again with symlink modules if present
-  if [ $hasApkSymLinks = true ]; then
+  if [ ! -z "${PKGS_SLINKS-}" ]; then
     {
       echo "# Prebuilt APKs libs symlinks from '$RELROOT/$RELSUBROOT'"
       echo 'PRODUCT_PACKAGES += \'
-      for module in ${PKGS_SLINKS[@]}
+      for module in "${PKGS_SLINKS[@]}"
       do
         echo "    $module \\"
       done
@@ -662,9 +666,7 @@ gen_mk_for_shared_libs() {
   local OUTBASE="$2"
 
   local -a PKGS
-  local hasPKGS=false
   local -a MULTIDSO
-  local hasMultiDSO=false
   local dsoModule
 
   # First iterate the 64bit libs to detect possible dual target modules
@@ -714,8 +716,7 @@ gen_mk_for_shared_libs() {
 
         # Cache dual-targets so that we don't include again when searching for
         # 32bit only libs under a 64bit system
-        MULTIDSO=("${MULTIDSO[@]-}" "$dso32Src")
-        hasMultiDSO=true
+        MULTIDSO+=("$dso32Src")
       else
         echo "LOCAL_MULTILIB := first"
       fi
@@ -724,8 +725,7 @@ gen_mk_for_shared_libs() {
     } >> "$ANDROID_MK"
 
     # Also add pkgName to runtime array to append later the vendor mk
-    PKGS=("${PKGS[@]-}" "$dsoName")
-    hasPKGS=true
+    PKGS+=("$dsoName")
   done
 
   # Then iterate the 32bit libs excluding the ones already included as dual targets
@@ -751,7 +751,7 @@ gen_mk_for_shared_libs() {
     dsoName=$(basename "$curFile" ".so")
     dsoSrc="$dsoRelRoot/$dsoFile"
 
-    if [ $hasMultiDSO = true ]; then
+    if [ ! -z "${MULTIDSO-}" ]; then
       if array_contains "$dsoSrc" "${MULTIDSO[@]}"; then
         continue
       fi
@@ -776,16 +776,15 @@ gen_mk_for_shared_libs() {
     } >> "$ANDROID_MK"
 
     # Also add pkgName to runtime array to append later the vendor mk
-    PKGS=("${PKGS[@]-}" "$dsoName")
-    hasPKGS=true
+    PKGS+=("$dsoName")
   done
 
   # Update vendor mk
-  if [ $hasPKGS = true ]; then
+  if [ ! -z "${PKGS-}" ]; then
     {
       echo "# Prebuilt shared libraries"
       echo 'PRODUCT_PACKAGES += \'
-      for pkg in ${PKGS[@]}
+      for pkg in "${PKGS[@]}"
       do
         echo "    $pkg \\"
       done
