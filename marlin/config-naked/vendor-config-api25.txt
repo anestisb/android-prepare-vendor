@@ -10,3 +10,6 @@
 PRODUCT_COPY_FILES := \
     device/google/marlin/fstab.common:root/fstab.marlin \
     $(PRODUCT_COPY_FILES)
+
+PRODUCT_PROPERTY_OVERRIDES += \
+   ro.hardware.fingerprint=fpc
