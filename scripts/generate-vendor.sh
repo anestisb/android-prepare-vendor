@@ -181,7 +181,7 @@ extract_blobs() {
       fi
       symLinkSrc="$(read_invalid_symlink "$INDIR" "$src")"
       if [[ "$symLinkSrc" != /* ]]; then
-        symLinkSrc="/$(dirname $src)/$symLinkSrc"
+        symLinkSrc="/$(dirname "$src")/$symLinkSrc"
       fi
       S_SLINKS_SRC+=("$symLinkSrc")
       S_SLINKS_DST+=("$src")
@@ -242,14 +242,14 @@ update_vendor_blobs_mk() {
     if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
       continue
     fi
-    if [[ $hasDsoModules = true && "$fileExt" == "so" ]]; then
+    if [[ "$hasDsoModules" = true && "$fileExt" == "so" ]]; then
       if array_contains "$file" "${DSO_MODULES[@]}"; then
         continue
       fi
     fi
 
     # Skip standalone symbolic links if available
-    if [ $hasStandAloneSymLinks = true ]; then
+    if [ "$hasStandAloneSymLinks" = true ]; then
       if array_contains "$file" "${S_SLINKS_DST[@]}"; then
         continue
       fi
@@ -402,7 +402,8 @@ gen_apk_dso_symlink() {
   local APK_DIR=$4
   local DSO_ABI=$5
 
-  echo "\ninclude \$(CLEAR_VARS)"
+  echo ""
+  echo "include \$(CLEAR_VARS)"
   echo "LOCAL_MODULE := $DSO_MNAME"
   echo "LOCAL_MODULE_CLASS := FAKE"
   echo "LOCAL_MODULE_TAGS := optional"
@@ -412,12 +413,12 @@ gen_apk_dso_symlink() {
   echo "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
   echo "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
   echo "\$(LOCAL_BUILT_MODULE):"
-  echo "\t\$(hide) mkdir -p \$(dir \$@)"
-  echo "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
-  echo "\t\$(hide) rm -rf \$@"
-  echo "\t\$(hide) rm -rf \$(SYMLINK)"
-  echo "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
-  echo "\t\$(hide) touch \$@"
+  echo "    \$(hide) mkdir -p \$(dir \$@)"
+  echo "    \$(hide) mkdir -p \$(dir \$(SYMLINK))"
+  echo "    \$(hide) rm -rf \$@"
+  echo "    \$(hide) rm -rf \$(SYMLINK)"
+  echo "    \$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
+  echo "    \$(hide) touch \$@"
 }
 
 gen_standalone_symlinks() {
@@ -456,22 +457,23 @@ gen_standalone_symlinks() {
     PKGS_SSLINKS+=("$pkgName")
 
     {
-      echo -e "\ninclude \$(CLEAR_VARS)"
-      echo -e "LOCAL_MODULE := $pkgName"
-      echo -e "LOCAL_MODULE_CLASS := FAKE"
-      echo -e "LOCAL_MODULE_TAGS := optional"
-      echo -e "LOCAL_MODULE_OWNER := $VENDOR"
-      echo -e 'include $(BUILD_SYSTEM)/base_rules.mk'
-      echo -e "\$(LOCAL_BUILT_MODULE): TARGET := ${S_SLINKS_SRC[$cnt]}"
-      echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}"
-      echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
-      echo -e "\$(LOCAL_BUILT_MODULE):"
-      echo -e "\t\$(hide) mkdir -p \$(dir \$@)"
-      echo -e "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
-      echo -e "\t\$(hide) rm -rf \$@"
-      echo -e "\t\$(hide) rm -rf \$(SYMLINK)"
-      echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
-      echo -e "\t\$(hide) touch \$@"
+      echo ""
+      echo "include \$(CLEAR_VARS)"
+      echo "LOCAL_MODULE := $pkgName"
+      echo "LOCAL_MODULE_CLASS := FAKE"
+      echo "LOCAL_MODULE_TAGS := optional"
+      echo "LOCAL_MODULE_OWNER := $VENDOR"
+      echo 'include $(BUILD_SYSTEM)/base_rules.mk'
+      echo "\$(LOCAL_BUILT_MODULE): TARGET := ${S_SLINKS_SRC[$cnt]}"
+      echo "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}"
+      echo "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
+      echo "\$(LOCAL_BUILT_MODULE):"
+      echo "    \$(hide) mkdir -p \$(dir \$@)"
+      echo "    \$(hide) mkdir -p \$(dir \$(SYMLINK))"
+      echo "    \$(hide) rm -rf \$@"
+      echo "    \$(hide) rm -rf \$(SYMLINK)"
+      echo "    \$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
+      echo "    \$(hide) touch \$@"
     } >> "$ANDROID_MK"
   done
 
@@ -667,7 +669,7 @@ gen_mk_for_shared_libs() {
 
   local -a PKGS
   local -a MULTIDSO
-  local dsoModule
+  local dsoModule curFile
 
   # First iterate the 64bit libs to detect possible dual target modules
   for dsoModule in "${DSO_MODULES[@]}"
@@ -677,7 +679,7 @@ gen_mk_for_shared_libs() {
       continue
     fi
 
-    local curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
+    curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
 
     # Check that configuration requested file exists
     if [ ! -f "$curFile" ]; then
@@ -736,7 +738,7 @@ gen_mk_for_shared_libs() {
       continue
     fi
 
-    local curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
+    curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
 
     # Check that configuration requested file exists
     if [ ! -f "$curFile" ]; then
@@ -823,13 +825,13 @@ gen_android_mk() {
     done
   done
 
-  if [ $hasStandAloneSymLinks = true ]; then
+  if [ "$hasStandAloneSymLinks" = true ]; then
     echo "[*] Processing standalone symlinks"
     gen_standalone_symlinks "$INPUT_DIR" "$OUTPUT_VENDOR"
   fi
 
   # Iterate over directories with shared libraries and update the unified Android.mk file
-  if [ $hasDsoModules = true ]; then
+  if [ "$hasDsoModules" = true ]; then
     echo "[*] Generating shared library individual pre-built modules"
     gen_mk_for_shared_libs "$INPUT_DIR" "$OUTPUT_VENDOR"
   fi

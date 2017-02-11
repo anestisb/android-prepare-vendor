@@ -140,11 +140,11 @@ oat2dex_repair() {
   for type in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
-      ABIS=("${ABIS[@]-}" "$type")
+      ABIS+=("$type")
     fi
   done
 
-  for abi in ${ABIS[@]}
+  for abi in "${ABIS[@]}"
   do
     echo "[*] Preparing environment for '$abi' ABI"
     workDir="$TMP_WORK_DIR/$abi"
@@ -201,7 +201,7 @@ oat2dex_repair() {
       # Boot classes have already been de-optimized. Just check against any ABI
       # to verify that is present (not all jars under framework are part of
       # boot.oat)
-      odexFound=$(find "$TMP_WORK_DIR/${ABIS[1]}/dex" -type f \
+      odexFound=$(find "$TMP_WORK_DIR/${ABIS[0]}/dex" -type f \
                   -iname "$pkgName*.dex" | wc -l | tr -d ' ')
     fi
     if [ $odexFound -eq 0 ]; then
@@ -215,7 +215,7 @@ oat2dex_repair() {
     else
       # If pre-compiled, de-optimize to original DEX bytecode
       deoptSuccess=false
-      for abi in ${ABIS[@]}
+      for abi in "${ABIS[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ -f "$curOdex" ]; then
@@ -314,7 +314,7 @@ oatdump_repair() {
   for cpu in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$cpu/boot.art" ]; then
-      ABIS=("${ABIS[@]-}" "$cpu")
+      ABIS+=("$cpu")
     fi
   done
 
@@ -323,8 +323,8 @@ oatdump_repair() {
   while read -r file
   do
     jarFile="$(basename "$file" | cut -d '-' -f2- | sed 's#.oat#.jar#')"
-    BOOTJARS=("${BOOTJARS[@]-}" "$jarFile")
-  done < <(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot*.oat")
+    BOOTJARS+=("$jarFile")
+  done < <(find "$INPUT_DIR/framework/${ABIS[0]}" -iname "boot*.oat")
 
   while read -r file
   do
@@ -385,7 +385,7 @@ oatdump_repair() {
       # If bytecode compiled for more than one ABIs - only the first is kept
       # (shouldn't make any difference)
       deoptSuccess=false
-      for abi in ${ABIS[@]}
+      for abi in "${ABIS[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ ! -f "$curOdex" ]; then
@@ -478,11 +478,11 @@ smali_repair() {
   for type in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
-      ABIS=("${ABIS[@]-}" "$type")
+      ABIS+=("$type")
     fi
   done
 
-  for abi in ${ABIS[@]}
+  for abi in "${ABIS[@]}"
   do
     echo "[*] Preparing environment for '$abi' ABI"
     workDir="$TMP_WORK_DIR/$abi"
@@ -545,7 +545,7 @@ smali_repair() {
 
       # If pre-compiled, de-optimize to original DEX bytecode
       deoptSuccess=false
-      for abi in ${ABIS[@]}
+      for abi in "${ABIS[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ ! -f "$curOdex" ]; then
