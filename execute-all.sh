@@ -544,7 +544,7 @@ if [ "$KEEP_DATA" = false ]; then
 fi
 
 if [[ "$AOSP_ROOT" != "" ]]; then
-  rsync -aruz "$OUT_BASE/vendor/" "$AOSP_ROOT/vendor" || {
+  rsync -aruzI "$OUT_BASE/vendor/" "$AOSP_ROOT/vendor" || {
     echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor')"
     abort 1
   }
