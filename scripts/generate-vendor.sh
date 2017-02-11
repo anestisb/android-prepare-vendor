@@ -1019,7 +1019,7 @@ done
 
 # Update from DSO_MODULES array from DEP_DSO_BLOBS_LIST file
 entries=$(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST" | wc -l | tr -d ' ')
-if [ $entries -gt 0 ]; then
+if [ "$entries" -gt 0 ]; then
   readarray -t DSO_MODULES < <(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST")
   hasDsoModules=true
 fi
@@ -1035,7 +1035,7 @@ extract_blobs "$BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
 update_vendor_blobs_mk "$BLOBS_LIST"
 
 # Generate device-vendor.mk makefile (will be updated later)
-echo "[*] Generating '$(basename $DEVICE_VENDOR_MK)'"
+echo "[*] Generating '$(basename "$DEVICE_VENDOR_MK")'"
 echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)

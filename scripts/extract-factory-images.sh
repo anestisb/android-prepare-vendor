@@ -85,11 +85,11 @@ mount_darwin() {
   local IMGFILE="$1"
   local MOUNTPOINT="$2"
   local MOUNT_LOG="$TMP_WORK_DIR/mount.log"
-  local WAIT_TMOUT=2
   local -a OSXFUSE_VER
+  local readonly OS_MAJOR_VER
 
-  local readonly OS_MAJOR_VER="$(sw_vers -productVersion | cut -d '.' -f2)"
-  if [ $OS_MAJOR_VER -ge 12 ]; then
+  OS_MAJOR_VER="$(sw_vers -productVersion | cut -d '.' -f2)"
+  if [ "$OS_MAJOR_VER" -ge 12 ]; then
     # If Sierra and above, check that latest supported (3.5.4) osxfuse version is installed
     local readonly OSXFUSE_PLIST="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
     IFS='.' read -r -a OSXFUSE_VER <<< "$(grep '<key>CFBundleVersion</key>' -A1 "$OSXFUSE_PLIST" | \

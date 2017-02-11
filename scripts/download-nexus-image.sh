@@ -54,7 +54,7 @@ otherwise provided.
 EOF
 
 echo -n "[?] I have read and agree with the above terms and conditions - ACKNOWLEDGE [y|n]: "
-if [ $AUTO_TOS_ACCEPT = true ]; then
+if [ "$AUTO_TOS_ACCEPT" = true ]; then
   echo "yes"
   userRes="yes"
 else
@@ -145,7 +145,7 @@ grep -io "google.[[:alpha:]]\+[[:blank:]]" "$COOKIE_FILE" | \
   sed -e "s/[[:space:]]\+//g" | sort -u | \
   while read -r domain
 do
-  sed -i.bak "s/$domain/google.com/g" $COOKIE_FILE
+  sed -i.bak "s/$domain/google.com/g" "$COOKIE_FILE"
 done
 
 # Accept news ToS page
