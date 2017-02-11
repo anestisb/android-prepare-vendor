@@ -402,22 +402,22 @@ gen_apk_dso_symlink() {
   local APK_DIR=$4
   local DSO_ABI=$5
 
-  echo -e "\ninclude \$(CLEAR_VARS)"
-  echo -e "LOCAL_MODULE := $DSO_MNAME"
-  echo -e "LOCAL_MODULE_CLASS := FAKE"
-  echo -e "LOCAL_MODULE_TAGS := optional"
-  echo -e "LOCAL_MODULE_OWNER := $VENDOR"
-  echo -e 'include $(BUILD_SYSTEM)/base_rules.mk'
-  echo -e "\$(LOCAL_BUILT_MODULE): TARGET := $DSO_ROOT/$DSO_NAME"
-  echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
-  echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
-  echo -e "\$(LOCAL_BUILT_MODULE):"
-  echo -e "\t\$(hide) mkdir -p \$(dir \$@)"
-  echo -e "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
-  echo -e "\t\$(hide) rm -rf \$@"
-  echo -e "\t\$(hide) rm -rf \$(SYMLINK)"
-  echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
-  echo -e "\t\$(hide) touch \$@"
+  echo "include \$(CLEAR_VARS)"
+  echo "LOCAL_MODULE := $DSO_MNAME"
+  echo "LOCAL_MODULE_CLASS := FAKE"
+  echo "LOCAL_MODULE_TAGS := optional"
+  echo "LOCAL_MODULE_OWNER := $VENDOR"
+  echo 'include $(BUILD_SYSTEM)/base_rules.mk'
+  echo "\$(LOCAL_BUILT_MODULE): TARGET := $DSO_ROOT/$DSO_NAME"
+  echo "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
+  echo "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
+  echo "\$(LOCAL_BUILT_MODULE):"
+  echo "\t\$(hide) mkdir -p \$(dir \$@)"
+  echo "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
+  echo "\t\$(hide) rm -rf \$@"
+  echo "\t\$(hide) rm -rf \$(SYMLINK)"
+  echo "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
+  echo "\t\$(hide) touch \$@"
 }
 
 gen_standalone_symlinks() {
@@ -584,8 +584,8 @@ gen_mk_for_bytecode() {
 
         # Generate symlink fake rule & cache module_names to append later to vendor mk
         PKGS_SLINKS+=("$dsoMName")
-        apk_lib_slinks="$apk_lib_slinks\n$(gen_apk_dso_symlink "$dsoName" \
-                        "$dsoMName" "$dsoRoot" "$lcMPath/$pkgName" "$arch")"
+        apk_lib_slinks+="\n$(gen_apk_dso_symlink "$dsoName" "$dsoMName" "$dsoRoot" \
+                             "$lcMPath/$pkgName" "$arch")"
       done < <(find -L "$appDir/lib" -type l -iname '*.so')
     fi
 
