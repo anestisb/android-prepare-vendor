@@ -402,23 +402,22 @@ gen_apk_dso_symlink() {
   local APK_DIR=$4
   local DSO_ABI=$5
 
-  echo ""
-  echo "include \$(CLEAR_VARS)"
-  echo "LOCAL_MODULE := $DSO_MNAME"
-  echo "LOCAL_MODULE_CLASS := FAKE"
-  echo "LOCAL_MODULE_TAGS := optional"
-  echo "LOCAL_MODULE_OWNER := $VENDOR"
-  echo 'include $(BUILD_SYSTEM)/base_rules.mk'
-  echo "\$(LOCAL_BUILT_MODULE): TARGET := $DSO_ROOT/$DSO_NAME"
-  echo "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
-  echo "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
-  echo "\$(LOCAL_BUILT_MODULE):"
-  echo "    \$(hide) mkdir -p \$(dir \$@)"
-  echo "    \$(hide) mkdir -p \$(dir \$(SYMLINK))"
-  echo "    \$(hide) rm -rf \$@"
-  echo "    \$(hide) rm -rf \$(SYMLINK)"
-  echo "    \$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
-  echo "    \$(hide) touch \$@"
+  echo -e "\ninclude \$(CLEAR_VARS)"
+  echo -e "LOCAL_MODULE := $DSO_MNAME"
+  echo -e "LOCAL_MODULE_CLASS := FAKE"
+  echo -e "LOCAL_MODULE_TAGS := optional"
+  echo -e "LOCAL_MODULE_OWNER := $VENDOR"
+  echo -e 'include $(BUILD_SYSTEM)/base_rules.mk'
+  echo -e "\$(LOCAL_BUILT_MODULE): TARGET := $DSO_ROOT/$DSO_NAME"
+  echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
+  echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
+  echo -e "\$(LOCAL_BUILT_MODULE):"
+  echo -e "\t\$(hide) mkdir -p \$(dir \$@)"
+  echo -e "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
+  echo -e "\t\$(hide) rm -rf \$@"
+  echo -e "\t\$(hide) rm -rf \$(SYMLINK)"
+  echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
+  echo -e "\t\$(hide) touch \$@"
 }
 
 gen_standalone_symlinks() {
@@ -457,23 +456,22 @@ gen_standalone_symlinks() {
     PKGS_SSLINKS+=("$pkgName")
 
     {
-      echo ""
-      echo "include \$(CLEAR_VARS)"
-      echo "LOCAL_MODULE := $pkgName"
-      echo "LOCAL_MODULE_CLASS := FAKE"
-      echo "LOCAL_MODULE_TAGS := optional"
-      echo "LOCAL_MODULE_OWNER := $VENDOR"
-      echo 'include $(BUILD_SYSTEM)/base_rules.mk'
-      echo "\$(LOCAL_BUILT_MODULE): TARGET := ${S_SLINKS_SRC[$cnt]}"
-      echo "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}"
-      echo "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
-      echo "\$(LOCAL_BUILT_MODULE):"
-      echo "    \$(hide) mkdir -p \$(dir \$@)"
-      echo "    \$(hide) mkdir -p \$(dir \$(SYMLINK))"
-      echo "    \$(hide) rm -rf \$@"
-      echo "    \$(hide) rm -rf \$(SYMLINK)"
-      echo "    \$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
-      echo "    \$(hide) touch \$@"
+      echo -e "\ninclude \$(CLEAR_VARS)"
+      echo -e "LOCAL_MODULE := $pkgName"
+      echo -e "LOCAL_MODULE_CLASS := FAKE"
+      echo -e "LOCAL_MODULE_TAGS := optional"
+      echo -e "LOCAL_MODULE_OWNER := $VENDOR"
+      echo -e 'include $(BUILD_SYSTEM)/base_rules.mk'
+      echo -e "\$(LOCAL_BUILT_MODULE): TARGET := ${S_SLINKS_SRC[$cnt]}"
+      echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}"
+      echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
+      echo -e "\$(LOCAL_BUILT_MODULE):"
+      echo -e "\t\$(hide) mkdir -p \$(dir \$@)"
+      echo -e "\t\$(hide) mkdir -p \$(dir \$(SYMLINK))"
+      echo -e "\t\$(hide) rm -rf \$@"
+      echo -e "\t\$(hide) rm -rf \$(SYMLINK)"
+      echo -e "\t\$(hide) ln -sf \$(TARGET) \$(SYMLINK)"
+      echo -e "\t\$(hide) touch \$@"
     } >> "$ANDROID_MK"
   done
 
