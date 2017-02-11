@@ -87,7 +87,7 @@ check_ram_size() {
     RAM_SIZE=$(grep MemTotal /proc/meminfo | awk '{print $2}'  | awk '{$1=$1/(1024^2); print int($1);}')
   fi
 
-  if [ $RAM_SIZE -le 2 ]; then
+  if [ "$RAM_SIZE" -le 2 ]; then
     echo "[!] Host RAM size <= 2GB - jars might crash due to low memory"
   fi
 }
@@ -100,20 +100,16 @@ get_build_id() {
 }
 
 check_java_version() {
-  local JAVA_VER_MAJOR=""
   local JAVA_VER_MINOR=""
-  local JAVA_VER_BUILD=""
   local _token
 
   for _token in $(java -version 2>&1 | grep -i version)
   do
-      if [[ $_token =~ \"([[:digit:]])\.([[:digit:]])\.(.*)\" ]]
-      then
-          JAVA_VER_MAJOR=${BASH_REMATCH[1]}
-          JAVA_VER_MINOR=${BASH_REMATCH[2]}
-          JAVA_VER_BUILD=${BASH_REMATCH[3]}
-          break
-      fi
+    if [[ $_token =~ \"([[:digit:]])\.([[:digit:]])\.(.*)\" ]]
+    then
+      JAVA_VER_MINOR=${BASH_REMATCH[2]}
+      break
+    fi
   done
 
   if [ "$JAVA_VER_MINOR" -lt 8 ]; then
@@ -126,7 +122,7 @@ check_java_version() {
 
 array_contains() {
   local element
-  for element in "${@:2}"; do [[ "$element" =~ "$1" ]] && return 0; done
+  for element in "${@:2}"; do [[ "$element" =~ $1 ]] && return 0; done
   return 1
 }
 
@@ -197,14 +193,14 @@ oat2dex_repair() {
       odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
                   wc -l | tr -d ' ')
     fi
-    if [[ $odexFound -eq 0 && "$relFile" == "/framework/"* ]]; then
+    if [[ "$odexFound" -eq 0 && "$relFile" == "/framework/"* ]]; then
       # Boot classes have already been de-optimized. Just check against any ABI
       # to verify that is present (not all jars under framework are part of
       # boot.oat)
       odexFound=$(find "$TMP_WORK_DIR/${ABIS[0]}/dex" -type f \
                   -iname "$pkgName*.dex" | wc -l | tr -d ' ')
     fi
-    if [ $odexFound -eq 0 ]; then
+    if [ "$odexFound" -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
@@ -304,9 +300,10 @@ oat2dex_repair() {
 oatdump_repair() {
   local -a ABIS
   local -a BOOTJARS
+  local _BASE_PATH
 
   if [[ "$(uname)" == "Darwin" ]]; then
-    local _BASE_PATH="$(dirname "$OATDUMP_BIN")/.."
+    _BASE_PATH="$(dirname "$OATDUMP_BIN")/.."
     export DYLD_FALLBACK_LIBRARY_PATH=$_BASE_PATH/lib64:$_BASE_PATH/lib
   fi
 
@@ -356,7 +353,7 @@ oatdump_repair() {
     fi
 
     # If APKs selection enabled, skip if not in list
-    if [ $hasBytecodeList = true ]; then
+    if [ "$hasBytecodeList" = true ]; then
       if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
@@ -372,7 +369,7 @@ oatdump_repair() {
       odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
                   wc -l | tr -d ' ')
     fi
-    if [ $odexFound -eq 0 ]; then
+    if [ "$odexFound" -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
@@ -407,7 +404,7 @@ oatdump_repair() {
 
         # If DEX not created, oat2dex failed to resolve a dependency and skipped file
         dexsExported=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_export.dex" | wc -l | tr -d ' ')
-        if [ $dexsExported -eq 0 ]; then
+        if [ "$dexsExported" -eq 0 ]; then
           echo "[-] '$relFile' DEX export failed"
           abort 1
         else
@@ -428,7 +425,7 @@ oatdump_repair() {
       # Normalize names & add dex files back to zip archives (jar or APK)
       # considering possible multi-dex cases. zipalign is not necessary since
       # AOSP build rules will align them if not already
-      if [ $dexsExported -gt 1 ]; then
+      if [ "$dexsExported" -gt 1 ]; then
         # multi-dex file
         echo "[*] '$relFile' is multi-dex - adjusting recursive archive adds"
         counter=2
@@ -514,7 +511,7 @@ smali_repair() {
     fi
 
     # If APKs selection enabled, skip if not in list
-    if [ $hasBytecodeList = true ]; then
+    if [ "$hasBytecodeList" = true ]; then
       if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
@@ -531,7 +528,7 @@ smali_repair() {
       odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
                   wc -l | tr -d ' ')
     fi
-    if [ $odexFound -eq 0 ]; then
+    if [ "$odexFound" -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
