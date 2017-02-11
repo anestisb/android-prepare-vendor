@@ -1009,6 +1009,12 @@ if [ $IS_PIXEL = true ]; then
   rm "$DEVICE_VENDOR_MK"
   DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
   touch "$DEVICE_VENDOR_MK"
+
+  # Fingerprint fix
+  {
+    echo 'PRODUCT_PROPERTY_OVERRIDES += \'
+    echo '    ro.hardware.fingerprint=fpc'
+  } >> "$DEVICE_VENDOR_MK"
 fi
 
 # And prefix them
