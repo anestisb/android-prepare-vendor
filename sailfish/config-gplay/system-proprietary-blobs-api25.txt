@@ -63,6 +63,8 @@ system/etc/camera/msm8996_camera.xml
 system/etc/cne/Nexus/ATT/ATT_profiles.xml
 system/etc/cne/Nexus/ROW/ROW_profiles.xml
 system/etc/cne/Nexus/VZW/VZW_profiles.xml
+system/etc/data/dsi_config.xml
+system/etc/data/netmgr_config.xml
 system/etc/diag/CHRE.cfg
 system/etc/diag/IMS.cfg
 system/etc/diag/MarlinSailfish_Radio-generic.cfg
@@ -87,6 +89,9 @@ system/etc/firmware/rampatch_tlv_3.0.tlv
 system/etc/firmware/rampatch_tlv_3.2.tlv
 system/etc/firmware/rampatch_tlv.img
 system/etc/firmware/tfa98xx.cnt
+system/etc/firmware/wcd9320/wcd9320_anc.bin
+system/etc/firmware/wcd9320/wcd9320_mad_audio.bin
+system/etc/firmware/wcd9320/wcd9320_mbhc.bin
 system/etc/flp.conf
 system/etc/izat.conf
 system/etc/lowi.conf
