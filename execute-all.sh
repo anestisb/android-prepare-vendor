@@ -93,7 +93,7 @@ check_bash_version() {
 unmount_raw_image() {
   local MOUNT_POINT="$1"
 
-  if [ -d "$MOUNT_POINT" ]; then
+  if [[ -d "$MOUNT_POINT" && "$USE_DEBUGFS" = false ]]; then
     $_UMOUNT "$MOUNT_POINT" || {
       echo "[-] '$MOUNT_POINT' unmount failed"
       exit 1
