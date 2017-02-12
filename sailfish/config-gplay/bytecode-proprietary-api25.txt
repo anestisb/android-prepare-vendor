@@ -1,10 +1,22 @@
 # Bytecode archive files to extract from factory images
 
 # Radio
+system/app/atfwd/atfwd.apk
+system/app/embms/embms.apk
+system/app/fastdormancy/fastdormancy.apk
+system/app/QAS_DVC_MSP/QAS_DVC_MSP.apk
+system/app/QtiTelephonyService/QtiTelephonyService.apk
+system/app/radioconfig/radioconfig.apk
+system/app/RCSBootstraputil/RCSBootstraputil.apk
+system/app/shutdownlistener/shutdownlistener.apk
 system/framework/embmslibrary.jar
 system/framework/qcrilhook.jar
 system/framework/QtiTelephonyServicelibrary.jar
 system/framework/rcsservice.jar
+system/priv-app/CarrierEntitlement/CarrierEntitlement.apk
+system/priv-app/CarrierServices/CarrierServices.apk
+system/priv-app/CNEService/CNEService.apk
+system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk
 
 # Sprint

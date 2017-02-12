@@ -55,6 +55,7 @@ cat <<_EOF
       --extra-modules : Text file additional modules to be appended at master vendor
                         'Android.mk'
       --allow-preopt  : Don't disable LOCAL_DEX_PREOPT for /system
+      --force-modules : Text file with AOSP defined modules to force include
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -290,7 +291,7 @@ update_vendor_blobs_mk() {
   strip_trail_slash_from_file "$DEVICE_VENDOR_BLOBS_MK"
 }
 
-update_dev_vendor_mk() {
+process_extra_modules() {
   local module
 
   if [ ! -s "$EXTRA_MODULES" ]; then
@@ -307,6 +308,29 @@ update_dev_vendor_mk() {
     done
   } >> "$DEVICE_VENDOR_MK"
   strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
+}
+
+process_enforced_modules() {
+  local module
+
+  if [ ! -s "$FORCE_MODULES" ]; then
+    return
+  fi
+
+  {
+    echo "# Enforced modules from user configuration"
+    echo 'PRODUCT_PACKAGES += \'
+    grep -Ev '(^#|^$)' "$FORCE_MODULES" | while read -r module
+    do
+      echo "    $module \\"
+    done
+  } >> "$DEVICE_VENDOR_MK"
+  strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
+}
+
+update_dev_vendor_mk() {
+  process_extra_modules
+  process_enforced_modules
 }
 
 gen_board_vendor_mk() {
@@ -897,6 +921,7 @@ BLOBS_LIST=""
 DEP_DSO_BLOBS_LIST=""
 MK_FLAGS_LIST=""
 EXTRA_MODULES=""
+FORCE_MODULES=""
 ALLOW_PREOPT=false
 
 DEVICE=""
@@ -943,6 +968,10 @@ do
       EXTRA_MODULES="$2"
       shift
       ;;
+    --force-modules)
+      FORCE_MODULES="$2"
+      shift
+      ;;
     --allow-preopt)
       ALLOW_PREOPT=true
       ;;
@@ -963,6 +992,7 @@ check_file "$BLOBS_LIST" "Vendor proprietary-blobs"
 check_file "$DEP_DSO_BLOBS_LIST" "Vendor dep-dso-proprietary"
 check_file "$MK_FLAGS_LIST" "Vendor vendor-config"
 check_file "$EXTRA_MODULES" "Vendor extra modules"
+check_file "$FORCE_MODULES" "Vendor enforce modules"
 
 # Verify input directory structure
 verify_input "$INPUT_DIR"
@@ -1066,7 +1096,7 @@ gen_board_info_txt "$OUTPUT_VENDOR"
 echo "[*] Generating 'Android.mk'"
 gen_android_mk "$OUTPUT_VENDOR"
 
-# Add user defined extra module targets to PRODUCT_PACKAGES list
+# Add user defined extra and enforced module targets to PRODUCT_PACKAGES list
 update_dev_vendor_mk
 
 # Generate $DEVICE-vendor-blobs.mk makefile (plain files that don't require a target module)

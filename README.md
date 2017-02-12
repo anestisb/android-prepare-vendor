@@ -35,7 +35,7 @@ Repository data are LICENSE free, use them as you want at your own risk. Feedbac
 patches are more than welcome though.
 
 
-### Status update (17 Dec 2016)
+### Status update (12 Feb 2017)
 As of 7.1 release Google has started publishing again a set of vendor blobs for
 supported Nexus & Pixel devices. Unfortunately the distributed blobs still miss
 some functionality when compiled under AOSP:
@@ -44,6 +44,8 @@ some functionality when compiled under AOSP:
 boot (dm-verity) against it
 * Distributed blobs do not include APK bytecode vendor packages, only some jar files. It
 is still unclear to what extend device functionalities are broken.
+* Due to missing proprietary modules, required modules present in AOSP are not
+included as active dependencies resulting into skipped functionality (e.g. IMS, RCS)
 
 
 ## Required steps summary
@@ -140,8 +142,13 @@ be appended at master vendor `Android.mk`.
 | N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
 | N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
 | N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
-| Pixel sailfish                  | N/A                         | N/A              | Testing          |
-| Pixel XL marlin                 | N/A                         | N/A              | Testing          |
+| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali |
+| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali |
+
+* Open [issues](https://github.com/anestisb/android-prepare-vendor/issues)
+exist for Pixel devices
+* Pixel XL marlin support has not been tested against physical device from author
+due to lack of hardware.
 
 ## Contributing
 If you want to contribute to device configuration files, please test against the

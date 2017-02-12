@@ -551,6 +551,7 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
   --flags-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/vendor-config-api$API_LEVEL.txt" \
   --extra-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/extra-modules-api$API_LEVEL.txt" \
+  --force-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/modules-force-api$API_LEVEL.txt" \
   $VGEN_SCRIPT_EXTRA_ARGS || {
   echo "[-] Vendor generation failed"
   abort 1
