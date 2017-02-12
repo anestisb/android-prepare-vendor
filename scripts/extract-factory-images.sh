@@ -132,10 +132,17 @@ extract_img_data() {
     mkdir -p "$OUT_DIR"
   fi
 
-  debugfs -R "rdump / "$OUT_DIR"" "$IMAGE_FILE" &>/dev/null || {
-    echo "[-] Failed to extract data from '$IMAGE_FILE'"
-    abort 1
-  }
+  if [[ "$HOST_OS" == "Darwin" ]]; then
+    debugfs -R "rdump / "$OUT_DIR"" "$IMAGE_FILE" &>/dev/null || {
+      echo "[-] Failed to extract data from '$IMAGE_FILE'"
+      abort 1
+    }
+  else
+    debugfs -R 'ls -p' "$IMAGE_FILE" | cut -d '/' -f6 | while read -r entry
+    do
+      debugfs -R "rdump \"$entry\" \"$OUT_DIR\"" "$IMAGE_FILE"
+    done
+  fi
 }
 
 mount_img() {
