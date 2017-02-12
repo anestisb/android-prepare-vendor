@@ -84,7 +84,7 @@ command_exists() {
 }
 
 check_bash_version() {
-  if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+  if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
     echo "[-] Minimum supported version of bash is 4.x"
     abort 1
   fi
@@ -460,9 +460,9 @@ elif [ $FORCE_OATDUMP = true ]; then
   BYTECODE_REPAIR_METHOD="OATDUMP"
 else
   # Default choices based on API level
-  if [ $API_LEVEL -le 23 ]; then
+  if [ "$API_LEVEL" -le 23 ]; then
     BYTECODE_REPAIR_METHOD="OAT2DEX"
-  elif [ $API_LEVEL -ge 24 ]; then
+  elif [ "$API_LEVEL" -ge 24 ]; then
     BYTECODE_REPAIR_METHOD="OATDUMP"
   fi
 fi

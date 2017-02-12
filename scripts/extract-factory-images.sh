@@ -133,7 +133,7 @@ extract_img_data() {
   fi
 
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    debugfs -R "rdump / "$OUT_DIR"" "$IMAGE_FILE" &>/dev/null || {
+    debugfs -R "rdump / \"$OUT_DIR\"" "$IMAGE_FILE" &>/dev/null || {
       echo "[-] Failed to extract data from '$IMAGE_FILE'"
       abort 1
     }
