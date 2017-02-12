@@ -282,7 +282,7 @@ if [[ "$USER_JAVA_PATH" != "" ]]; then
 fi
 
 # Some business logic related checks
-if [[ $DEODEX_ALL = true && $KEEP_DATA = false ]]; then
+if [[ "$DEODEX_ALL" = true && $KEEP_DATA = false ]]; then
   echo "[!] It's pointless to deodex all if not keeping runtime generated data"
   echo "    After vendor generate finishes all files not part of configs will be deleted"
   abort 1
@@ -290,7 +290,7 @@ fi
 
 # Check if output directory is AOSP root
 if is_aosp_root "$OUTPUT_DIR"; then
-  if [[ $KEEP_DATA = true ]]; then
+  if [ "$KEEP_DATA" = true ]; then
     echo "[!] Cannot keep data when output directory is AOSP root - choose different path"
     abort 1
   fi
@@ -548,9 +548,12 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   abort 1
 }
 
-if [[ "$KEEP_DATA" = false && "$USE_DEBUGFS" = false ]]; then
-  unmount_raw_image "$FACTORY_IMGS_DATA/system"
-  unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
+if [ "$KEEP_DATA" = false ]; then
+  if [ "$USE_DEBUGFS" = false ]; then
+    # Mount points are present only when fuse-ext2 is used
+    unmount_raw_image "$FACTORY_IMGS_DATA/system"
+    unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
+  fi
   rm -rf "$FACTORY_IMGS_DATA"
   rm -rf "$FACTORY_IMGS_R_DATA"
 fi
