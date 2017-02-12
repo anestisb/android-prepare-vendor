@@ -69,6 +69,7 @@ cat <<_EOF
       --smali      : [OPTIONAL] Force use of smali/baksmali to revert preoptimized bytecode
       --smaliex    : [OPTIONAL] Force use of smaliEx to revert preoptimized bytecode [DEPRECATED]
       --deodex-all : [OPTIONAL] De-optimize all packages under /system
+      --debugfs    : [EXPERIMENTAL] Use debugfs instead of default fuse-ext2, to extract image files data
 
     INFO:
       * Default configuration is naked. Use "-g|--gplay" if you plan to install Google Play Services.
@@ -158,6 +159,7 @@ FORCE_SMALIEX=false
 BYTECODE_REPAIR_METHOD=""
 DEODEX_ALL=false
 AOSP_ROOT=""
+USE_DEBUGFS=false
 
 # Compatibility
 check_bash_version
@@ -239,6 +241,9 @@ do
       ;;
     --deodex-all)
       DEODEX_ALL=true
+      ;;
+    --debugfs)
+      USE_DEBUGFS=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -390,8 +395,15 @@ if [ -d "$FACTORY_IMGS_DATA" ]; then
 else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
-$EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
-     --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img" || {
+
+EXTRACT_SCRIPT_ARGS="--input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
+--simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img""
+
+if [ "$USE_DEBUGFS" = true ]; then
+  EXTRACT_SCRIPT_ARGS+=" --debugfs"
+fi
+
+$EXTRACT_SCRIPT $EXTRACT_SCRIPT_ARGS || {
   echo "[-] Factory images data extract failed"
   abort 1
 }
@@ -536,7 +548,7 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   abort 1
 }
 
-if [ "$KEEP_DATA" = false ]; then
+if [[ "$KEEP_DATA" = false && "$USE_DEBUGFS" = false ]]; then
   unmount_raw_image "$FACTORY_IMGS_DATA/system"
   unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
   rm -rf "$FACTORY_IMGS_DATA"

@@ -151,6 +151,7 @@ target device before any pull request.
 * 0.2.0 - TBC
  * Support for Pixel devices
  * Output can be directly set to AOSP SRC ROOT
+ * Experimental debugfs support as an alternative to fuse-ext2
  * Bug fixes when processing symbolic links from vendor partition
  * Preserve symbolic links when processing vendor partition
  * Android 7.1 support for Nexus devices (API-25)

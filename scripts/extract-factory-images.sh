@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut" "fuse-ext2")
+declare -a sysTools=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -29,10 +29,12 @@ cat <<_EOF
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
       -t|--simg2img : Path to simg2img binary for converting sparse images
+      --debugfs     : Use debugfs instead of default fuse-ext2
 
     INFO:
       * fuse-ext2 available at 'https://github.com/alperakcan/fuse-ext2'
       * Caller is responsible to unmount mount points when done
+      * debugfs support is experimental
 _EOF
   abort 1
 }
@@ -122,6 +124,20 @@ mount_linux() {
   }
 }
 
+extract_img_data() {
+  local IMAGE_FILE="$1"
+  local OUT_DIR="$2"
+
+  if [ ! -d "$OUT_DIR" ]; then
+    mkdir -p "$OUT_DIR"
+  fi
+
+  debugfs -R "rdump / "$OUT_DIR"" "$IMAGE_FILE" &>/dev/null || {
+    echo "[-] Failed to extract data from '$IMAGE_FILE'"
+    abort 1
+  }
+}
+
 mount_img() {
   local IMAGE_FILE="$1"
   local MOUNT_DIR="$2"
@@ -167,6 +183,7 @@ trap "abort 1" SIGINT SIGTERM
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 SIMG2IMG=""
+USE_DEBUGFS=false
 
 # Compatibility
 HOST_OS=$(uname)
@@ -175,21 +192,7 @@ if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
   abort 1
 fi
 
-# Platform specific commands
-if [[ "$HOST_OS" == "Darwin" ]]; then
-  sysTools+=("sw_vers")
-fi
-
-# Check that system tools exist
-for i in "${sysTools[@]}"
-do
-  if ! command_exists "$i"; then
-    echo "[-] '$i' command not found"
-    abort 1
-  fi
-done
-
-while [[ $# -gt 1 ]]
+while [[ $# -gt 0 ]]
 do
   arg="$1"
   case $arg in
@@ -205,12 +208,35 @@ do
       SIMG2IMG=$2
       shift
       ;;
+    --debugfs)
+      USE_DEBUGFS=true
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
       ;;
   esac
   shift
+done
+
+# Additional tools based on chosen image files data extraction method
+if [ "$USE_DEBUGFS" = true ]; then
+  sysTools+=("debugfs")
+else
+  sysTools+=("fuse-ext2")
+  # Platform specific commands
+  if [[ "$HOST_OS" == "Darwin" ]]; then
+    sysTools+=("sw_vers")
+  fi
+fi
+
+# Check that system tools exist
+for i in "${sysTools[@]}"
+do
+  if ! command_exists "$i"; then
+    echo "[-] '$i' command not found"
+    abort 1
+  fi
 done
 
 # Input args check
@@ -289,11 +315,15 @@ $SIMG2IMG "$vImg" "$rawVImg" || {
 # Save raw vendor img partition size
 extract_vendor_partition_size "$rawVImg" "$OUTPUT_DIR"
 
-# Mount raw system image and copy files
-mount_img "$rawSysImg" "$SYSTEM_DATA_OUT"
-
-# Same process for vendor raw image
-mount_img "$rawVImg" "$VENDOR_DATA_OUT"
+if [ "$USE_DEBUGFS" = true ]; then
+  # Extract raw system and vendor images. Data will be processed later
+  extract_img_data "$rawSysImg" "$SYSTEM_DATA_OUT"
+  extract_img_data "$rawVImg" "$VENDOR_DATA_OUT"
+else
+  # Mount raw system and vendor images. Data will be processed later
+  mount_img "$rawSysImg" "$SYSTEM_DATA_OUT"
+  mount_img "$rawVImg" "$VENDOR_DATA_OUT"
+fi
 
 # Copy bootloader & radio images
 if [ $hasRadioImg = true ]; then
