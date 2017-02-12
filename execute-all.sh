@@ -134,6 +134,14 @@ is_aosp_root() {
   return 1
 }
 
+is_pixel() {
+  local device="$1"
+  if [[ "$device" == "marlin" || "$device" == "sailfish" ]]; then
+    return 0
+  fi
+  return 1
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 
@@ -559,11 +567,40 @@ if [ "$KEEP_DATA" = false ]; then
 fi
 
 if [[ "$AOSP_ROOT" != "" ]]; then
-  rsync -aruzI "$OUT_BASE/vendor/" "$AOSP_ROOT/vendor" || {
-    echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor')"
-    abort 1
-  }
-  echo "[*] Vendor blobs copied to AOSP root"
+  VENDOR="$(basename "$(find "$OUT_BASE"/vendor/* -maxdepth 0 -type d -print | head -n1)")"
+  if [ ! -d "$AOSP_ROOT/vendor/$VENDOR" ]; then
+    mkdir -p "$AOSP_ROOT/vendor/$VENDOR"
+  fi
+
+  # If Pixel device we need to do some special directory handling due to common
+  # files for the marlin codename
+  if is_pixel "$DEVICE"; then
+    # If sailfish, don't delete the marlin files - just override the affected ones
+    # sailfish blobs include marlin configs too
+    if [[ "$DEVICE" == "sailfish" ]]; then
+      rsync -aruz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
+        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+        abort 1
+      }
+
+      rsync -aruz --delete "$OUT_BASE/vendor/$VENDOR/sailfish/" "$AOSP_ROOT/vendor/$VENDOR/sailfish" || {
+        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+        abort 1
+      }
+    # If marlin, don't delete the sailfish files - just override the affected ones
+    elif [[ "$DEVICE" == "marlin" ]]; then
+      rsync -aruz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
+        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+        abort 1
+      }
+    fi
+  else
+    rsync -aruz --delete "$OUT_BASE/vendor/$VENDOR/" "$AOSP_ROOT/vendor/$VENDOR" || {
+      echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+      abort 1
+    }
+  fi
+  echo "[*] Vendor blobs copied to '$AOSP_ROOT/vendor'"
 else
   echo "[*] Import '$OUT_BASE/vendor' to AOSP root"
 fi
