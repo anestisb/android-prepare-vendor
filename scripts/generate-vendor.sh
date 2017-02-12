@@ -564,11 +564,8 @@ gen_mk_for_bytecode() {
       priv='LOCAL_PRIVILEGED_MODULE := true'
     fi
 
-    # APKs under /vendor should not be optimized & always use the PRESIGNED cert
-    if [[ "$fileExt" == "apk" && "$RELROOT" == "vendor" ]]; then
-      cert="PRESIGNED"
-    elif [[ "$fileExt" == "apk" ]]; then
-      # All other APKs have been repaired & thus need resign
+    # Always resigned APKs with platform keys
+    if [[ "$fileExt" == "apk" ]]; then
       cert="platform"
     else
       # Framework JAR's don't contain signatures, so annotate to skip signing
