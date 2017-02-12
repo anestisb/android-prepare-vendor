@@ -402,6 +402,7 @@ gen_apk_dso_symlink() {
   local APK_DIR=$4
   local DSO_ABI=$5
 
+  echo ""
   echo "include \$(CLEAR_VARS)"
   echo "LOCAL_MODULE := $DSO_MNAME"
   echo "LOCAL_MODULE_CLASS := FAKE"
@@ -584,8 +585,8 @@ gen_mk_for_bytecode() {
 
         # Generate symlink fake rule & cache module_names to append later to vendor mk
         PKGS_SLINKS+=("$dsoMName")
-        apk_lib_slinks+="\n$(gen_apk_dso_symlink "$dsoName" "$dsoMName" "$dsoRoot" \
-                             "$lcMPath/$pkgName" "$arch")"
+        apk_lib_slinks+="$(gen_apk_dso_symlink "$dsoName" "$dsoMName" "$dsoRoot" \
+                           "$lcMPath/$pkgName" "$arch")"
       done < <(find -L "$appDir/lib" -type l -iname '*.so')
     fi
 
