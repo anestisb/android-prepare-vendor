@@ -2,6 +2,7 @@
 
 # Radio
 system/app/atfwd/atfwd.apk
+system/app/datastatusnotification/datastatusnotification.apk
 system/app/embms/embms.apk
 system/app/fastdormancy/fastdormancy.apk
 system/app/QAS_DVC_MSP/QAS_DVC_MSP.apk
@@ -9,6 +10,7 @@ system/app/QtiTelephonyService/QtiTelephonyService.apk
 system/app/radioconfig/radioconfig.apk
 system/app/RCSBootstraputil/RCSBootstraputil.apk
 system/app/shutdownlistener/shutdownlistener.apk
+system/app/xdivert/xdivert.apk
 system/framework/embmslibrary.jar
 system/framework/qcrilhook.jar
 system/framework/QtiTelephonyServicelibrary.jar

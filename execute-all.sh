@@ -58,7 +58,7 @@ cat <<_EOF
       -a|--alias   : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
       -b|--buildID : BuildID string (e.g. MMB29P)
       -o|--output  : Path to save generated vendor data
-      -g|--gplay   : Use blobs configuration compatible with Google Play Services / GApps
+      -f|--full    : Use blobs configuration with all non-essential OEM packages + compatible with GApps
       -i|--img     : [OPTIONAL] Read factory image archive from file instead of downloading
       -k|--keep    : [OPTIONAL] Keep all factory images extracted & repaired data
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
@@ -72,7 +72,8 @@ cat <<_EOF
       --debugfs    : [EXPERIMENTAL] Use debugfs instead of default fuse-ext2, to extract image files data
 
     INFO:
-      * Default configuration is naked. Use "-g|--gplay" if you plan to install Google Play Services.
+      * Default configuration is naked. Use "-f|--full" if you plan to install Google Play Services
+        or you have issues with some carriers
       * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method
         If you need something on the top of defaults, you can select manually.
 _EOF
@@ -219,8 +220,8 @@ do
       INPUT_IMG="$(_realpath "$2")"
       shift
       ;;
-    -g|--gplay)
-      CONFIG="config-gplay"
+    -f|--full)
+      CONFIG="config-full"
       ;;
     -k|--keep)
       KEEP_DATA=true

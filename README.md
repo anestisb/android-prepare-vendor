@@ -101,13 +101,17 @@ Unfortunately due to not quickly catching-up with upstream smali & dexlib it has
 deprecated for now.
 
 ## Configuration files explained
-### Naked vs GPlay
+### Naked vs Full
 Naked configuration group (enabled by default when using the master script)
 includes data & module targets required to have a functional device from AOSP
-without using Google Play Services / Google Apps. On the other hand GPlay
-configuration group (enabled with `-g|--gplay` flag from master script) has additional
-blobs & module targets which are required only when GApps are installed (either
-manually post-boot or included as additional vendor blobs).
+without installing non-essential OEM packages. With this setup using Google Play
+Services / Google Apps will probably not work.
+
+On the other hand the full configuration group (enabled with `-f|--full` flag
+from master script) has additional blobs & module targets which are normally
+marked as non-essential, although might be required for some carriers or in case
+of GApps being installed (either manually post-boot or included as additional
+vendor blobs).
 
 ### **system-proprietary-blobs-apiXX.txt**
 List of files to be appended at the `PRODUCT_COPY_FILES` list. These files are
@@ -156,6 +160,7 @@ target device before any pull request.
 
 ## Change Log
 * 0.2.0 - TBC
+ * Renamed GPlay configuration to Full configuration
  * Support for Pixel devices
  * Output can be directly set to AOSP SRC ROOT
  * Experimental debugfs support as an alternative to fuse-ext2
