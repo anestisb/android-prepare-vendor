@@ -149,10 +149,8 @@ be appended at master vendor `Android.mk`.
 | Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali |
 | Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali |
 
-* Open [issues](https://github.com/anestisb/android-prepare-vendor/issues)
-exist for Pixel devices
-* Pixel XL marlin support has not been tested against physical device from author
-due to lack of hardware.
+Please check existing [issues](https://github.com/anestisb/android-prepare-vendor/issues)
+before reporting new ones
 
 ## Contributing
 If you want to contribute to device configuration files, please test against the
