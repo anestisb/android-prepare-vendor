@@ -53,15 +53,15 @@ The process to extract and import vendor proprietary blobs requires to:
 
 1. Obtain device matching factory images archive from Google developer website
 (`scripts/download-nexus-image.sh`)
-  * Users need to accept Google ToS for Nexus factory images
+   * Users need to accept Google ToS for Nexus factory images
 2. Extract images from archive, convert from sparse to raw, mount with fuse-ext2 &
 extract data (`scripts/extract-factory-images.sh`)
-  * All vendor partition data are mirrored in order to generate a production identical `vendor.img`
+   * All vendor partition data are mirrored in order to generate a production identical `vendor.img`
 3. Repair bytecode (APKs/JARs) from factory system image (`scripts/system-img-repair.sh`) using one
 of supported bytecode de-optimization methods (see next paragraph for details)
 4. Generate vendor proprietary includes & makefiles compatible with AOSP build tree
 (`scripts/generate-vendor.sh`)
-  * Extra care in Makefile rules to not break compatibility among supported AOSP branches
+   * Extra care in Makefile rules to not break compatibility among supported AOSP branches
 
 `execute-all.sh` runs all previous steps with required order. As an alternative to
 download images from Google's website, script can also read factory images from
@@ -160,50 +160,50 @@ target device before any pull request.
 
 ## Change Log
 * 0.2.0 - TBC
- * Renamed GPlay configuration to Full configuration
- * Support for Pixel devices
- * Output can be directly set to AOSP SRC ROOT
- * Experimental debugfs support as an alternative to fuse-ext2
- * Bug fixes when processing symbolic links from vendor partition
- * Preserve symbolic links when processing vendor partition
- * Android 7.1 support for Nexus devices (API-25)
- * Follow HTTP redirects when downloading factory images
+  * Renamed GPlay configuration to Full configuration
+  * Support for Pixel devices
+  * Output can be directly set to AOSP SRC ROOT
+  * Experimental debugfs support as an alternative to fuse-ext2
+  * Bug fixes when processing symbolic links from vendor partition
+  * Preserve symbolic links when processing vendor partition
+  * Android 7.1 support for Nexus devices (API-25)
+  * Follow HTTP redirects when downloading factory images
 * 0.1.7 - 8 Oct 2016
- * Nexus 9 LTE (volantisg) support
- * Offer option to de-optimize all packages under /system despite configuration settings
- * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode
- * Improve supported bytecode deodex methods modularity - users can now override default methods
- * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor generate script
- * Respect `LOCAL_MULTILIB` `32` or `both` when 32bit bytecode prebuilts detected at 64bit devices
+  * Nexus 9 LTE (volantisg) support
+  * Offer option to de-optimize all packages under /system despite configuration settings
+  * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode
+  * Improve supported bytecode deodex methods modularity - users can now override default methods
+  * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor generate script
+  * Respect `LOCAL_MULTILIB` `32` or `both` when 32bit bytecode prebuilts detected at 64bit devices
 * 0.1.6 - 4 Oct 2016
- * Download automation compatibility with refactored Google Nexus images website
- * Bug fixes when generating from OS X
+  * Download automation compatibility with refactored Google Nexus images website
+  * Bug fixes when generating from OS X
 * 0.1.5 - 25 Sep 2016
- * Fixes issue with symlinks resolve when output path with spaces
- * Fixes bug when repairing multi-dex APKs with oatdump method
- * Introduced sorted data processing so that output is diff friendly
- * Include baseband & bootloader firmware at vendor blobs
- * Various performance optimizations
+  * Fixes issue with symlinks resolve when output path with spaces
+  * Fixes bug when repairing multi-dex APKs with oatdump method
+  * Introduced sorted data processing so that output is diff friendly
+  * Include baseband & bootloader firmware at vendor blobs
+  * Various performance optimizations
 * 0.1.4 - 17 Sep 2016
- * Split configuration into 2 groups: Naked & GPlay
- * Fix extra modules being ignored bug
+  * Split configuration into 2 groups: Naked & GPlay
+  * Fix extra modules being ignored bug
 * 0.1.3 - 14 Sep 2016
- * Fix missing output path normalization which was corrupting symbolic links
+  * Fix missing output path normalization which was corrupting symbolic links
 * 0.1.2 - 12 Sep 2016
- * Fix JAR META-INF repaired archives deletion bug
- * Improved fuse mount error handling
- * FAQ for common fuse mount issues
- * Extra defensive checks for /vendor/priv-app chosen signing certificate
+  * Fix JAR META-INF repaired archives deletion bug
+  * Improved fuse mount error handling
+  * FAQ for common fuse mount issues
+  * Extra defensive checks for /vendor/priv-app chosen signing certificate
 * 0.1.1 - 12 Sep 2016
- * Unbound variable bug fix when early error abort
+  * Unbound variable bug fix when early error abort
 * 0.1.0 - 11 Sep 2016
- * Nougat API-24 support
- * Utilize fuse-ext2 to drop required root permissions
- * Implement new bytecode repair method
- * Read directly data from mount points - deprecate local rsync copies for speed
- * Add OS X support (requires OSXFuse)
- * Improved device configuration layers / files
- * AOSP compatibility bug fixes & performance optimizations
+  * Nougat API-24 support
+  * Utilize fuse-ext2 to drop required root permissions
+  * Implement new bytecode repair method
+  * Read directly data from mount points - deprecate local rsync copies for speed
+  * Add OS X support (requires OSXFuse)
+  * Improved device configuration layers / files
+  * AOSP compatibility bug fixes & performance optimizations
 
 ## Warnings
 * Scripts do **NOT** require root permissions to run. If you're facing problems
@@ -245,10 +245,10 @@ directories and might break if `cp` or `mv` are against the wrong base paths.
 ## Frequently Spotted Issues
 ### fuse-ext2
 * `fusermount: failed to open /etc/fuse.conf: Permission denied`
- * FIX-1: Add low privilege username to fuse group (e.g.: `# usermod -a -G fuse anestisb`)
- * FIX-2: Change file permissions - `# chmod +r /etc/fuse.conf`
+  * FIX-1: Add low privilege username to fuse group (e.g.: `# usermod -a -G fuse anestisb`)
+  * FIX-2: Change file permissions - `# chmod +r /etc/fuse.conf`
 * `fusermount: option allow_other only allowed if 'user_allow_other' is set in /etc/fuse.conf`
- * Edit `/etc/fuse.conf` and write/uncomment the `user_allow_other` flag
+  * Edit `/etc/fuse.conf` and write/uncomment the `user_allow_other` flag
 
 ## Examples
 ### API-24 (Nougat) N9 WiFi (alias volantis) flounder vendor generation after downloading factory image from website
