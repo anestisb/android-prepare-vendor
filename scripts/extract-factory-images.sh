@@ -138,7 +138,7 @@ extract_img_data() {
       abort 1
     }
   else
-    debugfs -R 'ls -p' "$IMAGE_FILE" 2>/dev/nul | cut -d '/' -f6 | while read -r entry
+    debugfs -R 'ls -p' "$IMAGE_FILE" 2>/dev/null | cut -d '/' -f6 | while read -r entry
     do
       debugfs -R "rdump \"$entry\" \"$OUT_DIR\"" "$IMAGE_FILE" &>/dev/null || {
         echo "[-] Failed to extract data from '$IMAGE_FILE'"
