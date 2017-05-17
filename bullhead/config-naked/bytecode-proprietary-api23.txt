@@ -10,5 +10,4 @@ system/framework/com.google.widevine.software.drm.jar
 system/framework/qcrilhook.jar
 system/framework/rcsimssettings.jar
 system/framework/rcsservice.jar
-system/priv-app/HotwordEnrollment/HotwordEnrollment.apk
 system/priv-app/LifeTimerService/LifeTimerService.apk

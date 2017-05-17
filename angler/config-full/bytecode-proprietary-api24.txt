@@ -18,6 +18,5 @@ system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/Entitlement/Entitlement.apk
 system/priv-app/GCS/GCS.apk
 system/priv-app/HiddenMenu/HiddenMenu.apk
-system/priv-app/HotwordEnrollment/HotwordEnrollment.apk
 system/priv-app/SprintDM/SprintDM.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk

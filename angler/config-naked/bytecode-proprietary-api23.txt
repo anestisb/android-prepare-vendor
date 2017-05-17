@@ -9,4 +9,3 @@ system/framework/com.google.android.camera.experimental2015.jar
 system/framework/com.google.widevine.software.drm.jar
 system/framework/qcrilhook.jar
 system/priv-app/ConfigUpdater/ConfigUpdater.apk
-system/priv-app/HotwordEnrollment/HotwordEnrollment.apk
