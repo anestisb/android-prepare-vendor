@@ -47,13 +47,10 @@ cat <<_EOF
     OPTIONS:
       -i|--input      : Root path of extracted /system & /vendor partitions
       -o|--output     : Path to save vendor blobs & makefiles in AOSP compatible structure
-      --blobs-list    : Text file with list of proprietary blobs to copy
-      --dep-dso-list  : Text file with list of shared libraries that required to be
-                        included as a separate module
-      --flags-list    : Text file with list of Makefile flags to be appended at
-                        'BoardConfigVendor.mk'
-      --extra-modules : Text file additional modules to be appended at master vendor
-                        'Android.mk'
+      --blobs-list    : List of proprietary blobs to copy
+      --dep-dso-list  : List of shared libraries that need to be included as a separate module
+      --flags-list    : List of Makefile flags to be appended at 'BoardConfigVendor.mk'
+      --extra-modules : Additional modules to be appended at main vendor 'Android.mk'
       --allow-preopt  : Don't disable LOCAL_DEX_PREOPT for /system
       --force-modules : Text file with AOSP defined modules to force include
     INFO:
@@ -166,7 +163,7 @@ extract_blobs() {
 
   while read -r file
   do
-    # Input format follows AOSP compatibility allowing optional save at relative path
+    # Input format allows optional store under a different directory
     src=$(echo "$file" | cut -d ":" -f1)
     dst=$(echo "$file" | cut -d ":" -f2)
     if [[ "$dst" == "" ]]; then
@@ -564,7 +561,7 @@ gen_mk_for_bytecode() {
       priv='LOCAL_PRIVILEGED_MODULE := true'
     fi
 
-    # Always resigned APKs with platform keys
+    # Always resign APKs with platform keys
     if [[ "$fileExt" == "apk" ]]; then
       cert="platform"
     else

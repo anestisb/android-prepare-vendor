@@ -49,12 +49,12 @@ cat <<_EOF
     OPTIONS:
       -i|--input      : Root path of extracted factory image system partition
       -o|--output     : Path to save input partition with repaired bytecode
-      -m|--method     : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP')
+      -m|--method     : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP', 'SMALIDEODEX')
       --oat2dex       : [OPTIONAL] Path to SmaliEx oat2dex.jar (when 'OAT2DEX' method)
       --oatdump       : [OPTIONAL] Path to ART oatdump executable (when 'OATDUMP' or 'SMALIDEODEX' method)
       --dexrepair     : [OPTIONAL] Path to dexrepair executable (when 'OATDUMP' method)
-      --smali         : [OPTIONAL] Path to smali.har (when 'SMALIDEODEX' method)
-      --baksmali      : [OPTIONAL] Path to baksmali.har (when 'SMALIDEODEX' method)
+      --smali         : [OPTIONAL] Path to smali.jar (when 'SMALIDEODEX' method)
+      --baksmali      : [OPTIONAL] Path to baksmali.jar (when 'SMALIDEODEX' method)
       --bytecode-list : [OPTIONAL] list with bytecode archive files to be included in
                         generated MKs. When provided only required bytecode is repaired,
                         otherwise all bytecode in partition is repaired.
