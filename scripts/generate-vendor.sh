@@ -31,6 +31,9 @@ hasStandAloneSymLinks=false
 declare -a DSO_MODULES
 hasDsoModules=false
 
+# APK files that need to preserve the original signature
+declare -a PSIG_BC_FILES
+
 abort() {
   # If debug keep work directory for bugs investigation
   if [[ "$-" == *x* ]]; then
@@ -563,7 +566,11 @@ gen_mk_for_bytecode() {
 
     # Always resign APKs with platform keys
     if [[ "$fileExt" == "apk" ]]; then
-      cert="platform"
+      if array_contains "$zipName" "${PSIG_BC_FILES[@]}"; then
+        cert="PRESIGNED"
+      else
+        cert="platform"
+      fi
     else
       # Framework JAR's don't contain signatures, so annotate to skip signing
       cert="PRESIGNED"
@@ -987,6 +994,12 @@ check_file "$DEP_DSO_BLOBS_LIST" "Vendor dep-dso-proprietary"
 check_file "$MK_FLAGS_LIST" "Vendor vendor-config"
 check_file "$EXTRA_MODULES" "Vendor extra modules"
 check_file "$FORCE_MODULES" "Vendor enforce modules"
+
+# Populate the array with the APK that need to maintain their signature
+readarray -t PSIG_BC_FILES < <(
+ grep -E ':PRESIGNED$' "$BLOBS_LIST" | cut -d ":" -f1 | while read -r apk; do
+  basename "$apk"; done
+)
 
 # Verify input directory structure
 verify_input "$INPUT_DIR"
