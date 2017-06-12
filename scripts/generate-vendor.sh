@@ -32,7 +32,7 @@ declare -a DSO_MODULES
 hasDsoModules=false
 
 # APK files that need to preserve the original signature
-declare -a PSIG_BC_FILES
+declare -a PSIG_BC_FILES=()
 
 abort() {
   # If debug keep work directory for bugs investigation
@@ -566,10 +566,11 @@ gen_mk_for_bytecode() {
 
     # Always resign APKs with platform keys
     if [[ "$fileExt" == "apk" ]]; then
-      if array_contains "$zipName" "${PSIG_BC_FILES[@]}"; then
-        cert="PRESIGNED"
-      else
-        cert="platform"
+      cert="platform"
+      if [ ! -z "${PSIG_BC_FILES-}" ]; then
+        if array_contains "$zipName" "${PSIG_BC_FILES[@]}"; then
+          cert="PRESIGNED"
+        fi
       fi
     else
       # Framework JAR's don't contain signatures, so annotate to skip signing
