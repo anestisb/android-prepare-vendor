@@ -398,7 +398,8 @@ else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
 
-EXTRACT_SCRIPT_ARGS="--input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
+EXTRACT_SCRIPT_ARGS="--device "$DEVICE" --input "$factoryImgArchive" \
+--output "$FACTORY_IMGS_DATA" \
 --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img""
 
 if [ "$USE_DEBUGFS" = true ]; then

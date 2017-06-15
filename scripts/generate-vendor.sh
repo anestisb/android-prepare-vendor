@@ -148,6 +148,13 @@ copy_radio_files() {
     echo "[-] Failed to copy bootloader image"
     abort 1
   }
+
+  if [ "$IS_PIXEL" = true ]; then
+    for img in "${PIXEL_AB_PARTITIONS[@]}"
+    do
+      cp "$INDIR/radio/$img.img" "$OUTDIR/radio/"
+    done
+  fi
 }
 
 extract_blobs() {
@@ -334,6 +341,13 @@ gen_board_vendor_mk() {
     echo "\$(call add-radio-file,radio/bootloader.img,version-bootloader)"
     if [[ "$RADIO_VER" != "" ]]; then
       echo "\$(call add-radio-file,radio/radio.img,version-baseband)"
+    fi
+
+    if [ "$IS_PIXEL" = true ]; then
+      for img in "${PIXEL_AB_PARTITIONS[@]}"
+      do
+        echo "\$(call add-radio-file,radio/$img.img)"
+      done
     fi
   } >> "$ANDROID_BOARD_VENDOR_MK"
 }
@@ -804,6 +818,20 @@ gen_mk_for_shared_libs() {
   fi
 }
 
+update_ab_ota_partitions() {
+  local outMk="$1"
+
+  {
+    echo "# Partitions to add in AB OTA images"
+    echo 'AB_OTA_PARTITIONS += \'
+    for partition in "${PIXEL_AB_PARTITIONS[@]}"
+    do
+      echo "    $partition \\"
+    done
+  }  >> "$DEVICE_VENDOR_MK"
+  strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
+}
+
 gen_android_mk() {
   local root path targetProductDevice
   targetProductDevice="$DEVICE"
@@ -1101,6 +1129,10 @@ if [ -f "$RUNTIME_EXTRA_BLOBS_LIST" ]; then
   cat "$RUNTIME_EXTRA_BLOBS_LIST" >> "$BLOBS_LIST"
   sort "$BLOBS_LIST" > "$BLOBS_LIST.tmp"
   mv "$BLOBS_LIST.tmp" "$BLOBS_LIST"
+fi
+
+if [ "$IS_PIXEL" = true ]; then
+  update_ab_ota_partitions "$DEVICE_VENDOR_MK"
 fi
 
 # Generate file signatures list

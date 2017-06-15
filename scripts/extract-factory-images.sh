@@ -27,6 +27,7 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
+      -d|--device   : Device codename
       -i|--input    : Archive with factory images as downloaded from
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
@@ -193,6 +194,7 @@ check_file() {
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
 
+DEVICE=""
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 SIMG2IMG=""
@@ -209,6 +211,10 @@ while [[ $# -gt 0 ]]
 do
   arg="$1"
   case $arg in
+    -d|--device)
+      DEVICE=$2
+      shift
+      ;;
     -o|--output)
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
@@ -349,5 +355,17 @@ mv "$bootloaderImg" "$RADIO_DATA_OUT/" || {
   echo "[-] Failed to copy bootloader image"
   abort 1
 }
+
+# For devices with AB partitions layout, copy additional images required for OTA
+if [[ "$DEVICE" == "sailfish" || "$DEVICE" == "marlin" ]]; then
+  for img in "${PIXEL_AB_PARTITIONS[@]}"
+  do
+    if [ ! -f "$extractDir/images/$img.img" ]; then
+      echo "[-] Failed to locate '$img.img' in factory image"
+      abort 1
+    fi
+    mv "$extractDir/images/$img.img" "$RADIO_DATA_OUT/"
+  done
+fi
 
 abort 0
