@@ -23,8 +23,6 @@ readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 declare -ra SYSTEM_DIRS_WITH_BC=("app" "framework" "priv-app")
 
 declare -ra PIXEL_AB_PARTITIONS=(
-  "boot"
-  "system"
   "aboot"
   "apdp"
   "bootlocker"
