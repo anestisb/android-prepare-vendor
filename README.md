@@ -157,6 +157,9 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.2.1 - TBC
+  * Upgrade to smali/baksmali 2.2.1
+  * Add support to maintain presigned APKs
 * 0.2.0 - 13 May 2017
   * Renamed GPlay configuration to Full configuration
   * Support for Pixel devices
