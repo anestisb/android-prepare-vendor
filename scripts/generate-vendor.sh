@@ -10,26 +10,20 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly REALPATH_SCRIPT="$SCRIPTS_DIR/realpath.sh"
-
+readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
-declare -a sysTools=("cp" "sed" "zipinfo" "jarsigner" "awk" "shasum")
-declare -a dirsWithBC=("app" "framework" "priv-app")
-
-# Last known good defaults in case fdisk automation failed
-readonly BULLHEAD_VENDOR_IMG_SZ="260034560"
-readonly ANGLER_VENDOR_IMG_SZ="209702912"
-readonly FLOUNDER_VENDOR_IMG_SZ="268419072"
+declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jarsigner" "awk" "shasum")
 
 # Standalone symlinks. Need to also take care standalone firmware bin
 # symlinks between /data/misc & /system/etc/firmware.
 declare -a S_SLINKS_SRC
 declare -a S_SLINKS_DST
-hasStandAloneSymLinks=false
+HAS_STANDALONE_SLINKS=false
 
 # Some shared libraries under are required as dependencies so we need to create
 # individual modules for them
 declare -a DSO_MODULES
-hasDsoModules=false
+HAS_DSO_MODULES=false
 
 # APK files that need to preserve the original signature
 declare -a PSIG_BC_FILES=()
@@ -186,7 +180,7 @@ extract_blobs() {
       fi
       S_SLINKS_SRC+=("$symLinkSrc")
       S_SLINKS_DST+=("$src")
-      hasStandAloneSymLinks=true
+      HAS_STANDALONE_SLINKS=true
       continue
     fi
 
@@ -243,14 +237,14 @@ update_vendor_blobs_mk() {
     if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
       continue
     fi
-    if [[ "$hasDsoModules" = true && "$fileExt" == "so" ]]; then
+    if [[ "$HAS_DSO_MODULES" = true && "$fileExt" == "so" ]]; then
       if array_contains "$file" "${DSO_MODULES[@]}"; then
         continue
       fi
     fi
 
     # Skip standalone symbolic links if available
-    if [ "$hasStandAloneSymLinks" = true ]; then
+    if [ "$HAS_STANDALONE_SLINKS" = true ]; then
       if array_contains "$file" "${S_SLINKS_DST[@]}"; then
         continue
       fi
@@ -351,19 +345,9 @@ gen_board_cfg_mk() {
   # First lets check if vendor partition size has been extracted from
   # previous data extraction script
   v_img_sz="$(has_vendor_size "$INDIR")"
-
-  # If not found, fail over to last known value from hardcoded entries
   if [[ "$v_img_sz" == "" ]]; then
-    if [[ "$DEVICE" == "bullhead" ]]; then
-      v_img_sz=$BULLHEAD_VENDOR_IMG_SZ
-    elif [[ "$DEVICE" == "angler" ]]; then
-      v_img_sz=$ANGLER_VENDOR_IMG_SZ
-    elif [[ "$DEVICE" == "flounder" ]]; then
-      v_img_sz=$FLOUNDER_VENDOR_IMG_SZ
-    else
-      echo "[-] Unknown vendor image size for '$DEVICE' device"
-      abort 1
-    fi
+    echo "[-] Unknown vendor image size for '$DEVICE' device"
+    abort 1
   fi
 
   {
@@ -841,7 +825,7 @@ gen_android_mk() {
 
   for root in "vendor" "proprietary"
   do
-    for path in "${dirsWithBC[@]}"
+    for path in "${SYSTEM_DIRS_WITH_BC[@]}"
     do
       if [ -d "$OUTPUT_VENDOR/$root/$path" ]; then
         echo "[*] Gathering data from '$root/$path' APK/JAR pre-builts"
@@ -850,13 +834,13 @@ gen_android_mk() {
     done
   done
 
-  if [ "$hasStandAloneSymLinks" = true ]; then
+  if [ "$HAS_STANDALONE_SLINKS" = true ]; then
     echo "[*] Processing standalone symlinks"
     gen_standalone_symlinks "$INPUT_DIR" "$OUTPUT_VENDOR"
   fi
 
   # Iterate over directories with shared libraries and update the unified Android.mk file
-  if [ "$hasDsoModules" = true ]; then
+  if [ "$HAS_DSO_MODULES" = true ]; then
     echo "[*] Generating shared library individual pre-built modules"
     gen_mk_for_shared_libs "$INPUT_DIR" "$OUTPUT_VENDOR"
   fi
@@ -916,6 +900,7 @@ check_file() {
 
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
+. "$CONSTS_SCRIPT"
 
 INPUT_DIR=""
 OUTPUT_DIR=""
@@ -934,7 +919,7 @@ DEV_FAMILY_BOARD_CONFIG_VENDOR_MK=""
 RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
 
 # Check that system tools exist
-for i in "${sysTools[@]}"
+for i in "${SYS_TOOLS[@]}"
 do
   if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
@@ -1066,7 +1051,7 @@ done
 entries=$(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST" | wc -l | tr -d ' ')
 if [ "$entries" -gt 0 ]; then
   readarray -t DSO_MODULES < <(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST")
-  hasDsoModules=true
+  HAS_DSO_MODULES=true
 fi
 
 # Copy radio images

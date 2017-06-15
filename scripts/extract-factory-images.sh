@@ -8,8 +8,10 @@ set -e # fail on unhandled error
 set -u # fail on undefined variable
 #set -x # debug
 
+readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a sysTools=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
+declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -189,6 +191,7 @@ check_file() {
 }
 
 trap "abort 1" SIGINT SIGTERM
+. "$CONSTS_SCRIPT"
 
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
@@ -231,17 +234,17 @@ done
 
 # Additional tools based on chosen image files data extraction method
 if [ "$USE_DEBUGFS" = true ]; then
-  sysTools+=("debugfs")
+  SYS_TOOLS+=("debugfs")
 else
-  sysTools+=("fuse-ext2")
+  SYS_TOOLS+=("fuse-ext2")
   # Platform specific commands
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    sysTools+=("sw_vers")
+    SYS_TOOLS+=("sw_vers")
   fi
 fi
 
 # Check that system tools exist
-for i in "${sysTools[@]}"
+for i in "${SYS_TOOLS[@]}"
 do
   if ! command_exists "$i"; then
     echo "[-] '$i' command not found"

@@ -7,11 +7,10 @@ set -e # fail on unhandled error
 set -u # fail on undefined variable
 #set -x # debug
 
+readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_download.XXXXXX) || exit 1
-readonly NID_URL="https://google.com"
-readonly GURL="https://developers.google.com/android/nexus/images"
-readonly TOSURL="https://developers.google.com/profile/acknowledgeNotification"
-declare -a sysTools=("curl" "wget")
+declare -a SYS_TOOLS=("curl" "wget")
 
 abort() {
   exit "$1"
@@ -69,9 +68,10 @@ fi
 }
 
 trap "abort 1" SIGINT SIGTERM
+. "$CONSTS_SCRIPT"
 
 # Check that system tools exist
-for i in "${sysTools[@]}"
+for i in "${SYS_TOOLS[@]}"
 do
   if ! command_exists "$i"; then
     echo "[-] '$i' command not found"

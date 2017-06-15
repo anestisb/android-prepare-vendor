@@ -8,9 +8,14 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
+declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount")
 
 # Realpath implementation in bash
 readonly REALPATH_SCRIPT="$SCRIPTS_ROOT/scripts/realpath.sh"
+
+# Script that contain global constants
+readonly CONSTS_SCRIPT="$SCRIPTS_ROOT/scripts/constants.sh"
 
 # Helper script to download Nexus factory images from web
 readonly DOWNLOAD_SCRIPT="$SCRIPTS_ROOT/scripts/download-nexus-image.sh"
@@ -26,19 +31,6 @@ readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 
 # Helper script to generate vendor AOSP includes & makefiles
 readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
-
-# oatdump dependencies URLs
-readonly L_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21490&authkey=ACA4f4Zvs3Tb_SY'
-readonly D_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21493&authkey=AJ0rWu5Ci8tQNLY'
-readonly L_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21492&authkey=AE4uqwH-THvvkSQ'
-readonly D_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21491&authkey=AHvCaYwFBPYD4Fs'
-readonly L_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21503&authkey=AKDpBAzhzum6d7w'
-readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21504&authkey=AC5YFNSAZ31-W3o'
-
-readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
-
-declare -a sysTools=("mkdir" "dirname" "wget" "mount")
-declare -a availDevices=("bullhead" "flounder" "angler" "sailfish" "marlin")
 
 abort() {
   # Remove mount points in case of error
@@ -145,6 +137,7 @@ is_pixel() {
 
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
+. "$CONSTS_SCRIPT"
 
 # Global variables
 DEVICE=""
@@ -180,15 +173,15 @@ fi
 
 # Platform specific commands
 if [[ "$HOST_OS" == "Darwin" ]]; then
-  sysTools+=("umount")
+  SYS_TOOLS+=("umount")
   _UMOUNT=umount
 else
-  sysTools+=("fusermount")
+  SYS_TOOLS+=("fusermount")
   _UMOUNT="fusermount -u"
 fi
 
 # Check that system tools exist
-for i in "${sysTools[@]}"
+for i in "${SYS_TOOLS[@]}"
 do
   if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
@@ -336,7 +329,7 @@ export PATH="$__JAVADIR":$PATH
 
 # Check if supported device
 deviceOK=false
-for devNm in "${availDevices[@]}"
+for devNm in "${SUPPORTED_DEVICES[@]}"
 do
   if [[ "$devNm" == "$DEVICE" ]]; then
     deviceOK=true
