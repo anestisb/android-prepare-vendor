@@ -160,6 +160,7 @@ target device before any pull request.
 * 0.2.1 - TBC
   * Upgrade to smali/baksmali 2.2.1
   * Add support to maintain presigned APKs
+  * Add missing AB partitions for Pixel OTA images
 * 0.2.0 - 13 May 2017
   * Renamed GPlay configuration to Full configuration
   * Support for Pixel devices
