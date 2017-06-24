@@ -636,7 +636,7 @@ gen_mk_for_bytecode() {
         echo "$priv"
       fi
       echo "LOCAL_MODULE_SUFFIX := $suffix"
-      if [[ "$ALLOW_PREOPT" = false || "$RELROOT" == "vendor" ]]; then
+      if [[ "$ALLOW_PREOPT" = false ]]; then
         echo "LOCAL_DEX_PREOPT := false"
       fi
 
