@@ -9,6 +9,7 @@ system/app/QtiTelephonyService/QtiTelephonyService.apk
 system/app/radioconfig/radioconfig.apk
 system/app/RCSBootstraputil/RCSBootstraputil.apk
 system/app/shutdownlistener/shutdownlistener.apk
+system/app/TimeService/TimeService.apk
 system/framework/embmslibrary.jar
 system/framework/qcrilhook.jar
 system/framework/QtiTelephonyServicelibrary.jar
