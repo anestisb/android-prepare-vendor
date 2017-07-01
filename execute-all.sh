@@ -84,36 +84,36 @@ check_bash_version() {
 }
 
 unmount_raw_image() {
-  local MOUNT_POINT="$1"
+  local mount_point="$1"
 
-  if [[ -d "$MOUNT_POINT" && "$USE_DEBUGFS" = false ]]; then
-    $_UMOUNT "$MOUNT_POINT" || {
-      echo "[-] '$MOUNT_POINT' unmount failed"
+  if [[ -d "$mount_point" && "$USE_DEBUGFS" = false ]]; then
+    $_UMOUNT "$mount_point" || {
+      echo "[-] '$mount_point' unmount failed"
       exit 1
     }
   fi
 }
 
 oatdump_prepare_env() {
-  local API_LEVEL="$1"
+  local api_level="$1"
 
-  local DOWNLOAD_URL
-  local OUT_FILE="$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/oatdump_deps.zip"
-  mkdir -p "$(dirname "$OUT_FILE")"
+  local download_url
+  local out_file="$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level/oatdump_deps.zip"
+  mkdir -p "$(dirname "$out_file")"
 
 
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    DOWNLOAD_URL="D_OATDUMP_URL_API$API_LEVEL"
+    download_url="D_OATDUMP_URL_API$api_level"
   else
-    DOWNLOAD_URL="L_OATDUMP_URL_API$API_LEVEL"
+    download_url="L_OATDUMP_URL_API$api_level"
   fi
 
-  wget -O "$OUT_FILE" "${!DOWNLOAD_URL}" || {
+  wget -O "$out_file" "${!download_url}" || {
     echo "[-] oatdump dependencies download failed"
     abort 1
   }
 
-  unzip -qq "$OUT_FILE" -d "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL" || {
+  unzip -qq "$out_file" -d "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level" || {
     echo "[-] oatdump dependencies unzip failed"
     abort 1
   }

@@ -78,18 +78,18 @@ command_exists() {
 
 # Print RAM size memory warning when using smali jar tools
 check_ram_size() {
-  local HOST_OS
-  local RAM_SIZE
+  local host_os
+  local ram_size
 
-  HOST_OS=$(uname)
-  RAM_SIZE=0
-  if [[ "$HOST_OS" == "Darwin" ]]; then
-    RAM_SIZE=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
+  host_os=$(uname)
+  ram_size=0
+  if [[ "$host_os" == "Darwin" ]]; then
+    ram_size=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
   else
-    RAM_SIZE=$(grep MemTotal /proc/meminfo | awk '{print $2}'  | awk '{$1=$1/(1024^2); print int($1);}')
+    ram_size=$(grep MemTotal /proc/meminfo | awk '{print $2}'  | awk '{$1=$1/(1024^2); print int($1);}')
   fi
 
-  if [ "$RAM_SIZE" -le 2 ]; then
+  if [ "$ram_size" -le 2 ]; then
     echo "[!] Host RAM size <= 2GB - jars might crash due to low memory"
   fi
 }
@@ -102,20 +102,20 @@ get_build_id() {
 }
 
 check_java_version() {
-  local JAVA_VER_MINOR=""
+  local java_ver_minor=""
   local _token
 
   for _token in $(java -version 2>&1 | grep -i version)
   do
     if [[ $_token =~ \"([[:digit:]])\.([[:digit:]])\.(.*)\" ]]
     then
-      JAVA_VER_MINOR=${BASH_REMATCH[2]}
+      java_ver_minor=${BASH_REMATCH[2]}
       break
     fi
   done
 
-  if [ "$JAVA_VER_MINOR" -lt 8 ]; then
-    echo "[-] Java version ('$JAVA_VER_MINOR') is detected, while minimum required version is 8"
+  if [ "$java_ver_minor" -lt 8 ]; then
+    echo "[-] Java version ('$java_ver_minor') is detected, while minimum required version is 8"
     echo "[!] Consider exporting PATH like the following if a system-wide set is not desired"
     echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
     abort 1
@@ -129,7 +129,7 @@ array_contains() {
 }
 
 oat2dex_repair() {
-  local -a ABIS
+  local -a abis
 
   # oat2dex.jar is memory hungry
   check_ram_size
@@ -138,11 +138,11 @@ oat2dex_repair() {
   for type in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
-      ABIS+=("$type")
+      abis+=("$type")
     fi
   done
 
-  for abi in "${ABIS[@]}"
+  for abi in "${abis[@]}"
   do
     echo "[*] Preparing environment for '$abi' ABI"
     workDir="$TMP_WORK_DIR/$abi"
@@ -199,7 +199,7 @@ oat2dex_repair() {
       # Boot classes have already been de-optimized. Just check against any ABI
       # to verify that is present (not all jars under framework are part of
       # boot.oat)
-      odexFound=$(find "$TMP_WORK_DIR/${ABIS[0]}/dex" -type f \
+      odexFound=$(find "$TMP_WORK_DIR/${abis[0]}/dex" -type f \
                   -iname "$pkgName*.dex" | wc -l | tr -d ' ')
     fi
     if [ "$odexFound" -eq 0 ]; then
@@ -213,7 +213,7 @@ oat2dex_repair() {
     else
       # If pre-compiled, de-optimize to original DEX bytecode
       deoptSuccess=false
-      for abi in "${ABIS[@]}"
+      for abi in "${abis[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ -f "$curOdex" ]; then
@@ -300,20 +300,20 @@ oat2dex_repair() {
 }
 
 oatdump_repair() {
-  local -a ABIS
-  local -a BOOTJARS
-  local _BASE_PATH
+  local -a abis
+  local -a bootJars
+  local _base_path
 
   if [[ "$(uname)" == "Darwin" ]]; then
-    _BASE_PATH="$(dirname "$OATDUMP_BIN")/.."
-    export DYLD_FALLBACK_LIBRARY_PATH=$_BASE_PATH/lib64:$_BASE_PATH/lib
+    _base_path="$(dirname "$OATDUMP_BIN")/.."
+    export DYLD_FALLBACK_LIBRARY_PATH=$_base_path/lib64:$_base_path/lib
   fi
 
   # Identify supported ABI(s) - extra work for 64bit ABIs
   for cpu in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$cpu/boot.art" ]; then
-      ABIS+=("$cpu")
+      abis+=("$cpu")
     fi
   done
 
@@ -322,8 +322,8 @@ oatdump_repair() {
   while read -r file
   do
     jarFile="$(basename "$file" | cut -d '-' -f2- | sed 's#.oat#.jar#')"
-    BOOTJARS+=("$jarFile")
-  done < <(find "$INPUT_DIR/framework/${ABIS[0]}" -iname "boot*.oat")
+    bootJars+=("$jarFile")
+  done < <(find "$INPUT_DIR/framework/${abis[0]}" -iname "boot*.oat")
 
   while read -r file
   do
@@ -350,7 +350,7 @@ oatdump_repair() {
     fi
 
     # If boot jar skip
-    if array_contains "$fileName" "${BOOTJARS[@]}"; then
+    if array_contains "$fileName" "${bootJars[@]}"; then
       continue
     fi
 
@@ -384,7 +384,7 @@ oatdump_repair() {
       # If bytecode compiled for more than one ABIs - only the first is kept
       # (shouldn't make any difference)
       deoptSuccess=false
-      for abi in "${ABIS[@]}"
+      for abi in "${abis[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ ! -f "$curOdex" ]; then
@@ -469,7 +469,7 @@ oatdump_repair() {
 }
 
 smali_repair() {
-  local -a ABIS
+  local -a abis
 
   check_ram_size
 
@@ -477,11 +477,11 @@ smali_repair() {
   for type in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
-      ABIS+=("$type")
+      abis+=("$type")
     fi
   done
 
-  for abi in "${ABIS[@]}"
+  for abi in "${abis[@]}"
   do
     echo "[*] Preparing environment for '$abi' ABI"
     workDir="$TMP_WORK_DIR/$abi"
@@ -544,7 +544,7 @@ smali_repair() {
 
       # If pre-compiled, de-optimize to original DEX bytecode
       deoptSuccess=false
-      for abi in "${ABIS[@]}"
+      for abi in "${abis[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ ! -f "$curOdex" ]; then

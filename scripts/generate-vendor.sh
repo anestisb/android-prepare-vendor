@@ -111,18 +111,18 @@ get_bootloader_ver() {
 }
 
 has_vendor_size() {
-  local SEARCH_FILE="$1/vendor_partition_size"
-  if [ -f "$SEARCH_FILE" ]; then
-    cat "$SEARCH_FILE"
+  local search_file="$1/vendor_partition_size"
+  if [ -f "$search_file" ]; then
+    cat "$search_file"
   else
     echo ""
   fi
 }
 
 read_invalid_symlink() {
-  local INBASE="$1"
-  local RELTARGET="$2"
-  ls -l "$INBASE/$RELTARGET" | sed -e 's/.* -> //'
+  local inBase="$1"
+  local relTarget="$2"
+  ls -l "$inBase/$relTarget" | sed -e 's/.* -> //'
 }
 
 array_contains() {
@@ -132,19 +132,19 @@ array_contains() {
 }
 
 copy_radio_files() {
-  local INDIR="$1"
-  local OUTDIR="$2"
+  local inDir="$1"
+  local outDir="$2"
 
-  mkdir -p "$OUTDIR/radio"
+  mkdir -p "$outDir/radio"
 
   if [[ "$RADIO_VER" != "" ]]; then
-    cp -a "$INDIR/radio/radio"* "$OUTDIR/radio/radio.img" || {
+    cp -a "$inDir/radio/radio"* "$outDir/radio/radio.img" || {
       echo "[-] Failed to copy radio image"
       abort 1
     }
   fi
 
-  cp -a "$INDIR/radio/bootloader"* "$OUTDIR/radio/bootloader.img" || {
+  cp -a "$inDir/radio/bootloader"* "$outDir/radio/bootloader.img" || {
     echo "[-] Failed to copy bootloader image"
     abort 1
   }
@@ -152,16 +152,16 @@ copy_radio_files() {
   if [ "$IS_PIXEL" = true ]; then
     for img in "${PIXEL_AB_PARTITIONS[@]}"
     do
-      cp "$INDIR/radio/$img.img" "$OUTDIR/radio/"
+      cp "$inDir/radio/$img.img" "$outDir/radio/"
     done
   fi
 }
 
 extract_blobs() {
-  local BLOBS_LIST="$1"
-  local INDIR="$2"
-  local OUTDIR_PROP="$3/proprietary"
-  local OUTDIR_VENDOR="$3/vendor"
+  local blobsList="$1"
+  local inDir="$2"
+  local outDir_prop="$3/proprietary"
+  local outDir_vendor="$3/vendor"
 
   local src="" dst="" dstDir="" outBase="" openTag=""
 
@@ -176,12 +176,12 @@ extract_blobs() {
 
     # Special handling if source file is a symbolic link. Additional rules
     # will be handled later when unified Android.mk is created
-    if [[ -L "$INDIR/$src" ]]; then
+    if [[ -L "$inDir/$src" ]]; then
       if [[ "$dst" != "$src" ]]; then
         echo "[-] Symbolic links cannot have their destination path altered"
         abort 1
       fi
-      symLinkSrc="$(read_invalid_symlink "$INDIR" "$src")"
+      symLinkSrc="$(read_invalid_symlink "$inDir" "$src")"
       if [[ "$symLinkSrc" != /* ]]; then
         symLinkSrc="/$(dirname "$src")/$symLinkSrc"
       fi
@@ -191,16 +191,16 @@ extract_blobs() {
       continue
     fi
 
-    # Files under /system go to $OUTDIR_PROP, while files from /vendor
-    # to $OUTDIR_VENDOR
+    # Files under /system go to $outDir_prop, while files from /vendor
+    # to $outDir_vendor
     if [[ $src == system/* ]]; then
-      outBase=$OUTDIR_PROP
+      outBase=$outDir_prop
       dst=$(echo "$dst" | sed 's#^system/##')
     elif [[ $src == vendor/* ]]; then
-      outBase=$OUTDIR_VENDOR
+      outBase=$outDir_vendor
       dst=$(echo "$dst" | sed 's#^vendor/##')
     else
-      echo "[-] Invalid path detected at '$BLOBS_LIST' ($src)"
+      echo "[-] Invalid path detected at '$blobsList' ($src)"
       abort 1
     fi
 
@@ -209,7 +209,7 @@ extract_blobs() {
     if [ ! -d "$outBase/$dstDir" ]; then
       mkdir -p "$outBase/$dstDir"
     fi
-    cp -a "$INDIR/$src" "$outBase/$dst" || {
+    cp -a "$inDir/$src" "$outBase/$dst" || {
       echo "[-] Failed to copy '$src'"
       abort 1
     }
@@ -224,14 +224,14 @@ extract_blobs() {
         rm "$TMP_WORK_DIR/xml_fixup.tmp"
       fi
     fi
-  done < <(grep -Ev '(^#|^$)' "$BLOBS_LIST")
+  done < <(grep -Ev '(^#|^$)' "$blobsList")
 }
 
 update_vendor_blobs_mk() {
-  local BLOBS_LIST="$1"
+  local blobsList="$1"
 
-  local RELDIR_PROP="vendor/$VENDOR_DIR/$DEVICE/proprietary"
-  local RELDIR_VENDOR="vendor/$VENDOR_DIR/$DEVICE/vendor"
+  local relDir_prop="vendor/$VENDOR_DIR/$DEVICE/proprietary"
+  local relDir_vendor="vendor/$VENDOR_DIR/$DEVICE/vendor"
 
   local src="" srcRelDir="" dst="" dstRelDir="" fileExt=""
 
@@ -266,13 +266,13 @@ update_vendor_blobs_mk() {
 
     # Adjust prefixes for relative dirs of src & dst files
     if [[ $src == system/* ]]; then
-      srcRelDir=$RELDIR_PROP
+      srcRelDir=$relDir_prop
       src=$(echo "$src" | sed 's#^system/##')
     elif [[ $src == vendor/* ]]; then
-      srcRelDir=$RELDIR_VENDOR
+      srcRelDir=$relDir_vendor
       src=$(echo "$src" | sed 's#^vendor/##')
     else
-      echo "[-] Invalid src path detected at '$BLOBS_LIST'"
+      echo "[-] Invalid src path detected at '$blobsList'"
       abort 1
     fi
     if [[ $dst == system/* ]]; then
@@ -282,12 +282,12 @@ update_vendor_blobs_mk() {
       dstRelDir='$(TARGET_COPY_OUT_VENDOR)'
       dst=$(echo "$dst" | sed 's#^vendor/##')
     else
-      echo "[-] Invalid dst path detected at '$BLOBS_LIST'"
+      echo "[-] Invalid dst path detected at '$blobsList'"
       abort 1
     fi
 
     echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$DEVICE_VENDOR_BLOBS_MK"
-  done < <(grep -Ev '(^#|^$)' "$BLOBS_LIST")
+  done < <(grep -Ev '(^#|^$)' "$blobsList")
 
   strip_trail_slash_from_file "$DEVICE_VENDOR_BLOBS_MK"
 }
@@ -353,12 +353,12 @@ gen_board_vendor_mk() {
 }
 
 gen_board_cfg_mk() {
-  local INDIR="$1"
+  local inDir="$1"
   local v_img_sz
 
   # First lets check if vendor partition size has been extracted from
   # previous data extraction script
-  v_img_sz="$(has_vendor_size "$INDIR")"
+  v_img_sz="$(has_vendor_size "$inDir")"
   if [[ "$v_img_sz" == "" ]]; then
     echo "[-] Unknown vendor image size for '$DEVICE' device"
     abort 1
@@ -393,8 +393,8 @@ gen_board_family_cfg_mk() {
 }
 
 gen_board_info_txt() {
-  local OUTDIR="$1"
-  local OUTTXT="$OUTDIR/vendor-board-info.txt"
+  local outDir="$1"
+  local outTxt="$outDir/vendor-board-info.txt"
 
   {
     echo "require board=$DEVICE"
@@ -402,14 +402,14 @@ gen_board_info_txt() {
     if [[ "$RADIO_VER" != "" ]]; then
       echo "require version-baseband=$RADIO_VER"
     fi
-  } > "$OUTTXT"
+  } > "$outTxt"
 }
 
 zip_needs_resign() {
-  local INFILE="$1"
+  local inFile="$1"
   local output
 
-  output=$(jarsigner -verify "$INFILE" 2>&1 || abort 1)
+  output=$(jarsigner -verify "$inFile" 2>&1 || abort 1)
   if [[ "$output" =~ .*"contains unsigned entries".* ]]; then
     return 0
   else
@@ -418,21 +418,21 @@ zip_needs_resign() {
 }
 
 gen_apk_dso_symlink() {
-  local DSO_NAME=$1
-  local DSO_MNAME=$2
-  local DSO_ROOT=$3
-  local APK_DIR=$4
-  local DSO_ABI=$5
+  local dso_name=$1
+  local dso_mName=$2
+  local dso_root=$3
+  local apk_dir=$4
+  local dso_abi=$5
 
   echo ""
   echo "include \$(CLEAR_VARS)"
-  echo "LOCAL_MODULE := $DSO_MNAME"
+  echo "LOCAL_MODULE := $dso_mName"
   echo "LOCAL_MODULE_CLASS := FAKE"
   echo "LOCAL_MODULE_TAGS := optional"
   echo "LOCAL_MODULE_OWNER := $VENDOR"
   echo 'include $(BUILD_SYSTEM)/base_rules.mk'
-  echo "\$(LOCAL_BUILT_MODULE): TARGET := $DSO_ROOT/$DSO_NAME"
-  echo "\$(LOCAL_BUILT_MODULE): SYMLINK := $APK_DIR/lib/$DSO_ABI/$DSO_NAME"
+  echo "\$(LOCAL_BUILT_MODULE): TARGET := $dso_root/$dso_name"
+  echo "\$(LOCAL_BUILT_MODULE): SYMLINK := $apk_dir/lib/$dso_abi/$dso_name"
   echo "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
   echo "\$(LOCAL_BUILT_MODULE):"
   echo "\t\$(hide) mkdir -p \$(dir \$@)"
@@ -444,10 +444,9 @@ gen_apk_dso_symlink() {
 }
 
 gen_standalone_symlinks() {
-  local INDIR="$1"
-  local OUTBASE="$2"
+  local inDir="$1"
 
-  local -a PKGS_SSLINKS
+  local -a pkgs_SSLinks
   local pkgName=""
   local cnt
 
@@ -476,7 +475,7 @@ gen_standalone_symlinks() {
     else
       pkgName=$(basename "$link")
     fi
-    PKGS_SSLINKS+=("$pkgName")
+    pkgs_SSLinks+=("$pkgName")
 
     {
       echo -e "\ninclude \$(CLEAR_VARS)"
@@ -498,11 +497,11 @@ gen_standalone_symlinks() {
     } >> "$ANDROID_MK"
   done
 
-  if [ ! -z "${PKGS_SSLINKS-}" ]; then
+  if [ ! -z "${pkgs_SSLinks-}" ]; then
     {
       echo "# Standalone symbolic links"
       echo 'PRODUCT_PACKAGES += \'
-      for module in "${PKGS_SSLINKS[@]}"
+      for module in "${pkgs_SSLinks[@]}"
       do
         echo "    $module \\"
       done
@@ -512,28 +511,28 @@ gen_standalone_symlinks() {
 }
 
 gen_mk_for_bytecode() {
-  local INDIR="$1"
-  local RELROOT="$2"
-  local RELSUBROOT="$3"
-  local OUTBASE="$4"
-  local -a PKGS
-  local -a PKGS_SLINKS
+  local inDir="$1"
+  local relRoot="$2"
+  local relSubRoot="$3"
+  local outBase="$4"
+  local -a pkgs
+  local -a pkgs_SLinks
 
   local origin="" zipName="" fileExt="" pkgName="" src="" class="" suffix=""
   local priv="" cert="" stem="" lcMPath="" appDir="" dsoRootBase="" dsoRoot=""
   local dsoName="" dsoMName="" arch="" apk_lib_slinks=""
 
   # Set module path (output)
-  if [[ "$RELROOT" == "vendor" ]]; then
-    origin="$INDIR/vendor/$RELSUBROOT"
-    lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_VENDOR)/$RELSUBROOT"
+  if [[ "$relRoot" == "vendor" ]]; then
+    origin="$inDir/vendor/$relSubRoot"
+    lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_VENDOR)/$relSubRoot"
     dsoRootBase="/vendor"
-  elif [[ "$RELROOT" == "proprietary" ]]; then
-    origin="$INDIR/system/$RELSUBROOT"
-    lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_SYSTEM)/$RELSUBROOT"
+  elif [[ "$relRoot" == "proprietary" ]]; then
+    origin="$inDir/system/$relSubRoot"
+    lcMPath="\$(PRODUCT_OUT)/\$(TARGET_COPY_OUT_SYSTEM)/$relSubRoot"
     dsoRootBase="/system"
   else
-    echo "[-] Invalid '$RELDIR' relative directory"
+    echo "[-] Invalid '$relRoot' relative directory"
     abort 1
   fi
 
@@ -547,18 +546,18 @@ gen_mk_for_bytecode() {
 
     # Adjust APK/JAR specifics
     if [[ "$fileExt" == "jar" ]]; then
-      src="$RELROOT/$RELSUBROOT/$zipName"
+      src="$relRoot/$relSubRoot/$zipName"
       class='JAVA_LIBRARIES'
       suffix='$(COMMON_JAVA_PACKAGE_SUFFIX)'
     elif [[ "$fileExt" == "apk" ]]; then
-      src="$RELROOT/$RELSUBROOT/$pkgName/$zipName"
+      src="$relRoot/$relSubRoot/$pkgName/$zipName"
       class='APPS'
       suffix='$(COMMON_ANDROID_PACKAGE_SUFFIX)'
       stem="package.apk"
     fi
 
     # Annotate extra privileges when required
-    if [[ "$RELSUBROOT" == "priv-app" ]]; then
+    if [[ "$relSubRoot" == "priv-app" ]]; then
       priv='LOCAL_PRIVILEGED_MODULE := true'
     fi
 
@@ -577,7 +576,7 @@ gen_mk_for_bytecode() {
 
     # Some defensive checks in case configuration files are not aligned with the
     # existing assumptions about the signing entities
-    if [[ "$RELSUBROOT" == "priv-app" && "$RELROOT" == "vendor" ]]; then
+    if [[ "$relSubRoot" == "priv-app" && "$relRoot" == "vendor" ]]; then
       echo "[-] Privileged modules under /vendor/priv-app are not supported"
       abort 1
     fi
@@ -587,7 +586,7 @@ gen_mk_for_bytecode() {
       # Self-contained native libraries are copied across utilizing PRODUCT_COPY_FILES
       while read -r lib
       do
-        echo "$lib" | sed "s#$INDIR/##" >> "$RUNTIME_EXTRA_BLOBS_LIST"
+        echo "$lib" | sed "s#$inDir/##" >> "$RUNTIME_EXTRA_BLOBS_LIST"
       done < <(find "$appDir/lib" -type f -iname '*.so')
 
       # Some prebuilt APKs have also prebuilt JNI libs that are stored under
@@ -608,7 +607,7 @@ gen_mk_for_bytecode() {
         fi
 
         # Generate symlink fake rule & cache module_names to append later to vendor mk
-        PKGS_SLINKS+=("$dsoMName")
+        pkgs_SLinks+=("$dsoMName")
         apk_lib_slinks+="$(gen_apk_dso_symlink "$dsoName" "$dsoMName" "$dsoRoot" \
                            "$lcMPath/$pkgName" "$arch")"
       done < <(find -L "$appDir/lib" -type l -iname '*.so')
@@ -628,7 +627,7 @@ gen_mk_for_bytecode() {
       if [[ "$apk_lib_slinks" != "" ]]; then
         # Force symlink modules dependencies to avoid omissions from wrong cleans
         # for pre-ninja build envs
-        echo "LOCAL_REQUIRED_MODULES := ${PKGS_SLINKS[@]}"
+        echo "LOCAL_REQUIRED_MODULES := ${pkgs_SLinks[@]}"
       fi
       echo "LOCAL_CERTIFICATE := $cert"
       echo "LOCAL_MODULE_CLASS := $class"
@@ -657,15 +656,15 @@ gen_mk_for_bytecode() {
     } >> "$ANDROID_MK"
 
     # Also add pkgName to runtime array to append later the vendor mk
-    PKGS+=("$pkgName")
-  done < <(find "$OUTBASE/$RELROOT/$RELSUBROOT" -maxdepth 2 \
+    pkgs+=("$pkgName")
+  done < <(find "$outBase/$relRoot/$relSubRoot" -maxdepth 2 \
            -type f -iname '*.apk' -o -iname '*.jar' | sort)
 
   # Update vendor mk
   {
-    echo "# Prebuilt APKs/JARs from '$RELROOT/$RELSUBROOT'"
+    echo "# Prebuilt APKs/JARs from '$relRoot/$relSubRoot'"
     echo 'PRODUCT_PACKAGES += \'
-    for pkg in "${PKGS[@]}"
+    for pkg in "${pkgs[@]}"
     do
       echo "    $pkg \\"
     done
@@ -673,11 +672,11 @@ gen_mk_for_bytecode() {
   strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
 
   # Update vendor mk again with symlink modules if present
-  if [ ! -z "${PKGS_SLINKS-}" ]; then
+  if [ ! -z "${pkgs_SLinks-}" ]; then
     {
-      echo "# Prebuilt APKs libs symlinks from '$RELROOT/$RELSUBROOT'"
+      echo "# Prebuilt APKs libs symlinks from '$relRoot/$relSubRoot'"
       echo 'PRODUCT_PACKAGES += \'
-      for module in "${PKGS_SLINKS[@]}"
+      for module in "${pkgs_SLinks[@]}"
       do
         echo "    $module \\"
       done
@@ -687,11 +686,11 @@ gen_mk_for_bytecode() {
 }
 
 gen_mk_for_shared_libs() {
-  local INDIR="$1"
-  local OUTBASE="$2"
+  local inDir="$1"
+  local outBase="$2"
 
-  local -a PKGS
-  local -a MULTIDSO
+  local -a pkgs
+  local -a multiDSO
   local dsoModule curFile
 
   # First iterate the 64bit libs to detect possible dual target modules
@@ -702,7 +701,7 @@ gen_mk_for_shared_libs() {
       continue
     fi
 
-    curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
+    curFile="$outBase/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
 
     # Check that configuration requested file exists
     if [ ! -f "$curFile" ]; then
@@ -712,7 +711,7 @@ gen_mk_for_shared_libs() {
 
     local dsoRelRoot="" dso32RelRoot="" dsoFile="" dsoName="" dsoSrc="" dso32Src=""
 
-    dsoRelRoot=$(dirname "$curFile" | sed "s#$OUTBASE/##")
+    dsoRelRoot=$(dirname "$curFile" | sed "s#$outBase/##")
     dsoFile=$(basename "$curFile")
     dsoName=$(basename "$curFile" ".so")
     dsoSrc="$dsoRelRoot/$dsoFile"
@@ -735,13 +734,13 @@ gen_mk_for_shared_libs() {
       fi
 
       # In case 32bit version present - upgrade to dual target
-      if [ -f "$OUTBASE/$dso32Src" ]; then
+      if [ -f "$outBase/$dso32Src" ]; then
         echo "LOCAL_MULTILIB := both"
         echo "LOCAL_SRC_FILES_32 := $dso32Src"
 
         # Cache dual-targets so that we don't include again when searching for
         # 32bit only libs under a 64bit system
-        MULTIDSO+=("$dso32Src")
+        multiDSO+=("$dso32Src")
       else
         echo "LOCAL_MULTILIB := first"
       fi
@@ -750,7 +749,7 @@ gen_mk_for_shared_libs() {
     } >> "$ANDROID_MK"
 
     # Also add pkgName to runtime array to append later the vendor mk
-    PKGS+=("$dsoName")
+    pkgs+=("$dsoName")
   done
 
   # Then iterate the 32bit libs excluding the ones already included as dual targets
@@ -761,7 +760,7 @@ gen_mk_for_shared_libs() {
       continue
     fi
 
-    curFile="$OUTBASE/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
+    curFile="$outBase/$(echo "$dsoModule" | sed "s#system/#proprietary/#")"
 
     # Check that configuration requested file exists
     if [ ! -f "$curFile" ]; then
@@ -771,13 +770,13 @@ gen_mk_for_shared_libs() {
 
     local dsoRelRoot="" dsoFile="" dsoName="" dsoSrc=""
 
-    dsoRelRoot=$(dirname "$curFile" | sed "s#$OUTBASE/##")
+    dsoRelRoot=$(dirname "$curFile" | sed "s#$outBase/##")
     dsoFile=$(basename "$curFile")
     dsoName=$(basename "$curFile" ".so")
     dsoSrc="$dsoRelRoot/$dsoFile"
 
-    if [ ! -z "${MULTIDSO-}" ]; then
-      if array_contains "$dsoSrc" "${MULTIDSO[@]}"; then
+    if [ ! -z "${multiDSO-}" ]; then
+      if array_contains "$dsoSrc" "${multiDSO[@]}"; then
         continue
       fi
     fi
@@ -801,15 +800,15 @@ gen_mk_for_shared_libs() {
     } >> "$ANDROID_MK"
 
     # Also add pkgName to runtime array to append later the vendor mk
-    PKGS+=("$dsoName")
+    pkgs+=("$dsoName")
   done
 
   # Update vendor mk
-  if [ ! -z "${PKGS-}" ]; then
+  if [ ! -z "${pkgs-}" ]; then
     {
       echo "# Prebuilt shared libraries"
       echo 'PRODUCT_PACKAGES += \'
-      for pkg in "${PKGS[@]}"
+      for pkg in "${pkgs[@]}"
       do
         echo "    $pkg \\"
       done
@@ -864,7 +863,7 @@ gen_android_mk() {
 
   if [ "$HAS_STANDALONE_SLINKS" = true ]; then
     echo "[*] Processing standalone symlinks"
-    gen_standalone_symlinks "$INPUT_DIR" "$OUTPUT_VENDOR"
+    gen_standalone_symlinks "$INPUT_DIR"
   fi
 
   # Iterate over directories with shared libraries and update the unified Android.mk file
@@ -889,20 +888,20 @@ gen_android_mk() {
 }
 
 strip_trail_slash_from_file() {
-  local INFILE="$1"
+  local inFile="$1"
 
-  sed '$s# \\#\'$'\n#' "$INFILE" > "$INFILE.tmp"
-  mv "$INFILE.tmp" "$INFILE"
+  sed '$s# \\#\'$'\n#' "$inFile" > "$inFile.tmp"
+  mv "$inFile.tmp" "$inFile"
 }
 
 gen_sigs_file() {
-  local INDIR="$1"
-  local SIGSFILE="$INDIR/file_signatures.txt"
-  > "$SIGSFILE"
+  local inDir="$1"
+  local sigsFile="$inDir/file_signatures.txt"
+  > "$sigsFile"
 
-  find "$INDIR" -type f ! -name "file_signatures.txt" | sort | while read -r file
+  find "$inDir" -type f ! -name "file_signatures.txt" | sort | while read -r file
   do
-    shasum -a1 "$file" | sed "s#$INDIR/##" >> "$SIGSFILE"
+    shasum -a1 "$file" | sed "s#$inDir/##" >> "$sigsFile"
   done
 }
 

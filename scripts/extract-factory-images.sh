@@ -47,104 +47,104 @@ command_exists() {
 }
 
 extract_archive() {
-  local IN_ARCHIVE="$1"
-  local OUT_DIR="$2"
+  local in_archive="$1"
+  local out_dir="$2"
   local archiveFile
 
-  echo "[*] Extracting '$IN_ARCHIVE'"
+  echo "[*] Extracting '$in_archive'"
 
-  archiveFile="$(basename "$IN_ARCHIVE")"
-  local F_EXT="${archiveFile#*.}"
-  if [[ "$F_EXT" == "tar" || "$F_EXT" == "tar.gz" || "$F_EXT" == "tgz" ]]; then
-    tar -xf "$IN_ARCHIVE" -C "$OUT_DIR" || { echo "[-] tar extract failed"; abort 1; }
-  elif [[ "$F_EXT" == "zip" ]]; then
-    unzip -qq "$IN_ARCHIVE" -d "$OUT_DIR" || { echo "[-] zip extract failed"; abort 1; }
+  archiveFile="$(basename "$in_archive")"
+  local f_ext="${archiveFile#*.}"
+  if [[ "$f_ext" == "tar" || "$f_ext" == "tar.gz" || "$f_ext" == "tgz" ]]; then
+    tar -xf "$in_archive" -C "$out_dir" || { echo "[-] tar extract failed"; abort 1; }
+  elif [[ "$f_ext" == "zip" ]]; then
+    unzip -qq "$in_archive" -d "$out_dir" || { echo "[-] zip extract failed"; abort 1; }
   else
-    echo "[-] Unknown archive format '$F_EXT'"
+    echo "[-] Unknown archive format '$f_ext'"
     abort 1
   fi
 }
 
 extract_vendor_partition_size() {
-  local VENDOR_IMG_RAW="$1"
-  local OUT_FILE="$2/vendor_partition_size"
+  local vendor_img_raw="$1"
+  local out_file="$2/vendor_partition_size"
   local size=""
 
   if [[ "$(uname)" == "Darwin" ]]; then
-    size="$(stat -f %z "$VENDOR_IMG_RAW")"
+    size="$(stat -f %z "$vendor_img_raw")"
   else
-    size="$(du -b "$VENDOR_IMG_RAW" | tr '\t' ' ' | cut -d' ' -f1)"
+    size="$(du -b "$vendor_img_raw" | tr '\t' ' ' | cut -d' ' -f1)"
   fi
 
   if [[ "$size" == "" ]]; then
-    echo "[!] Failed to extract vendor partition size from '$VENDOR_IMG_RAW'"
+    echo "[!] Failed to extract vendor partition size from '$vendor_img_raw'"
     abort 1
   fi
 
   # Write to file so that 'generate-vendor.sh' can pick the value
   # for BoardConfigVendor makefile generation
-  echo "$size" > "$OUT_FILE"
+  echo "$size" > "$out_file"
 }
 
 mount_darwin() {
-  local IMGFILE="$1"
-  local MOUNTPOINT="$2"
-  local MOUNT_LOG="$TMP_WORK_DIR/mount.log"
-  local -a OSXFUSE_VER
-  local readonly OS_MAJOR_VER
+  local imgFile="$1"
+  local mountPoint="$2"
+  local mount_log="$TMP_WORK_DIR/mount.log"
+  local -a osxfuse_ver
+  local readonly os_major_ver
 
-  OS_MAJOR_VER="$(sw_vers -productVersion | cut -d '.' -f2)"
-  if [ "$OS_MAJOR_VER" -ge 12 ]; then
+  os_major_ver="$(sw_vers -productVersion | cut -d '.' -f2)"
+  if [ "$os_major_ver" -ge 12 ]; then
     # If Sierra and above, check that latest supported (3.5.4) osxfuse version is installed
-    local readonly OSXFUSE_PLIST="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
-    IFS='.' read -r -a OSXFUSE_VER <<< "$(grep '<key>CFBundleVersion</key>' -A1 "$OSXFUSE_PLIST" | \
+    local readonly osxfuse_plist="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
+    IFS='.' read -r -a osxfuse_ver <<< "$(grep '<key>CFBundleVersion</key>' -A1 "$osxfuse_plist" | \
       grep -o '<string>.*</string>' | cut -d '>' -f2 | cut -d '<' -f1)"
 
-    if [[ ("${OSXFUSE_VER[0]}" -lt 3 ) || \
-          ("${OSXFUSE_VER[0]}" -eq 3 && "${OSXFUSE_VER[1]}" -lt 5) || \
-          ("${OSXFUSE_VER[0]}" -eq 3 && "${OSXFUSE_VER[1]}" -eq 5 && "${OSXFUSE_VER[2]}" -lt 4) ]]; then
-      echo "[!] Detected osxfuse version is '$(echo  ${OSXFUSE_VER[@]} | tr ' ' '.')'"
+    if [[ ("${osxfuse_ver[0]}" -lt 3 ) || \
+          ("${osxfuse_ver[0]}" -eq 3 && "${osxfuse_ver[1]}" -lt 5) || \
+          ("${osxfuse_ver[0]}" -eq 3 && "${osxfuse_ver[1]}" -eq 5 && "${osxfuse_ver[2]}" -lt 4) ]]; then
+      echo "[!] Detected osxfuse version is '$(echo  ${osxfuse_ver[@]} | tr ' ' '.')'"
       echo "[-] Update to latest or disable the check if you know that you're doing"
       abort 1
     fi
   fi
 
-  fuse-ext2 -o uid=$EUID,ro "$IMGFILE" "$MOUNTPOINT" &>"$MOUNT_LOG" || {
-    echo "[-] '$IMAGE_FILE' mount failed"
-    cat "$MOUNT_LOG"
+  fuse-ext2 -o uid=$EUID,ro "$imgFile" "$mountPoint" &>"$mount_log" || {
+    echo "[-] '$imgFile' mount failed"
+    cat "$mount_log"
     abort 1
   }
 }
 
 mount_linux() {
-  local IMGFILE="$1"
-  local MOUNTPOINT="$2"
-  local MOUNT_LOG="$TMP_WORK_DIR/mount.log"
-  fuse-ext2 -o uid=$EUID,ro "$IMGFILE" "$MOUNTPOINT" &>"$MOUNT_LOG" || {
-    echo "[-] '$IMAGE_FILE' mount failed"
-    cat "$MOUNT_LOG"
+  local imgFile="$1"
+  local mountPoint="$2"
+  local mount_log="$TMP_WORK_DIR/mount.log"
+  fuse-ext2 -o uid=$EUID,ro "$imgFile" "$mountPoint" &>"$mount_log" || {
+    echo "[-] '$imgFile' mount failed"
+    cat "$mount_log"
     abort 1
   }
 }
 
 extract_img_data() {
-  local IMAGE_FILE="$1"
-  local OUT_DIR="$2"
+  local image_file="$1"
+  local out_dir="$2"
 
-  if [ ! -d "$OUT_DIR" ]; then
-    mkdir -p "$OUT_DIR"
+  if [ ! -d "$out_dir" ]; then
+    mkdir -p "$out_dir"
   fi
 
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    debugfs -R "rdump / \"$OUT_DIR\"" "$IMAGE_FILE" &>/dev/null || {
-      echo "[-] Failed to extract data from '$IMAGE_FILE'"
+    debugfs -R "rdump / \"$out_dir\"" "$image_file" &>/dev/null || {
+      echo "[-] Failed to extract data from '$image_file'"
       abort 1
     }
   else
-    debugfs -R 'ls -p' "$IMAGE_FILE" 2>/dev/null | cut -d '/' -f6 | while read -r entry
+    debugfs -R 'ls -p' "$image_file" 2>/dev/null | cut -d '/' -f6 | while read -r entry
     do
-      debugfs -R "rdump \"$entry\" \"$OUT_DIR\"" "$IMAGE_FILE" &>/dev/null || {
-        echo "[-] Failed to extract data from '$IMAGE_FILE'"
+      debugfs -R "rdump \"$entry\" \"$out_dir\"" "$image_file" &>/dev/null || {
+        echo "[-] Failed to extract data from '$image_file'"
         abort 1
       }
     done
@@ -152,21 +152,21 @@ extract_img_data() {
 }
 
 mount_img() {
-  local IMAGE_FILE="$1"
-  local MOUNT_DIR="$2"
+  local image_file="$1"
+  local mount_dir="$2"
 
-  if [ ! -d "$MOUNT_DIR" ]; then
-    mkdir -p "$MOUNT_DIR"
+  if [ ! -d "$mount_dir" ]; then
+    mkdir -p "$mount_dir"
   fi
 
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    mount_darwin "$IMAGE_FILE" "$MOUNT_DIR"
+    mount_darwin "$image_file" "$mount_dir"
   else
-    mount_linux "$IMAGE_FILE" "$MOUNT_DIR"
+    mount_linux "$image_file" "$mount_dir"
   fi
 
-  if ! mount | grep -qs "$MOUNT_DIR"; then
-    echo "[-] '$IMAGE_FILE' mount point missing indicates fuse mount error"
+  if ! mount | grep -qs "$mount_dir"; then
+    echo "[-] '$image_file' mount point missing indicates fuse mount error"
     abort 1
   fi
 }
