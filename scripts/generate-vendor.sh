@@ -110,6 +110,16 @@ get_bootloader_ver() {
   echo "$bootloader_ver"
 }
 
+get_build_id() {
+  local build_id=""
+  build_id=$(grep 'ro.build.id' "$1" | cut -d '=' -f2 || true)
+  if [[ "$build_id" == "" ]]; then
+    echo "[-] Failed to identify BUILD_ID"
+    abort 1
+  fi
+  echo "$build_id"
+}
+
 has_vendor_size() {
   local search_file="$1/vendor_partition_size"
   if [ -f "$search_file" ]; then
@@ -1023,6 +1033,7 @@ VENDOR=$(get_vendor "$INPUT_DIR/system/build.prop")
 VENDOR_DIR="$VENDOR"
 RADIO_VER=$(get_radio_ver "$INPUT_DIR/system/build.prop")
 BOOTLOADER_VER=$(get_bootloader_ver "$INPUT_DIR/system/build.prop")
+BUILD_ID=$(get_build_id "$INPUT_DIR/system/build.prop")
 
 if [[ "$VENDOR" == "google" ]]; then
   VENDOR_DIR="google_devices"
@@ -1137,5 +1148,10 @@ fi
 # Generate file signatures list
 echo "[*] Generating signatures file"
 gen_sigs_file "$OUTPUT_VENDOR"
+
+# Can be used from AOSP build infrastructure to verify that build is performed
+# against a matching factory images vendor blobs extract
+echo "[*] Generating build_id file"
+echo "$BUILD_ID" > "$OUTPUT_VENDOR/build_id.txt"
 
 abort 0
