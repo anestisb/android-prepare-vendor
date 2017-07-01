@@ -157,10 +157,11 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.2.1 - TBC
+* 0.2.1 - 1 July 2017
   * Upgrade to smali/baksmali 2.2.1
   * Add support to maintain presigned APKs
   * Add missing AB partitions for Pixel OTA images
+  * Fixed Pixel TimeService bug by adding 'system/app/TimeService.apk' to extract list
 * 0.2.0 - 13 May 2017
   * Renamed GPlay configuration to Full configuration
   * Support for Pixel devices
