@@ -124,5 +124,6 @@ system/lib/libloc_eng.so
 system/lib/libminui.so
 system/lib/libmm-qcamera.so
 system/lib/libtinyxml.so
+system/lib/soundfx/libfmas.so
 system/usr/qfipsverify/bootimg.hmac
 system/usr/qfipsverify/qfipsverify.hmac
