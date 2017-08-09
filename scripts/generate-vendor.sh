@@ -479,11 +479,11 @@ gen_standalone_symlinks() {
     fi
 
     if [[ "$link" == *lib64/*.so ]]; then
-      pkgName="$(basename "$link" .so)_64.so"
+      pkgName="$(basename "$link" .so)_64.so__$(basename "${S_SLINKS_DST[$cnt]}")"
     elif [[ "$link" == *lib/*.so ]]; then
-      pkgName="$(basename "$link" .so)_32.so"
+      pkgName="$(basename "$link" .so)_32.so__$(basename "${S_SLINKS_DST[$cnt]}")"
     else
-      pkgName=$(basename "$link")
+      pkgName="$(basename "$link")__$(basename "${S_SLINKS_DST[$cnt]}")"
     fi
     pkgs_SSLinks+=("$pkgName")
 
