@@ -228,7 +228,7 @@ extract_blobs() {
     if [[ "${file##*.}" == "xml" ]]; then
       openTag=$(grep '^<?xml version' "$outBase/$dst" || true )
       if [[ "$openTag" != "" ]]; then
-        grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp"
+        grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp" || true
         echo "$openTag" > "$outBase/$dst"
         cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
         rm "$TMP_WORK_DIR/xml_fixup.tmp"
@@ -258,6 +258,10 @@ update_vendor_blobs_mk() {
       if array_contains "$file" "${DSO_MODULES[@]}"; then
         continue
       fi
+    fi
+
+    if [[ $file == vendor/etc/NOTICE.xml.gz ]]; then
+      continue
     fi
 
     # Skip standalone symbolic links if available
@@ -479,11 +483,11 @@ gen_standalone_symlinks() {
     fi
 
     if [[ "$link" == *lib64/*.so ]]; then
-      pkgName="$(basename "$link" .so)_64.so"
+      pkgName="$(basename "$link" .so)_64.so__$(basename "${S_SLINKS_DST[$cnt]}")"
     elif [[ "$link" == *lib/*.so ]]; then
-      pkgName="$(basename "$link" .so)_32.so"
+      pkgName="$(basename "$link" .so)_32.so__$(basename "${S_SLINKS_DST[$cnt]}")"
     else
-      pkgName=$(basename "$link")
+      pkgName="$(basename "$link")__$(basename "${S_SLINKS_DST[$cnt]}")"
     fi
     pkgs_SSLinks+=("$pkgName")
 
