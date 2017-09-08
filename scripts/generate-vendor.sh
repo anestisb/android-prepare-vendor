@@ -249,33 +249,33 @@ update_vendor_blobs_mk() {
 
   while read -r file
   do
-    # Skip files that have dedicated target module (APKs, JARs & selected shared libraries)
-    fileExt="${file##*.}"
-    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
-      continue
-    fi
-    if [[ "$HAS_DSO_MODULES" = true && "$fileExt" == "so" ]]; then
-      if array_contains "$file" "${DSO_MODULES[@]}"; then
-        continue
-      fi
-    fi
-
-    if [[ $file == vendor/etc/NOTICE.xml.gz ]]; then
-      continue
-    fi
-
-    # Skip standalone symbolic links if available
-    if [ "$HAS_STANDALONE_SLINKS" = true ]; then
-      if array_contains "$file" "${S_SLINKS_DST[@]}"; then
-        continue
-      fi
-    fi
-
     # Split the file from the destination (format is "file[:destination]")
     src=$(echo "$file" | cut -d ":" -f1)
     dst=$(echo "$file" | cut -d ":" -f2)
     if [[ "$dst" == "" ]]; then
       dst=$src
+    fi
+
+    # Skip files that have dedicated target module (APKs, JARs & selected shared libraries)
+    fileExt="${src##*.}"
+    if [[ "$fileExt" == "apk" || "$fileExt" == "jar" ]]; then
+      continue
+    fi
+    if [[ "$HAS_DSO_MODULES" = true && "$fileExt" == "so" ]]; then
+      if array_contains "$src" "${DSO_MODULES[@]}"; then
+        continue
+      fi
+    fi
+
+    if [[ "$src" == "vendor/etc/NOTICE.xml.gz" ]]; then
+      continue
+    fi
+
+    # Skip standalone symbolic links if available
+    if [ "$HAS_STANDALONE_SLINKS" = true ]; then
+      if array_contains "$src" "${S_SLINKS_DST[@]}"; then
+        continue
+      fi
     fi
 
     # Adjust prefixes for relative dirs of src & dst files
