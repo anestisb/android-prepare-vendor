@@ -61,13 +61,14 @@ cat <<_EOF
       --smali      : [OPTIONAL] Force use of smali/baksmali to revert preoptimized bytecode
       --smaliex    : [OPTIONAL] Force use of smaliEx to revert preoptimized bytecode [DEPRECATED]
       --deodex-all : [OPTIONAL] De-optimize all packages under /system
-      --debugfs    : [EXPERIMENTAL] Use debugfs instead of default fuse-ext2, to extract image files data
+      --debugfs    : [OPTIONAL] Use debugfs instead of default fuse-ext2, to extract image files data
 
     INFO:
       * Default configuration is naked. Use "-f|--full" if you plan to install Google Play Services
         or you have issues with some carriers
       * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method
         If you need something on the top of defaults, you can select manually.
+      * Until fuse-ext2 problems are resolved for Linux workstations, `--debugfs` is used by default
 _EOF
   abort 1
 }
@@ -178,6 +179,9 @@ if [[ "$HOST_OS" == "Darwin" ]]; then
 else
   SYS_TOOLS+=("fusermount")
   _UMOUNT="fusermount -u"
+
+  # Until fuse-ext2 problems are resolved for Linux, use debugfs by default
+  USE_DEBUGFS=true
 fi
 
 # Check that system tools exist
