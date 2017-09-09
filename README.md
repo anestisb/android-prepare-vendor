@@ -140,14 +140,14 @@ be appended at master vendor `Android.mk`.
 
 
 ## Supported devices
-| Device                          | API 23                      | API 24           | API 25           |
-| ------------------------------- | --------------------------- | -----------------| -----------------|
-| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
-| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
-| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
-| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali |
-| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali |
-| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali |
+| Device                          | API 23                      | API 24           | API 25           | API 26           |
+| ------------------------------- | --------------------------- | -----------------| -----------------| -----------------|
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under development|
+| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under development|
+| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
+| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
+| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | Under testing    |
+| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | Under testing    |
 
 Please check existing [issues](https://github.com/anestisb/android-prepare-vendor/issues)
 before reporting new ones
@@ -157,6 +157,8 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.3.0 - TBC
+  * Initial support for Android Oreo (API-26): Pixel, Pixel XL
 * 0.2.1 - 1 July 2017
   * Upgrade to smali/baksmali 2.2.1
   * Add support to maintain presigned APKs
