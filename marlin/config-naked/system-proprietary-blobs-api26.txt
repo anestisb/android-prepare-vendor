@@ -19,6 +19,5 @@ system/lib64/vendor.qti.atcmdfwd@1.0.so
 system/lib64/vendor.qti.qcril.am@1.0.so
 system/lib/libaptX_encoder.so
 system/lib/libaptXHD_encoder.so
-system/lib/libclcore_neon.bc
 system/lib/libion.so
 system/lib/libminui.so
