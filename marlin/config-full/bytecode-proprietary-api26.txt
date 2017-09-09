@@ -34,5 +34,8 @@ system/priv-app/VzwLcSilent/VzwLcSilent.apk
 system/priv-app/VzwOmaTrigger/VzwOmaTrigger.apk
 system/framework/VerizonUnifiedSettings.jar
 
+# Wifi Calling
+system/app/PresencePolling/PresencePolling.apk
+
 # GApps
 system/priv-app/HotwordEnrollmentWCD9335/HotwordEnrollmentWCD9335.apk::PRESIGNED
