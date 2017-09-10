@@ -173,7 +173,9 @@ oat2dex_repair() {
 
     # If not APK/jar file, copy as is
     if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
-      cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      cp -a "$file" "$OUTPUT_SYS/$relDir/" || {
+        echo "[!] Failed to copy '$relFile' - skipping"
+      }
       continue
     fi
 
@@ -345,7 +347,9 @@ oatdump_repair() {
 
     # If not APK/jar file, copy as is
     if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
-      cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      cp -a "$file" "$OUTPUT_SYS/$relDir/" || {
+        echo "[!] Failed to copy '$relFile' - skipping"
+      }
       continue
     fi
 
@@ -508,7 +512,9 @@ smali_repair() {
 
     # If not APK/jar file, copy as is
     if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
-      cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      cp -a "$file" "$OUTPUT_SYS/$relDir/" || {
+        echo "[!] Failed to copy '$relFile' - skipping"
+      }
       continue
     fi
 
