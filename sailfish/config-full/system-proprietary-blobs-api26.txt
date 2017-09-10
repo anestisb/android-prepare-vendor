@@ -13,13 +13,17 @@ system/etc/firmware/wcd9320/wcd9320_mbhc.bin
 system/etc/old-apns-conf.xml
 system/etc/permissions/com.android.ims.rcsmanager.xml
 system/etc/permissions/com.android.omadm.service.xml
+system/etc/permissions/com.android.sdm.plugins.connmo.xml
+system/etc/permissions/com.android.sdm.plugins.sprintdm.xml
 system/etc/permissions/com.android.vzwomatrigger.xml
+system/etc/permissions/com.customermobile.preload.vzw.xml
 system/etc/permissions/com.verizon.apn.xml
 system/etc/permissions/com.verizon.embms.xml
 system/etc/permissions/com.verizon.llkagent.xml
 system/etc/permissions/com.verizon.provider.xml
 system/etc/permissions/com.verizon.services.xml
 system/etc/permissions/obdm_permissions.xml
+system/etc/permissions/privapp-permissions-google.xml
 system/etc/permissions/privapp-permissions-marlin.xml
 system/etc/permissions/vzw_sso_permissions.xml
 system/etc/sysconfig/dialer_experience.xml
