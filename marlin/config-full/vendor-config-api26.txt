@@ -1,8 +1,1 @@
 # Additional flags to be inserted at generated BoardConfigVendor.mk
-
-# Enable back dm-verity verify for /vendor partition. This hack is to
-# effectively override the results of the following commit in AOSP
-# https://android.googlesource.com/device/google/marlin/+/062dfea3bd94177f7e24f7b08b4edce4006ae9b6
-PRODUCT_COPY_FILES := \
-    device/google/marlin/fstab.common:root/fstab.marlin \
-    $(PRODUCT_COPY_FILES)
