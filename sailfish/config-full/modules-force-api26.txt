@@ -1,3 +1,4 @@
 com.android.ims.rcsmanager
+nanotool
 PresencePolling
 RcsService

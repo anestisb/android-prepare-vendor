@@ -1,5 +1,4 @@
 system/bin/mct-unit-test-app
-system/bin/nanotool
 system/bin/pktlogconf
 system/bin/qmi_simple_ril_test
 system/bin/test_bet_8996
