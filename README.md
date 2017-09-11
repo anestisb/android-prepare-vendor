@@ -79,7 +79,7 @@ Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
 
 ## Supported bytecode de-optimization methods
-### oatdump (Default for API-24 or `--oatdump` flag)
+### oatdump (Default for API >= 24 or `--oatdump` flag)
 Use oatdump host tool (`platform/art` project from AOSP) to extract DEX bytecode from OAT's
 ELF `.rodata` section. Extracted DEX is not identical to original since DEX-to-DEX compiler
 transformations have already been applied when code was pre-optimized
@@ -158,7 +158,7 @@ target device before any pull request.
 
 ## Change Log
 * 0.3.0 - TBC
-  * Initial support for Android Oreo (API-26): Pixel, Pixel XL
+  * Initial support for Android Oreo (API-26): Pixel, Pixel XL, Nexus 6p, Nexus 5x
 * 0.2.1 - 1 July 2017
   * Upgrade to smali/baksmali 2.2.1
   * Add support to maintain presigned APKs
