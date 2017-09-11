@@ -10,7 +10,6 @@ system/etc/firmware/wcd9320/wcd9320_anc.bin
 system/etc/firmware/wcd9320/wcd9320_mad_audio.bin
 system/etc/firmware/wcd9320/wcd9320_mbhc.bin
 system/etc/old-apns-conf.xml
-system/etc/permissions/com.android.ims.rcsmanager.xml
 system/etc/permissions/com.android.omadm.service.xml
 system/etc/permissions/com.android.sdm.plugins.connmo.xml
 system/etc/permissions/com.android.sdm.plugins.sprintdm.xml
