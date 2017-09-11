@@ -564,7 +564,11 @@ gen_mk_for_bytecode() {
       class='JAVA_LIBRARIES'
       suffix='$(COMMON_JAVA_PACKAGE_SUFFIX)'
     elif [[ "$fileExt" == "apk" ]]; then
-      src="$relRoot/$relSubRoot/$pkgName/$zipName"
+      if [ -d "$outBase/$relRoot/$relSubRoot/$pkgName" ]; then
+        src="$relRoot/$relSubRoot/$pkgName/$zipName"
+      else
+        src="$relRoot/$relSubRoot/$zipName"
+      fi
       class='APPS'
       suffix='$(COMMON_ANDROID_PACKAGE_SUFFIX)'
       stem="package.apk"
@@ -659,6 +663,11 @@ gen_mk_for_bytecode() {
         echo "LOCAL_MULTILIB := both"
       elif [[ -d "$appDir/oat/arm" || -d "$appDir/oat/x86" ]]; then
         echo "LOCAL_MULTILIB := 32"
+      fi
+
+      # Overlay APKs should only contain resource files
+      if [[ "$relSubRoot" =~ ^overlay/.* ]]; then
+        echo "LOCAL_IS_RUNTIME_RESOURCE_OVERLAY := true"
       fi
 
       echo 'include $(BUILD_PREBUILT)'
@@ -866,7 +875,7 @@ gen_android_mk() {
 
   for root in "vendor" "proprietary"
   do
-    for path in "${SYSTEM_DIRS_WITH_BC[@]}"
+    for path in "${SUBDIRS_WITH_BC[@]}"
     do
       if [ -d "$OUTPUT_VENDOR/$root/$path" ]; then
         echo "[*] Gathering data from '$root/$path' APK/JAR pre-builts"
