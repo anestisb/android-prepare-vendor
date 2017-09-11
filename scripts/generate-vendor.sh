@@ -1105,9 +1105,10 @@ echo "[*] Generating '$(basename "$DEVICE_VENDOR_MK")'"
 echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
 if [ "$IS_PIXEL" = true ]; then
-  # Fingerprint fix
+  # Add missing properties from vendor/build.prop
   {
     echo 'PRODUCT_PROPERTY_OVERRIDES += \'
+    echo '    ro.hardware.egl=adreno \'
     echo '    ro.hardware.fingerprint=fpc'
     echo
   } >> "$DEVICE_VENDOR_MK"
