@@ -68,7 +68,7 @@ cat <<_EOF
         or you have issues with some carriers
       * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method
         If you need something on the top of defaults, you can select manually.
-      * Until fuse-ext2 problems are resolved for Linux workstations, `--debugfs` is used by default
+      * Until fuse-ext2 problems are resolved for Linux workstations, "--debugfs" is used by default
 _EOF
   abort 1
 }
