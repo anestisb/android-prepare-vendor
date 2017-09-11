@@ -1,7 +1,6 @@
 # Bytecode archive files to extract from factory images
 
 # Radio
-system/priv-app/CarrierSetup/CarrierSetup.apk
 system/priv-app/CNEService/CNEService.apk
 system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk
