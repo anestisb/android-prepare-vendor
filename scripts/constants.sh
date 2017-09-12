@@ -25,7 +25,12 @@ readonly L_OATDUMP_URL_API26='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
 
 # Files to skip from vendor partition when parsing factory images
-declare -ra VENDOR_SKIP_FILES=("build.prop" "default.prop" "manifest.xml")
+declare -ra VENDOR_SKIP_FILES=(
+  "build.prop"
+  "default.prop"
+  "manifest.xml"
+  "etc/selinux/nonplat_mac_permissions.xml"
+)
 
 declare -ra PIXEL_AB_PARTITIONS=(
   "aboot"
