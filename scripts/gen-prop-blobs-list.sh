@@ -69,6 +69,12 @@ check_file() {
   fi
 }
 
+array_contains() {
+  local element
+  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
+  return 1
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
 
@@ -141,8 +147,8 @@ readonly OUT_BLOBS_FILE="$OUTPUT_DIR/proprietary-blobs.txt"
 # First add all regular files or symbolic links from /vendor partition
 find "$INPUT_DIR" -not -type d | sed "s#^$INPUT_DIR/##" | while read -r FILE
 do
-  # Skip "build.prop" since it will be re-generated at build time
-  if [[ "$FILE" == "build.prop" ]]; then
+  # Skip VENDOR_SKIP_FILES since it will be re-generated at build time
+  if array_contains "$FILE" "${VENDOR_SKIP_FILES[@]}"; then
     continue
   fi
   echo "vendor/$FILE" >> "$OUT_BLOBS_FILE_TMP"
