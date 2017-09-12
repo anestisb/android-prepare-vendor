@@ -27,6 +27,7 @@ declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
 # Files to skip from vendor partition when parsing factory images
 declare -ra VENDOR_SKIP_FILES=(
   "build.prop"
+  "compatibility_matrix.xml"
   "default.prop"
   "etc/NOTICE.xml.gz"
   "etc/selinux/nonplat_file_contexts"
