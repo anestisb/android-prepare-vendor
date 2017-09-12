@@ -1,4 +1,5 @@
 com.android.ims.rcsmanager
+libminui
 nanotool
 PresencePolling
 RcsService
