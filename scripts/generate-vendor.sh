@@ -1163,11 +1163,11 @@ echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blob
 } >> "$DEVICE_VENDOR_MK"
 
 # Activate & populate overlay directory if overlays defined in device config
-if [ "$(ls -A $OVERLAYS_DIR)" ]; then
-  mkdir -p "$OUTPUT_VENDOR/overlay"
-  cp -a "$OVERLAYS_DIR"/* "$OUTPUT_VENDOR/overlay"
-  echo -e "PRODUCT_PACKAGE_OVERLAYS += vendor/$VENDOR_DIR/$DEVICE/overlay\n" >> "$DEVICE_VENDOR_MK"
-fi
+# if [ "$(ls -A $OVERLAYS_DIR)" ]; then
+#   mkdir -p "$OUTPUT_VENDOR/overlay"
+#   cp -a "$OVERLAYS_DIR"/* "$OUTPUT_VENDOR/overlay"
+#   echo -e "PRODUCT_PACKAGE_OVERLAYS += vendor/$VENDOR_DIR/$DEVICE/overlay\n" >> "$DEVICE_VENDOR_MK"
+# fi
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
 echo "[*] Generating 'AndroidBoardVendor.mk'"
