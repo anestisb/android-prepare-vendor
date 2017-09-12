@@ -274,10 +274,6 @@ update_vendor_blobs_mk() {
       fi
     fi
 
-    if [[ "$src" == "vendor/etc/NOTICE.xml.gz" ]]; then
-      continue
-    fi
-
     # Skip standalone symbolic links if available
     if [ "$HAS_STANDALONE_SLINKS" = true ]; then
       if array_contains "$src" "${S_SLINKS_DST[@]}"; then

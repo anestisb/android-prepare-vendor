@@ -28,7 +28,7 @@ declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
 declare -ra VENDOR_SKIP_FILES=(
   "build.prop"
   "default.prop"
-  "manifest.xml"
+  "etc/NOTICE.xml.gz"
   "etc/selinux/nonplat_file_contexts"
   "etc/selinux/nonplat_hwservice_contexts"
   "etc/selinux/nonplat_mac_permissions.xml"
@@ -40,6 +40,7 @@ declare -ra VENDOR_SKIP_FILES=(
   "etc/selinux/precompiled_sepolicy"
   "etc/selinux/precompiled_sepolicy.plat_and_mapping.sha256"
   "etc/selinux/vndservice_contexts"
+  "manifest.xml"
 )
 
 declare -ra PIXEL_AB_PARTITIONS=(
