@@ -23,11 +23,10 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input      : Root path of /vendor partition
-      -o|--output     : Path to save generated "proprietary-blobs.txt" file
-      --sys-list      : File list with proprietary blobs in /system partition
-      --bytecode-list : File list with proprietary bytecode archive files
-      --dep-dso-list  : File list with DSO files with individual targets
+      -i|--input  : Root path of /vendor partition
+      -o|--output : Path to save generated "proprietary-blobs.txt" file
+      --conf-dir  : Directory containing device configuration files
+      --api       : API level in order to pick appropriate config file
 _EOF
   abort 1
 }
@@ -89,9 +88,8 @@ done
 
 INPUT_DIR=""
 OUTPUT_DIR=""
-IN_SYS_FILE=""
-IN_BYTECODE_FILE=""
-IN_DEP_DSO_FILE=""
+CONFIGS_DIR=""
+API_LEVEL=""
 
 while [[ $# -gt 1 ]]
 do
@@ -105,16 +103,12 @@ do
       INPUT_DIR="$(echo "$2" | sed 's:/*$::')"
       shift
       ;;
-    --sys-list)
-      IN_SYS_FILE="$2"
+    --conf-dir)
+      CONFIGS_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
-    --bytecode-list)
-      IN_BYTECODE_FILE="$2"
-      shift
-      ;;
-    --dep-dso-list)
-      IN_DEP_DSO_FILE="$2"
+    --api)
+      API_LEVEL="$2"
       shift
       ;;
     *)
@@ -128,6 +122,17 @@ done
 # Input args check
 check_dir "$INPUT_DIR" "Input"
 check_dir "$OUTPUT_DIR" "Output"
+check_dir "$CONFIGS_DIR" "Base Config Dir"
+
+# Check if API level is a number
+if [[ ! "$API_LEVEL" = *[[:digit:]]* ]]; then
+  echo "[-] Invalid API level (not a number)"
+  abort 1
+fi
+
+readonly IN_SYS_FILE="$CONFIGS_DIR/system-proprietary-blobs-api$API_LEVEL.txt"
+readonly IN_BYTECODE_FILE="$CONFIGS_DIR/bytecode-proprietary-api$API_LEVEL.txt"
+readonly IN_DEP_DSO_FILE="$CONFIGS_DIR/dep-dso-proprietary-blobs-api$API_LEVEL.txt"
 
 # Mandatory configuration files
 check_file "$IN_SYS_FILE" "system-proprietary-blobs"

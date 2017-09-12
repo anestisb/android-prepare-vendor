@@ -45,16 +45,12 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -i|--input      : Root path of extracted /system & /vendor partitions
-      -o|--output     : Path to save vendor blobs & makefiles in AOSP compatible structure
-      --blobs-list    : List of proprietary blobs to copy
-      --dep-dso-list  : List of shared libraries that need to be included as a separate module
-      --flags-list    : List of Makefile flags to be appended at 'BoardConfigVendor.mk'
-      --extra-modules : Additional modules to be appended at main vendor 'Android.mk'
-      --allow-preopt  : Don't disable LOCAL_DEX_PREOPT for /system
-      --force-modules : Text file with AOSP defined modules to force include
-      --device-vendor : Additional flags to be appended at device vendor makefile
-      --force-vimg    : Always override AOSP definitions with included vendor blobs
+      -i|--input     : Root path of extracted /system & /vendor partitions
+      -o|--output    : Path to save vendor blobs & makefiles in AOSP compatible structure
+      --conf-dir     : Directory containing device configuration files
+      --api          : API level in order to pick appropriate config file
+      --allow-preopt : Don't disable LOCAL_DEX_PREOPT for /system
+      --force-vimg   : Always override AOSP definitions with included vendor blobs
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -995,14 +991,10 @@ trap "abort 1" SIGINT SIGTERM
 
 INPUT_DIR=""
 OUTPUT_DIR=""
-BLOBS_LIST=""
-DEP_DSO_BLOBS_LIST=""
-MK_FLAGS_LIST=""
-EXTRA_MODULES=""
-FORCE_MODULES=""
+CONFIGS_DIR=""
+API_LEVEL=""
 ALLOW_PREOPT=false
 FORCE_VIMG=false
-DEVICE_VENDOR_CONFIG=""
 
 DEVICE=""
 DEVICE_FAMILY=""
@@ -1032,24 +1024,12 @@ do
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
-    --blobs-list)
-      BLOBS_LIST="$2"
+    --conf-dir)
+      CONFIGS_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
-    --dep-dso-list)
-      DEP_DSO_BLOBS_LIST="$2"
-      shift
-      ;;
-    --flags-list)
-      MK_FLAGS_LIST="$2"
-      shift
-      ;;
-    --extra-modules)
-      EXTRA_MODULES="$2"
-      shift
-      ;;
-    --force-modules)
-      FORCE_MODULES="$2"
+    --api)
+      API_LEVEL="$2"
       shift
       ;;
     --allow-preopt)
@@ -1057,10 +1037,6 @@ do
       ;;
     --force-vimg)
       FORCE_VIMG=true
-      ;;
-    --device-vendor)
-      DEVICE_VENDOR_CONFIG="$2"
-      shift
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -1073,6 +1049,22 @@ done
 # Input args check
 check_dir "$INPUT_DIR" "Input"
 check_dir "$OUTPUT_DIR" "Output"
+check_dir "$CONFIGS_DIR" "Base Config Dir"
+
+# Check if API level is a number
+if [[ ! "$API_LEVEL" = *[[:digit:]]* ]]; then
+  echo "[-] Invalid API level (not a number)"
+  abort 1
+fi
+
+# Populate config files from base conf dir
+readonly BLOBS_LIST="$CONFIGS_DIR/proprietary-blobs.txt"
+readonly DEP_DSO_BLOBS_LIST="$CONFIGS_DIR/dep-dso-proprietary-blobs-api$API_LEVEL.txt"
+readonly MK_FLAGS_LIST="$CONFIGS_DIR/vendor-config-api$API_LEVEL.txt"
+readonly EXTRA_MODULES="$CONFIGS_DIR/extra-modules-api$API_LEVEL.txt"
+readonly FORCE_MODULES="$CONFIGS_DIR/modules-force-api$API_LEVEL.txt"
+readonly DEVICE_VENDOR_CONFIG="$CONFIGS_DIR/device-vendor-config-api$API_LEVEL.txt"
+readonly OVERLAYS_DIR="$CONFIGS_DIR/overlays-api$API_LEVEL"
 
 # Mandatory configuration files
 check_file "$BLOBS_LIST" "Vendor proprietary-blobs"
@@ -1164,11 +1156,18 @@ update_vendor_blobs_mk "$BLOBS_LIST"
 echo "[*] Generating '$(basename "$DEVICE_VENDOR_MK")'"
 echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
-# Append items listed in configuration file
+# Append items listed in device vendor configuration file
 {
   cat "$DEVICE_VENDOR_CONFIG"
   echo ""
 } >> "$DEVICE_VENDOR_MK"
+
+# Activate & populate overlay directory if overlays defined in device config
+if [ "$(ls -A $OVERLAYS_DIR)" ]; then
+  mkdir -p "$OUTPUT_VENDOR/overlay"
+  cp -a "$OVERLAYS_DIR"/* "$OUTPUT_VENDOR/overlay"
+  echo -e "PRODUCT_PACKAGE_OVERLAYS += vendor/$VENDOR_DIR/$DEVICE/overlay\n" >> "$DEVICE_VENDOR_MK"
+fi
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
 echo "[*] Generating 'AndroidBoardVendor.mk'"

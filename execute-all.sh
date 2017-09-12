@@ -438,10 +438,9 @@ echo "[*] Processing with 'API-$API_LEVEL $CONFIG' configuration"
 
 # Generate unified readonly "proprietary-blobs.txt"
 $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
-     --output "$SCRIPTS_ROOT/$DEVICE" \
-     --sys-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/system-proprietary-blobs-api""$API_LEVEL"".txt" \
-     --bytecode-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt" \
-     --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/dep-dso-proprietary-blobs-api$API_LEVEL.txt" || {
+    --output "$SCRIPTS_ROOT/$DEVICE/$CONFIG" \
+    --api "$API_LEVEL" \
+    --conf-dir "$SCRIPTS_ROOT/$DEVICE/$CONFIG" || {
   echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
 }
@@ -554,12 +553,8 @@ if [ $FORCE_VIMG = true ]; then
 fi
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
-  --blobs-list "$SCRIPTS_ROOT/$DEVICE/proprietary-blobs.txt" \
-  --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
-  --flags-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/vendor-config-api$API_LEVEL.txt" \
-  --extra-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/extra-modules-api$API_LEVEL.txt" \
-  --force-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/modules-force-api$API_LEVEL.txt" \
-  --device-vendor "$SCRIPTS_ROOT/$DEVICE/$CONFIG/device-vendor-config-api$API_LEVEL.txt" \
+  --api "$API_LEVEL" \
+  --conf-dir "$SCRIPTS_ROOT/$DEVICE/$CONFIG" \
   $VGEN_SCRIPT_EXTRA_ARGS || {
   echo "[-] Vendor generation failed"
   abort 1
