@@ -1166,7 +1166,16 @@ echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blob
 if [ "$(ls -A $OVERLAYS_DIR)" ]; then
   mkdir -p "$OUTPUT_VENDOR/overlay"
   cp -a "$OVERLAYS_DIR"/* "$OUTPUT_VENDOR/overlay"
-  echo -e "PRODUCT_PACKAGE_OVERLAYS += vendor/$VENDOR_DIR/$DEVICE/overlay\n" >> "$DEVICE_VENDOR_MK"
+
+  {
+    echo '# Hack around AOSP module restrictions that disallow overlays under /vendor'
+    echo '_rel_overlay_dev := google_devices/sailfish'
+    echo '_rel_overlay_dir := $(_rel_overlay_dev)/overlay'
+    echo '$(shell rf -rf vendor_overlay/$(_rel_overlay_dev) && \'
+    echo '    mkdir -p vendor_overlay/$(_rel_overlay_dev) && \'
+    echo '    cp -a vendor/$(_rel_overlay_dir) vendor_overlay/$(_rel_overlay_dir))'
+    echo -e "PRODUCT_PACKAGE_OVERLAYS += vendor_overlay/$VENDOR_DIR/$DEVICE/overlay\n"
+  } >> "$DEVICE_VENDOR_MK"
 fi
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
