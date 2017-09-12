@@ -25,8 +25,11 @@ HAS_STANDALONE_SLINKS=false
 declare -a DSO_MODULES
 HAS_DSO_MODULES=false
 
-# APK files that need to preserve the original signature
+# APK files that need to maintain the original signature
 declare -a PSIG_BC_FILES=()
+
+# All bytecode packages included from system partition
+declare -a ALL_BC_PKGS=()
 
 abort() {
   # If debug keep work directory for bugs investigation
@@ -678,8 +681,11 @@ gen_mk_for_bytecode() {
       fi
     } >> "$ANDROID_MK"
 
-    # Also add pkgName to runtime array to append later the vendor mk
+    # Also add pkgName to local runtime array to append later the vendor mk
     pkgs+=("$pkgName")
+
+    # Add to global array
+    ALL_BC_PKGS+=("$pkgName")
   done < <(find "$outBase/$relRoot/$relSubRoot" -maxdepth 2 \
            -type f -iname '*.apk' -o -iname '*.jar' | sort)
 
@@ -706,6 +712,27 @@ gen_mk_for_bytecode() {
     } >> "$DEVICE_VENDOR_MK"
     strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
   fi
+}
+
+check_orphan_bytecode() {
+  # Directly set to output directory so we can clean the orphans
+  local parseDir="$1"
+  local zipName="" fileExt="" pkgName=""
+
+  while read -r file
+  do
+    zipName=$(basename "$file")
+    fileExt="${zipName##*.}"
+    pkgName=$(basename "$file" ".$fileExt")
+
+    if array_contains "$pkgName" "${ALL_BC_PKGS[@]}"; then
+      continue
+    else
+      echo "[!] Orphan bytecode file detected '$zipName' & removed"
+      rm "$file"
+    fi
+
+  done < <(find "$parseDir" -type f -iname '*.apk' -o -iname '*.jar' | sort)
 }
 
 gen_mk_for_shared_libs() {
@@ -883,6 +910,9 @@ gen_android_mk() {
       fi
     done
   done
+
+  # Ensure that no bytecode files are included without generating a matching module
+  check_orphan_bytecode "$OUTPUT_VENDOR"
 
   if [ "$HAS_STANDALONE_SLINKS" = true ]; then
     echo "[*] Processing standalone symlinks"
