@@ -1,6 +1,5 @@
 # Bytecode archive files to extract from factory images
 
-system/app/HiddenMenu/HiddenMenu.apk
 system/app/RCSBootstraputil/RCSBootstraputil.apk
 system/app/RcsImsBootstraputil/RcsImsBootstraputil.apk
 system/app/TimeService/TimeService.apk
@@ -8,15 +7,5 @@ system/framework/cneapiclient.jar
 system/framework/qcrilhook.jar
 system/framework/rcsimssettings.jar
 system/framework/rcsservice.jar
-system/priv-app/CarrierEntitlement/CarrierEntitlement.apk
-system/priv-app/CNEService/CNEService.apk
-system/priv-app/ConnMO/ConnMO.apk
-system/priv-app/DCMO/DCMO.apk
-system/priv-app/DMConfigUpdate/DMConfigUpdate.apk
-system/priv-app/DMService/DMService.apk
-system/priv-app/DiagMon/DiagMon.apk
-system/priv-app/Entitlement/Entitlement.apk
-system/priv-app/LifeTimerService/LifeTimerService.apk
-system/priv-app/SprintDM/SprintDM.apk
 system/priv-app/atfwd/atfwd.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk

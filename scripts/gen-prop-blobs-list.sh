@@ -11,7 +11,9 @@ set -e # fail on unhandled error
 set -u # fail on undefined variable
 #set -x # debug
 
-declare -a sysTools=("find" "sed" "sort")
+readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+declare -a SYS_TOOLS=("find" "sed" "sort")
 
 abort() {
   exit "$1"
@@ -68,9 +70,10 @@ check_file() {
 }
 
 trap "abort 1" SIGINT SIGTERM
+. "$CONSTS_SCRIPT"
 
 # Check that system tools exist
-for i in "${sysTools[@]}"
+for i in "${SYS_TOOLS[@]}"
 do
   if ! command_exists "$i"; then
     echo "[-] '$i' command not found"

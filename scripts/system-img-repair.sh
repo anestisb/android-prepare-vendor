@@ -29,8 +29,10 @@ set -e # fail on unhandled error
 set -u # fail on undefined variable
 #set -x # debug
 
+readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_repair.XXXXXX) || exit 1
-declare -a sysTools=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut")
+declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -49,12 +51,12 @@ cat <<_EOF
     OPTIONS:
       -i|--input      : Root path of extracted factory image system partition
       -o|--output     : Path to save input partition with repaired bytecode
-      -m|--method     : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP')
+      -m|--method     : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP', 'SMALIDEODEX')
       --oat2dex       : [OPTIONAL] Path to SmaliEx oat2dex.jar (when 'OAT2DEX' method)
       --oatdump       : [OPTIONAL] Path to ART oatdump executable (when 'OATDUMP' or 'SMALIDEODEX' method)
       --dexrepair     : [OPTIONAL] Path to dexrepair executable (when 'OATDUMP' method)
-      --smali         : [OPTIONAL] Path to smali.har (when 'SMALIDEODEX' method)
-      --baksmali      : [OPTIONAL] Path to baksmali.har (when 'SMALIDEODEX' method)
+      --smali         : [OPTIONAL] Path to smali.jar (when 'SMALIDEODEX' method)
+      --baksmali      : [OPTIONAL] Path to baksmali.jar (when 'SMALIDEODEX' method)
       --bytecode-list : [OPTIONAL] list with bytecode archive files to be included in
                         generated MKs. When provided only required bytecode is repaired,
                         otherwise all bytecode in partition is repaired.
@@ -76,18 +78,18 @@ command_exists() {
 
 # Print RAM size memory warning when using smali jar tools
 check_ram_size() {
-  local HOST_OS
-  local RAM_SIZE
+  local host_os
+  local ram_size
 
-  HOST_OS=$(uname)
-  RAM_SIZE=0
-  if [[ "$HOST_OS" == "Darwin" ]]; then
-    RAM_SIZE=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
+  host_os=$(uname)
+  ram_size=0
+  if [[ "$host_os" == "Darwin" ]]; then
+    ram_size=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
   else
-    RAM_SIZE=$(grep MemTotal /proc/meminfo | awk '{print $2}'  | awk '{$1=$1/(1024^2); print int($1);}')
+    ram_size=$(grep MemTotal /proc/meminfo | awk '{print $2}'  | awk '{$1=$1/(1024^2); print int($1);}')
   fi
 
-  if [ $RAM_SIZE -le 2 ]; then
+  if [ "$ram_size" -le 2 ]; then
     echo "[!] Host RAM size <= 2GB - jars might crash due to low memory"
   fi
 }
@@ -100,24 +102,20 @@ get_build_id() {
 }
 
 check_java_version() {
-  local JAVA_VER_MAJOR=""
-  local JAVA_VER_MINOR=""
-  local JAVA_VER_BUILD=""
+  local java_ver_minor=""
   local _token
 
   for _token in $(java -version 2>&1 | grep -i version)
   do
-      if [[ $_token =~ \"([[:digit:]])\.([[:digit:]])\.(.*)\" ]]
-      then
-          JAVA_VER_MAJOR=${BASH_REMATCH[1]}
-          JAVA_VER_MINOR=${BASH_REMATCH[2]}
-          JAVA_VER_BUILD=${BASH_REMATCH[3]}
-          break
-      fi
+    if [[ $_token =~ \"([[:digit:]])\.([[:digit:]])\.(.*)\" ]]
+    then
+      java_ver_minor=${BASH_REMATCH[2]}
+      break
+    fi
   done
 
-  if [ "$JAVA_VER_MINOR" -lt 8 ]; then
-    echo "[-] Java version ('$JAVA_VER_MINOR') is detected, while minimum required version is 8"
+  if [ "$java_ver_minor" -lt 8 ]; then
+    echo "[-] Java version ('$java_ver_minor') is detected, while minimum required version is 8"
     echo "[!] Consider exporting PATH like the following if a system-wide set is not desired"
     echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
     abort 1
@@ -126,12 +124,12 @@ check_java_version() {
 
 array_contains() {
   local element
-  for element in "${@:2}"; do [[ "$element" =~ "$1" ]] && return 0; done
+  for element in "${@:2}"; do [[ "$element" =~ $1 ]] && return 0; done
   return 1
 }
 
 oat2dex_repair() {
-  local -a ABIS
+  local -a abis
 
   # oat2dex.jar is memory hungry
   check_ram_size
@@ -140,11 +138,11 @@ oat2dex_repair() {
   for type in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
-      ABIS=("${ABIS[@]-}" "$type")
+      abis+=("$type")
     fi
   done
 
-  for abi in ${ABIS[@]}
+  for abi in "${abis[@]}"
   do
     echo "[*] Preparing environment for '$abi' ABI"
     workDir="$TMP_WORK_DIR/$abi"
@@ -175,7 +173,9 @@ oat2dex_repair() {
 
     # If not APK/jar file, copy as is
     if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
-      cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      cp -a "$file" "$OUTPUT_SYS/$relDir/" || {
+        echo "[!] Failed to copy '$relFile' - skipping"
+      }
       continue
     fi
 
@@ -197,14 +197,14 @@ oat2dex_repair() {
       odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
                   wc -l | tr -d ' ')
     fi
-    if [[ $odexFound -eq 0 && "$relFile" == "/framework/"* ]]; then
+    if [[ "$odexFound" -eq 0 && "$relFile" == "/framework/"* ]]; then
       # Boot classes have already been de-optimized. Just check against any ABI
       # to verify that is present (not all jars under framework are part of
       # boot.oat)
-      odexFound=$(find "$TMP_WORK_DIR/${ABIS[1]}/dex" -type f \
+      odexFound=$(find "$TMP_WORK_DIR/${abis[0]}/dex" -type f \
                   -iname "$pkgName*.dex" | wc -l | tr -d ' ')
     fi
-    if [ $odexFound -eq 0 ]; then
+    if [ "$odexFound" -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
@@ -215,7 +215,7 @@ oat2dex_repair() {
     else
       # If pre-compiled, de-optimize to original DEX bytecode
       deoptSuccess=false
-      for abi in ${ABIS[@]}
+      for abi in "${abis[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ -f "$curOdex" ]; then
@@ -302,19 +302,20 @@ oat2dex_repair() {
 }
 
 oatdump_repair() {
-  local -a ABIS
-  local -a BOOTJARS
+  local -a abis
+  local -a bootJars
+  local _base_path
 
   if [[ "$(uname)" == "Darwin" ]]; then
-    local _BASE_PATH="$(dirname "$OATDUMP_BIN")/.."
-    export DYLD_FALLBACK_LIBRARY_PATH=$_BASE_PATH/lib64:$_BASE_PATH/lib
+    _base_path="$(dirname "$OATDUMP_BIN")/.."
+    export DYLD_FALLBACK_LIBRARY_PATH=$_base_path/lib64:$_base_path/lib
   fi
 
   # Identify supported ABI(s) - extra work for 64bit ABIs
   for cpu in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$cpu/boot.art" ]; then
-      ABIS=("${ABIS[@]-}" "$cpu")
+      abis+=("$cpu")
     fi
   done
 
@@ -323,8 +324,8 @@ oatdump_repair() {
   while read -r file
   do
     jarFile="$(basename "$file" | cut -d '-' -f2- | sed 's#.oat#.jar#')"
-    BOOTJARS=("${BOOTJARS[@]-}" "$jarFile")
-  done < <(find "$INPUT_DIR/framework/${ABIS[1]}" -iname "boot*.oat")
+    bootJars+=("$jarFile")
+  done < <(find "$INPUT_DIR/framework/${abis[0]}" -iname "boot*.oat")
 
   while read -r file
   do
@@ -346,17 +347,19 @@ oatdump_repair() {
 
     # If not APK/jar file, copy as is
     if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
-      cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      cp -a "$file" "$OUTPUT_SYS/$relDir/" || {
+        echo "[!] Failed to copy '$relFile' - skipping"
+      }
       continue
     fi
 
     # If boot jar skip
-    if array_contains "$fileName" "${BOOTJARS[@]}"; then
+    if array_contains "$fileName" "${bootJars[@]}"; then
       continue
     fi
 
     # If APKs selection enabled, skip if not in list
-    if [ $hasBytecodeList = true ]; then
+    if [ "$hasBytecodeList" = true ]; then
       if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
@@ -372,7 +375,7 @@ oatdump_repair() {
       odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
                   wc -l | tr -d ' ')
     fi
-    if [ $odexFound -eq 0 ]; then
+    if [ "$odexFound" -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
@@ -385,7 +388,7 @@ oatdump_repair() {
       # If bytecode compiled for more than one ABIs - only the first is kept
       # (shouldn't make any difference)
       deoptSuccess=false
-      for abi in ${ABIS[@]}
+      for abi in "${abis[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ ! -f "$curOdex" ]; then
@@ -407,7 +410,7 @@ oatdump_repair() {
 
         # If DEX not created, oat2dex failed to resolve a dependency and skipped file
         dexsExported=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_export.dex" | wc -l | tr -d ' ')
-        if [ $dexsExported -eq 0 ]; then
+        if [ "$dexsExported" -eq 0 ]; then
           echo "[-] '$relFile' DEX export failed"
           abort 1
         else
@@ -428,7 +431,7 @@ oatdump_repair() {
       # Normalize names & add dex files back to zip archives (jar or APK)
       # considering possible multi-dex cases. zipalign is not necessary since
       # AOSP build rules will align them if not already
-      if [ $dexsExported -gt 1 ]; then
+      if [ "$dexsExported" -gt 1 ]; then
         # multi-dex file
         echo "[*] '$relFile' is multi-dex - adjusting recursive archive adds"
         counter=2
@@ -470,7 +473,7 @@ oatdump_repair() {
 }
 
 smali_repair() {
-  local -a ABIS
+  local -a abis
 
   check_ram_size
 
@@ -478,11 +481,11 @@ smali_repair() {
   for type in "arm" "arm64" "x86" "x86_64"
   do
     if [ -f "$INPUT_DIR/framework/$type/boot.art" ]; then
-      ABIS=("${ABIS[@]-}" "$type")
+      abis+=("$type")
     fi
   done
 
-  for abi in ${ABIS[@]}
+  for abi in "${abis[@]}"
   do
     echo "[*] Preparing environment for '$abi' ABI"
     workDir="$TMP_WORK_DIR/$abi"
@@ -509,12 +512,14 @@ smali_repair() {
 
     # If not APK/jar file, copy as is
     if [[ "$fileExt" != "apk" && "$fileExt" != "jar" ]]; then
-      cp -a "$file" "$OUTPUT_SYS/$relDir/"
+      cp -a "$file" "$OUTPUT_SYS/$relDir/" || {
+        echo "[!] Failed to copy '$relFile' - skipping"
+      }
       continue
     fi
 
     # If APKs selection enabled, skip if not in list
-    if [ $hasBytecodeList = true ]; then
+    if [ "$hasBytecodeList" = true ]; then
       if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
@@ -531,7 +536,7 @@ smali_repair() {
       odexFound=$(find "$zipRoot/oat" -type f -iname "$pkgName*.odex" | \
                   wc -l | tr -d ' ')
     fi
-    if [ $odexFound -eq 0 ]; then
+    if [ "$odexFound" -eq 0 ]; then
       # shellcheck disable=SC2015
       zipinfo "$file" classes.dex &>/dev/null && {
         echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
@@ -545,7 +550,7 @@ smali_repair() {
 
       # If pre-compiled, de-optimize to original DEX bytecode
       deoptSuccess=false
-      for abi in ${ABIS[@]}
+      for abi in "${abis[@]}"
       do
         curOdex="$zipRoot/oat/$abi/$pkgName.odex"
         if [ ! -f "$curOdex" ]; then
@@ -656,9 +661,10 @@ check_opt_file() {
 }
 
 trap "abort 1" SIGINT SIGTERM
+. "$CONSTS_SCRIPT"
 
 # Check that system tools exist
-for i in "${sysTools[@]}"
+for i in "${SYS_TOOLS[@]}"
 do
   if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
@@ -781,7 +787,7 @@ fi
 # Check if blobs list is set so that only selected APKs will be repaired for speed
 # JARs under /system/framework are always repaired for safety
 if [[ "$BYTECODE_LIST_FILE" != "" ]]; then
-  readarray -t BYTECODE_LIST < <(grep -Ev '(^#|^$)' "$BYTECODE_LIST_FILE")
+  readarray -t BYTECODE_LIST < <(grep -Ev '(^#|^$)' "$BYTECODE_LIST_FILE" | cut -d ":" -f1)
   if [ ${#BYTECODE_LIST[@]} -eq 0 ]; then
     echo "[!] No bytecode files selected for repairing - link to original partition"
     ln -sfn "$INPUT_DIR" "$OUTPUT_SYS"

@@ -4,7 +4,6 @@ system/app/HwMMITest/HwMMITest.apk
 system/app/HwSarControlService/HwSarControlService.apk
 system/app/SetupSmartDeviceOverlay/SetupSmartDeviceOverlay.apk
 system/app/Tycho/Tycho.apk
-system/framework/com.google.android.camera.experimental2015.jar
 system/framework/com.google.widevine.software.drm.jar
 system/framework/qcrilhook.jar
 system/priv-app/CNEService/CNEService.apk
@@ -18,6 +17,5 @@ system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/Entitlement/Entitlement.apk
 system/priv-app/GCS/GCS.apk
 system/priv-app/HiddenMenu/HiddenMenu.apk
-system/priv-app/HotwordEnrollment/HotwordEnrollment.apk
 system/priv-app/SprintDM/SprintDM.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk

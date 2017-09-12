@@ -1,0 +1,4 @@
+com.android.ims.rcsmanager
+libion
+libminui
+RcsService

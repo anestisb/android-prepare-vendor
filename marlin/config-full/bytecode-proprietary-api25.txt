@@ -1,0 +1,51 @@
+# Bytecode archive files to extract from factory images
+
+# IMS/HD Voice
+system/priv-app/CNEService/CNEService.apk
+
+# Misc
+system/priv-app/DMService/DMService.apk
+system/priv-app/OBDM_Permissions/OBDM_Permissions.apk
+system/priv-app/WfcActivation/WfcActivation.apk
+
+# Radio
+system/app/atfwd/atfwd.apk
+system/app/datastatusnotification/datastatusnotification.apk
+system/app/embms/embms.apk
+system/app/fastdormancy/fastdormancy.apk
+system/app/QAS_DVC_MSP/QAS_DVC_MSP.apk
+system/app/QtiTelephonyService/QtiTelephonyService.apk
+system/app/radioconfig/radioconfig.apk
+system/app/RCSBootstraputil/RCSBootstraputil.apk
+system/app/shutdownlistener/shutdownlistener.apk
+system/app/TimeService/TimeService.apk
+system/app/xdivert/xdivert.apk
+system/framework/embmslibrary.jar
+system/framework/qcrilhook.jar
+system/framework/QtiTelephonyServicelibrary.jar
+system/framework/rcsservice.jar
+system/priv-app/CarrierEntitlement/CarrierEntitlement.apk
+system/priv-app/CarrierServices/CarrierServices.apk
+system/priv-app/ConnMO/ConnMO.apk
+system/priv-app/DCMO/DCMO.apk
+system/priv-app/DiagMon/DiagMon.apk
+system/priv-app/OemDmTrigger/OemDmTrigger.apk
+system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk
+
+# Sprint
+system/priv-app/SprintDM/SprintDM.apk
+system/priv-app/SprintHM/SprintHM.apk
+
+# Verizon
+system/app/VZWAPNLib/VZWAPNLib.apk
+system/app/vzw_msdc_api/vzw_msdc_api.apk
+system/priv-app/AppDirectedSMSService/AppDirectedSMSService.apk
+system/priv-app/obdm_stub/obdm_stub.apk
+system/priv-app/VZWAPNService/VZWAPNService.apk
+system/priv-app/VZWAVS/VZWAVS.apk
+system/priv-app/VzwLcSilent/VzwLcSilent.apk
+system/priv-app/VzwOmaTrigger/VzwOmaTrigger.apk
+system/framework/VerizonUnifiedSettings.jar
+
+# GApps
+system/priv-app/HotwordEnrollment/HotwordEnrollment.apk::PRESIGNED

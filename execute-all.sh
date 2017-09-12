@@ -8,9 +8,14 @@ set -u # fail on undefined variable
 #set -x # debug
 
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
+declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount")
 
 # Realpath implementation in bash
 readonly REALPATH_SCRIPT="$SCRIPTS_ROOT/scripts/realpath.sh"
+
+# Script that contain global constants
+readonly CONSTS_SCRIPT="$SCRIPTS_ROOT/scripts/constants.sh"
 
 # Helper script to download Nexus factory images from web
 readonly DOWNLOAD_SCRIPT="$SCRIPTS_ROOT/scripts/download-nexus-image.sh"
@@ -27,23 +32,13 @@ readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 # Helper script to generate vendor AOSP includes & makefiles
 readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
 
-# oatdump dependencies URLs
-readonly L_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21490&authkey=ACA4f4Zvs3Tb_SY'
-readonly D_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21493&authkey=AJ0rWu5Ci8tQNLY'
-readonly L_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21492&authkey=AE4uqwH-THvvkSQ'
-readonly D_OATDUMP_URL_API24='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21491&authkey=AHvCaYwFBPYD4Fs'
-readonly L_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21503&authkey=AKDpBAzhzum6d7w'
-readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21504&authkey=AC5YFNSAZ31-W3o'
-
-declare -a sysTools=("mkdir" "dirname" "wget" "mount")
-declare -a availDevices=("bullhead" "flounder" "angler" "sailfish" "marlin")
-
 abort() {
   # Remove mount points in case of error
   if [[ $1 -ne 0 && "$FACTORY_IMGS_DATA" != "" ]]; then
     unmount_raw_image "$FACTORY_IMGS_DATA/system"
     unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
   fi
+  rm -rf "$TMP_WORK_DIR"
   exit "$1"
 }
 
@@ -55,7 +50,7 @@ cat <<_EOF
       -a|--alias   : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
       -b|--buildID : BuildID string (e.g. MMB29P)
       -o|--output  : Path to save generated vendor data
-      -g|--gplay   : Use blobs configuration compatible with Google Play Services / GApps
+      -f|--full    : Use blobs configuration with all non-essential OEM packages + compatible with GApps
       -i|--img     : [OPTIONAL] Read factory image archive from file instead of downloading
       -k|--keep    : [OPTIONAL] Keep all factory images extracted & repaired data
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
@@ -66,11 +61,14 @@ cat <<_EOF
       --smali      : [OPTIONAL] Force use of smali/baksmali to revert preoptimized bytecode
       --smaliex    : [OPTIONAL] Force use of smaliEx to revert preoptimized bytecode [DEPRECATED]
       --deodex-all : [OPTIONAL] De-optimize all packages under /system
+      --debugfs    : [OPTIONAL] Use debugfs instead of default fuse-ext2, to extract image files data
 
     INFO:
-      * Default configuration is naked. Use "-g|--gplay" if you plan to install Google Play Services.
+      * Default configuration is naked. Use "-f|--full" if you plan to install Google Play Services
+        or you have issues with some carriers
       * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method
         If you need something on the top of defaults, you can select manually.
+      * Until fuse-ext2 problems are resolved for Linux workstations, "--debugfs" is used by default
 _EOF
   abort 1
 }
@@ -80,50 +78,67 @@ command_exists() {
 }
 
 check_bash_version() {
-  if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+  if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
     echo "[-] Minimum supported version of bash is 4.x"
     abort 1
   fi
 }
 
 unmount_raw_image() {
-  local MOUNT_POINT="$1"
+  local mount_point="$1"
 
-  if [ -d "$MOUNT_POINT" ]; then
-    $_UMOUNT "$MOUNT_POINT" || {
-      echo "[-] '$MOUNT_POINT' unmount failed"
+  if [[ -d "$mount_point" && "$USE_DEBUGFS" = false ]]; then
+    $_UMOUNT "$mount_point" || {
+      echo "[-] '$mount_point' unmount failed"
       exit 1
     }
   fi
 }
 
 oatdump_prepare_env() {
-  local API_LEVEL="$1"
+  local api_level="$1"
 
-  local DOWNLOAD_URL
-  local OUT_FILE="$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/oatdump_deps.zip"
-  mkdir -p "$(dirname "$OUT_FILE")"
+  local download_url
+  local out_file="$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level/oatdump_deps.zip"
+  mkdir -p "$(dirname "$out_file")"
 
 
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    DOWNLOAD_URL="D_OATDUMP_URL_API$API_LEVEL"
+    download_url="D_OATDUMP_URL_API$api_level"
   else
-    DOWNLOAD_URL="L_OATDUMP_URL_API$API_LEVEL"
+    download_url="L_OATDUMP_URL_API$api_level"
   fi
 
-  wget -O "$OUT_FILE" "${!DOWNLOAD_URL}" || {
+  wget -O "$out_file" "${!download_url}" || {
     echo "[-] oatdump dependencies download failed"
     abort 1
   }
 
-  unzip -qq "$OUT_FILE" -d "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL" || {
+  unzip -qq "$out_file" -d "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level" || {
     echo "[-] oatdump dependencies unzip failed"
     abort 1
   }
 }
 
+is_aosp_root() {
+  local targetDir="$1"
+  if [ -f "$targetDir/.repo/project.list" ]; then
+    return 0
+  fi
+  return 1
+}
+
+is_pixel() {
+  local device="$1"
+  if [[ "$device" == "marlin" || "$device" == "sailfish" ]]; then
+    return 0
+  fi
+  return 1
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
+. "$CONSTS_SCRIPT"
 
 # Global variables
 DEVICE=""
@@ -146,6 +161,8 @@ FORCE_OATDUMP=false
 FORCE_SMALIEX=false
 BYTECODE_REPAIR_METHOD=""
 DEODEX_ALL=false
+AOSP_ROOT=""
+USE_DEBUGFS=false
 
 # Compatibility
 check_bash_version
@@ -157,15 +174,18 @@ fi
 
 # Platform specific commands
 if [[ "$HOST_OS" == "Darwin" ]]; then
-  sysTools+=("umount")
+  SYS_TOOLS+=("umount")
   _UMOUNT=umount
 else
-  sysTools+=("fusermount")
+  SYS_TOOLS+=("fusermount")
   _UMOUNT="fusermount -u"
+
+  # Until fuse-ext2 problems are resolved for Linux, use debugfs by default
+  USE_DEBUGFS=true
 fi
 
 # Check that system tools exist
-for i in "${sysTools[@]}"
+for i in "${SYS_TOOLS[@]}"
 do
   if ! command_exists "$i"; then
     echo "[-] '$i' command not found"
@@ -197,8 +217,8 @@ do
       INPUT_IMG="$(_realpath "$2")"
       shift
       ;;
-    -g|--gplay)
-      CONFIG="config-gplay"
+    -f|--full)
+      CONFIG="config-full"
       ;;
     -k|--keep)
       KEEP_DATA=true
@@ -227,6 +247,9 @@ do
       ;;
     --deodex-all)
       DEODEX_ALL=true
+      ;;
+    --debugfs)
+      USE_DEBUGFS=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -265,10 +288,20 @@ if [[ "$USER_JAVA_PATH" != "" ]]; then
 fi
 
 # Some business logic related checks
-if [[ $DEODEX_ALL = true && $KEEP_DATA = false ]]; then
+if [[ "$DEODEX_ALL" = true && $KEEP_DATA = false ]]; then
   echo "[!] It's pointless to deodex all if not keeping runtime generated data"
   echo "    After vendor generate finishes all files not part of configs will be deleted"
   abort 1
+fi
+
+# Check if output directory is AOSP root
+if is_aosp_root "$OUTPUT_DIR"; then
+  if [ "$KEEP_DATA" = true ]; then
+    echo "[!] Cannot keep data when output directory is AOSP root - choose different path"
+    abort 1
+  fi
+  AOSP_ROOT="$OUTPUT_DIR"
+  OUTPUT_DIR="$TMP_WORK_DIR"
 fi
 
 # Resolve Java location
@@ -300,7 +333,7 @@ export PATH="$__JAVADIR":$PATH
 
 # Check if supported device
 deviceOK=false
-for devNm in "${availDevices[@]}"
+for devNm in "${SUPPORTED_DEVICES[@]}"
 do
   if [[ "$devNm" == "$DEVICE" ]]; then
     deviceOK=true
@@ -368,8 +401,16 @@ if [ -d "$FACTORY_IMGS_DATA" ]; then
 else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
-$EXTRACT_SCRIPT --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA" \
-     --simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img" || {
+
+EXTRACT_SCRIPT_ARGS="--device "$DEVICE" --input "$factoryImgArchive" \
+--output "$FACTORY_IMGS_DATA" \
+--simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img""
+
+if [ "$USE_DEBUGFS" = true ]; then
+  EXTRACT_SCRIPT_ARGS+=" --debugfs"
+fi
+
+$EXTRACT_SCRIPT $EXTRACT_SCRIPT_ARGS || {
   echo "[-] Factory images data extract failed"
   abort 1
 }
@@ -418,9 +459,9 @@ elif [ $FORCE_OATDUMP = true ]; then
   BYTECODE_REPAIR_METHOD="OATDUMP"
 else
   # Default choices based on API level
-  if [ $API_LEVEL -le 23 ]; then
+  if [ "$API_LEVEL" -le 23 ]; then
     BYTECODE_REPAIR_METHOD="OAT2DEX"
-  elif [ $API_LEVEL -ge 24 ]; then
+  elif [ "$API_LEVEL" -ge 24 ]; then
     BYTECODE_REPAIR_METHOD="OATDUMP"
   fi
 fi
@@ -509,19 +550,60 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
   --dep-dso-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/dep-dso-proprietary-blobs-api$API_LEVEL.txt" \
   --flags-list "$SCRIPTS_ROOT/$DEVICE/$CONFIG/vendor-config-api$API_LEVEL.txt" \
   --extra-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/extra-modules-api$API_LEVEL.txt" \
+  --force-modules "$SCRIPTS_ROOT/$DEVICE/$CONFIG/modules-force-api$API_LEVEL.txt" \
   $VGEN_SCRIPT_EXTRA_ARGS || {
   echo "[-] Vendor generation failed"
   abort 1
 }
 
 if [ "$KEEP_DATA" = false ]; then
-  unmount_raw_image "$FACTORY_IMGS_DATA/system"
-  unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
+  if [ "$USE_DEBUGFS" = false ]; then
+    # Mount points are present only when fuse-ext2 is used
+    unmount_raw_image "$FACTORY_IMGS_DATA/system"
+    unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
+  fi
   rm -rf "$FACTORY_IMGS_DATA"
   rm -rf "$FACTORY_IMGS_R_DATA"
 fi
 
-echo "[*] All actions completed successfully"
-echo "[*] Import '$OUT_BASE/vendor' to AOSP root"
+if [[ "$AOSP_ROOT" != "" ]]; then
+  VENDOR="$(basename "$(find "$OUT_BASE"/vendor/* -maxdepth 0 -type d -print | head -n1)")"
+  if [ ! -d "$AOSP_ROOT/vendor/$VENDOR" ]; then
+    mkdir -p "$AOSP_ROOT/vendor/$VENDOR"
+  fi
 
+  # If Pixel device we need to do some special directory handling due to common
+  # files for the marlin codename
+  if is_pixel "$DEVICE"; then
+    # If sailfish, don't delete the marlin files - just override the affected ones
+    # sailfish blobs include marlin configs too
+    if [[ "$DEVICE" == "sailfish" ]]; then
+      rsync -aruz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
+        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+        abort 1
+      }
+
+      rsync -aruz --delete "$OUT_BASE/vendor/$VENDOR/sailfish/" "$AOSP_ROOT/vendor/$VENDOR/sailfish" || {
+        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+        abort 1
+      }
+    # If marlin, don't delete the sailfish files - just override the affected ones
+    elif [[ "$DEVICE" == "marlin" ]]; then
+      rsync -aruz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
+        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+        abort 1
+      }
+    fi
+  else
+    rsync -aruz --delete "$OUT_BASE/vendor/$VENDOR/" "$AOSP_ROOT/vendor/$VENDOR" || {
+      echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
+      abort 1
+    }
+  fi
+  echo "[*] Vendor blobs copied to '$AOSP_ROOT/vendor'"
+else
+  echo "[*] Import '$OUT_BASE/vendor' to AOSP root"
+fi
+
+echo "[*] All actions completed successfully"
 abort 0
