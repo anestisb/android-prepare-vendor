@@ -29,7 +29,17 @@ declare -ra VENDOR_SKIP_FILES=(
   "build.prop"
   "default.prop"
   "manifest.xml"
+  "etc/selinux/nonplat_file_contexts"
+  "etc/selinux/nonplat_hwservice_contexts"
   "etc/selinux/nonplat_mac_permissions.xml"
+  "etc/selinux/nonplat_property_contexts"
+  "etc/selinux/nonplat_seapp_contexts"
+  "etc/selinux/nonplat_sepolicy.cil"
+  "etc/selinux/nonplat_service_contexts"
+  "etc/selinux/plat_sepolicy_vers.txt"
+  "etc/selinux/precompiled_sepolicy"
+  "etc/selinux/precompiled_sepolicy.plat_and_mapping.sha256"
+  "etc/selinux/vndservice_contexts"
 )
 
 declare -ra PIXEL_AB_PARTITIONS=(
