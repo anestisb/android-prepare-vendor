@@ -122,7 +122,6 @@ system/lib64/libtinyxml.so
 system/lib64/libwifi-hal-qcom.so
 system/lib/hw/gps.default.so
 system/lib/libgps.utils.so
-system/lib/libion.so
 system/lib/libloc_api_v02.so
 system/lib/libloc_core.so
 system/lib/libloc_ds_api.so
