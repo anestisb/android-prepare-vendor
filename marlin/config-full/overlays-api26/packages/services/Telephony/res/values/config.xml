@@ -212,7 +212,7 @@
     <string name="system_visual_voicemail_client"></string>
 
     <!-- Flag to enable VVM3 visual voicemail. VVM3 is used by Verizon Wireless. -->
-    <bool name="vvm3_enabled">false</bool>
+    <bool name="vvm3_enabled">true</bool>
 
     <!-- Flag indicating whether to allow pstn phone accounts [DO NOT TRANSLATE] -->
     <bool name="config_pstn_phone_accounts_enabled">true</bool>
