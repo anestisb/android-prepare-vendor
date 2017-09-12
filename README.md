@@ -138,6 +138,10 @@ original `BoardConfig.mk` without editing the source file.
 Additional target modules (with compatible structure based on rule build type) to
 be appended at master vendor `Android.mk`.
 
+### **device-vendor-config-apiXX.txt**
+Additional flags / properties to be appended at device vendor makefile
+(`device-vendor.mk` for Nexus or `device-vendor-${board_name}.mk` for Pixel).
+
 
 ## Supported devices
 | Device                          | API 23                      | API 24           | API 25           | API 26           |

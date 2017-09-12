@@ -53,6 +53,7 @@ cat <<_EOF
       --extra-modules : Additional modules to be appended at main vendor 'Android.mk'
       --allow-preopt  : Don't disable LOCAL_DEX_PREOPT for /system
       --force-modules : Text file with AOSP defined modules to force include
+      --device-vendor : Additional flags to be appended at device vendor makefile
       --force-vimg    : Always override AOSP definitions with included vendor blobs
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
@@ -1001,6 +1002,7 @@ EXTRA_MODULES=""
 FORCE_MODULES=""
 ALLOW_PREOPT=false
 FORCE_VIMG=false
+DEVICE_VENDOR_CONFIG=""
 
 DEVICE=""
 DEVICE_FAMILY=""
@@ -1056,6 +1058,10 @@ do
     --force-vimg)
       FORCE_VIMG=true
       ;;
+    --device-vendor)
+      DEVICE_VENDOR_CONFIG="$2"
+      shift
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -1074,6 +1080,7 @@ check_file "$DEP_DSO_BLOBS_LIST" "Vendor dep-dso-proprietary"
 check_file "$MK_FLAGS_LIST" "Vendor vendor-config"
 check_file "$EXTRA_MODULES" "Vendor extra modules"
 check_file "$FORCE_MODULES" "Vendor enforce modules"
+check_file "$DEVICE_VENDOR_CONFIG" "Vendor device config extra flags"
 
 # Populate the array with the APK that need to maintain their signature
 readarray -t PSIG_BC_FILES < <(
@@ -1157,15 +1164,11 @@ update_vendor_blobs_mk "$BLOBS_LIST"
 echo "[*] Generating '$(basename "$DEVICE_VENDOR_MK")'"
 echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
-if [ "$IS_PIXEL" = true ]; then
-  # Add missing properties from vendor/build.prop
-  {
-    echo 'PRODUCT_PROPERTY_OVERRIDES += \'
-    echo '    ro.hardware.egl=adreno \'
-    echo '    ro.hardware.fingerprint=fpc'
-    echo
-  } >> "$DEVICE_VENDOR_MK"
-fi
+# Append items listed in configuration file
+{
+  cat "$DEVICE_VENDOR_CONFIG"
+  echo ""
+} >> "$DEVICE_VENDOR_MK"
 
 # Generate AndroidBoardVendor.mk with radio stuff (baseband & bootloader)
 echo "[*] Generating 'AndroidBoardVendor.mk'"
