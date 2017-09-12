@@ -572,9 +572,7 @@ fi
 
 if [[ "$AOSP_ROOT" != "" ]]; then
   VENDOR="$(basename "$(find "$OUT_BASE"/vendor/* -maxdepth 0 -type d -print | head -n1)")"
-  if [ ! -d "$AOSP_ROOT/vendor/$VENDOR" ]; then
-    mkdir -p "$AOSP_ROOT/vendor/$VENDOR"
-  fi
+  mkdir -p "$AOSP_ROOT/vendor/$VENDOR"
 
   # If Pixel device we need to do some special directory handling due to common
   # files for the marlin codename
@@ -606,6 +604,7 @@ if [[ "$AOSP_ROOT" != "" ]]; then
   fi
   echo "[*] Vendor blobs copied to '$AOSP_ROOT/vendor'"
 
+  mkdir -p "$AOSP_ROOT/vendor_overlay/$VENDOR"
   rsync -aruz "$OUT_BASE/vendor_overlay/$VENDOR/" "$AOSP_ROOT/vendor_overlay/$VENDOR/" || {
     echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor_overlay/$VENDOR')"
     abort 1
