@@ -605,8 +605,15 @@ if [[ "$AOSP_ROOT" != "" ]]; then
     }
   fi
   echo "[*] Vendor blobs copied to '$AOSP_ROOT/vendor'"
+
+  rsync -aruz "$OUT_BASE/vendor_overlay/$VENDOR/" "$AOSP_ROOT/vendor_overlay/$VENDOR/" || {
+    echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor_overlay/$VENDOR')"
+    abort 1
+  }
+  echo "[*] Vendor overlays copied to '$AOSP_ROOT/vendor_overlay'"
 else
-  echo "[*] Import '$OUT_BASE/vendor' to AOSP root"
+  echo "[*] Import '$OUT_BASE/vendor' vendor blobs to AOSP root"
+  echo "[*] Import '$OUT_BASE/vendor_overlay' vendor overlays to AOSP root"
 fi
 
 echo "[*] All actions completed successfully"
