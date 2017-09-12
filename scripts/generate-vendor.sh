@@ -850,8 +850,8 @@ update_ab_ota_partitions() {
     do
       echo "    $partition \\"
     done
-  }  >> "$DEVICE_VENDOR_MK"
-  strip_trail_slash_from_file "$DEVICE_VENDOR_MK"
+  }  >> "$outMk"
+  strip_trail_slash_from_file "$outMk"
 }
 
 gen_android_mk() {
