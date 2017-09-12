@@ -146,8 +146,8 @@ Additional flags / properties to be appended at device vendor makefile
 ## Supported devices
 | Device                          | API 23                      | API 24           | API 25           | API 26           |
 | ------------------------------- | --------------------------- | -----------------| -----------------| -----------------|
-| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under development|
-| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under development|
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under testing    |
+| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under testing    |
 | N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
 | N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
 | Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | Under testing    |
