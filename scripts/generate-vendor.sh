@@ -53,6 +53,7 @@ cat <<_EOF
       --extra-modules : Additional modules to be appended at main vendor 'Android.mk'
       --allow-preopt  : Don't disable LOCAL_DEX_PREOPT for /system
       --force-modules : Text file with AOSP defined modules to force include
+      --force-vimg    : Always override AOSP definitions with included vendor blobs
     INFO:
       * Output should be moved/synced with AOSP root, unless -o is AOSP root
 _EOF
@@ -246,10 +247,12 @@ update_vendor_blobs_mk() {
   local relDir_prop="vendor/$VENDOR_DIR/$DEVICE/proprietary"
   local relDir_vendor="vendor/$VENDOR_DIR/$DEVICE/vendor"
 
-  local src="" srcRelDir="" dst="" dstRelDir="" fileExt="" dstMk
+  local src="" srcRelDir="" dst="" dstRelDir="" fileExt="" dstMk=""
 
   echo 'PRODUCT_COPY_FILES += \' >> "$DEVICE_VENDOR_BLOBS_MK"
-  echo 'PRODUCT_COPY_FILES := \' >> "$BOARD_CONFIG_VENDOR_MK"
+  if [ $FORCE_VIMG = true ]; then
+    echo 'PRODUCT_COPY_FILES := \' >> "$BOARD_CONFIG_VENDOR_MK"
+  fi
 
   while read -r file
   do
@@ -306,11 +309,18 @@ update_vendor_blobs_mk() {
       abort 1
     fi
 
-    echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$DEVICE_VENDOR_BLOBS_MK"
+    if [ $FORCE_VIMG = true ]; then
+      echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$dstMk"
+    else
+      echo "    $srcRelDir/$src:$dstRelDir/$dst:$VENDOR \\" >> "$DEVICE_VENDOR_BLOBS_MK"
+    fi
   done < <(grep -Ev '(^#|^$)' "$blobsList")
 
   strip_trail_slash_from_file "$DEVICE_VENDOR_BLOBS_MK"
-  echo '    $(PRODUCT_COPY_FILES)' >> "$BOARD_CONFIG_VENDOR_MK"
+
+  if [ $FORCE_VIMG = true ]; then
+    echo '    $(PRODUCT_COPY_FILES)' >> "$BOARD_CONFIG_VENDOR_MK"
+  fi
 }
 
 process_extra_modules() {
@@ -994,6 +1004,7 @@ MK_FLAGS_LIST=""
 EXTRA_MODULES=""
 FORCE_MODULES=""
 ALLOW_PREOPT=false
+FORCE_VIMG=false
 
 DEVICE=""
 DEVICE_FAMILY=""
@@ -1045,6 +1056,9 @@ do
       ;;
     --allow-preopt)
       ALLOW_PREOPT=true
+      ;;
+    --force-vimg)
+      FORCE_VIMG=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"

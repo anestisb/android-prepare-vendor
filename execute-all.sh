@@ -62,6 +62,7 @@ cat <<_EOF
       --smaliex    : [OPTIONAL] Force use of smaliEx to revert preoptimized bytecode [DEPRECATED]
       --deodex-all : [OPTIONAL] De-optimize all packages under /system
       --debugfs    : [OPTIONAL] Use debugfs instead of default fuse-ext2, to extract image files data
+      --force-vimg : [OPTIONAL] Force factory extracted blobs under /vendor to be always used regardless AOSP definitions
 
     INFO:
       * Default configuration is naked. Use "-f|--full" if you plan to install Google Play Services
@@ -163,6 +164,7 @@ BYTECODE_REPAIR_METHOD=""
 DEODEX_ALL=false
 AOSP_ROOT=""
 USE_DEBUGFS=false
+FORCE_VIMG=false
 
 # Compatibility
 check_bash_version
@@ -250,6 +252,9 @@ do
       ;;
     --debugfs)
       USE_DEBUGFS=true
+      ;;
+    --force-vimg)
+      FORCE_VIMG=true
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -543,6 +548,9 @@ ln -s "$FACTORY_IMGS_DATA/radio" "$FACTORY_IMGS_R_DATA/radio"
 VGEN_SCRIPT_EXTRA_ARGS=""
 if [ $FORCE_PREOPT = true ]; then
   VGEN_SCRIPT_EXTRA_ARGS="--allow-preopt"
+fi
+if [ $FORCE_VIMG = true ]; then
+  VGEN_SCRIPT_EXTRA_ARGS+=" --force-vimg"
 fi
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
