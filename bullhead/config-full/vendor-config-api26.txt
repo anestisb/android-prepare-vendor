@@ -1,0 +1,12 @@
+# Additional flags to be inserted at generated BoardConfigVendor.mk
+
+# Bypass location API missing dependencies AOSP compilation problem
+# Target shared libs are included as prebuilt from factory image
+BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE :=
+
+# Enable back dm-verity verify for /vendor partition. This hack is to
+# effectively override the results of the following commit in AOSP
+# https://android.googlesource.com/device/lge/bullhead/+/7fecf8ad27e41fc1ccfc586bac8ffe1c66016873
+PRODUCT_COPY_FILES := \
+    device/lge/bullhead/fstab.bullhead:root/fstab.bullhead \
+    $(PRODUCT_COPY_FILES)

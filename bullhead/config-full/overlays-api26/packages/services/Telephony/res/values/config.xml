@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2009 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<!-- NOTE: Many variables that used to be in this file have been migrated to
+     CarrierConfigManager.java. Please consider whether new variables belong
+     there before adding to this file. Variables here should be more closely
+     related to devices than to networks. -->
+
+<!-- Phone app resources that may need to be customized
+     for different hardware or product builds. -->
+<resources>
+    <!-- Flag indicating whether the Phone app should ignore
+         EVENT_SIM_NETWORK_LOCKED events from the Sim.  If true, this will
+         prevent the IccNetworkDepersonalizationPanel from being shown,
+         and effectively disable the "Sim network lock" feature. -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_IGNORE_SIM_NETWORK_LOCKED_EVENTS_BOOL -->
+    <bool name="ignore_sim_network_locked_events">false</bool>
+
+    <!-- Flag indicating whether the Phone app should provide
+         a "Dismiss" button on the SIM network unlock screen.
+         The default value is true.
+         If set to false, there will be *no way* to dismiss the SIM
+         network unlock screen if you don't enter the correct unlock code.
+         (One important consequence: there will be no way to make an
+         Emergency Call if your SIM is network-locked and you don't know
+         the PIN.) -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_SIM_NETWORK_UNLOCK_ALLOW_DISMISS_BOOL -->
+    <bool name="sim_network_unlock_allow_dismiss">true</bool>
+
+    <!-- OTA configuration values, used when provisioning CDMA devices.
+         Following defaults values of zero means OTA UI is completely disabled.
+         These OTA UI can be enabled by setting config value to one in the product
+         specific overlay file -->
+
+    <!-- Determine whether we want to display the OTA activation screen, which
+         gives the user option to activate or cancel -->
+    <integer name="OtaShowActivationScreen">1</integer>
+    <!-- Determine whether we should show the "listen for instructions" screen after
+         successfully placing the OTA call -->
+    <integer name="OtaShowListeningScreen">0</integer>
+    <!-- The number of times we should show the activation screen/allow the provisioning
+         to fail before just showing an unsuccessful dialog -->
+    <integer name="OtaShowActivateFailTimes">0</integer>
+    <!-- Determine whether or not we should play the success/failure tone -->
+    <integer name="OtaPlaySuccessFailureTone">0</integer>
+
+    <!-- Flag indicating if the phone is a world phone -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_WORLD_PHONE_BOOL -->
+    <bool name="world_phone">false</bool>
+
+    <!-- If true, enable vibration (haptic feedback) for key presses
+         in the EmergencyDialer activity. The pattern is set on a
+         per-platform basis using config_virtualKeyVibePattern.  To be
+         consistent with the regular Dialer, this value should agree
+         with the corresponding values from config.xml under
+         apps/Contacts. -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_ENABLE_DIALER_KEY_VIBRATION_BOOL -->
+    <bool name="config_enable_dialer_key_vibration">true</bool>
+
+    <!-- Flag indicating if hac is enabled -->
+    <bool name="hac_enabled">false</bool>
+
+    <!-- Flag indicating if dtmf tone type is enabled -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_DTMF_TYPE_ENABLED_BOOL -->
+    <bool name="dtmf_type_enabled">false</bool>
+
+    <!-- Flag indicating if auto retry is enabled -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_AUTO_RETRY_ENABLED_BOOL -->
+    <bool name="auto_retry_enabled">false</bool>
+
+    <!-- Determine whether we want to play local DTMF tones in a call, or
+         just let the radio/BP handle playing of the tones. -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_ALLOW_LOCAL_DTMF_TONES_BOOL -->
+    <bool name="allow_local_dtmf_tones">true</bool>
+
+    <!-- If true, show an onscreen "Dial" button in the dialer.
+         In practice this is used on all platforms, even the ones with hard SEND/END
+         keys, but for maximum flexibility it's controlled by a flag here
+         (which can be overridden on a per-product basis.) -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_SHOW_ONSCREEN_DIAL_BUTTON_BOOL -->
+    <bool name="config_show_onscreen_dial_button">true</bool>
+
+    <!-- Determine whether calls to mute the microphone in PhoneUtils
+         are routed through the android.media.AudioManager class (true) or through
+         the com.android.internal.telephony.Phone interface (false). -->
+    <bool name="send_mic_mute_to_AudioManager">false</bool>
+
+    <!-- Determines if device implements a noise suppression device for in call audio-->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_HAS_IN_CALL_NOISE_SUPPRESSION_BOOL -->
+    <bool name="has_in_call_noise_suppression">false</bool>
+
+    <!-- Determines if the current device should allow emergency numbers
+         to be logged in the Call Log.
+         (Some carriers require that emergency calls *not* be logged,
+         presumably to avoid the risk of accidental redialing from the
+         call log UI.  This is a good idea, so the default here is false.)
+
+         TODO: on the other hand, it might still be useful to have some
+         record of the emergency calls you've made, or to be able to look
+         up the exact date/time of an emergency call.  So perhaps we
+         *should* log those calls, but instead fix the call log to disable
+         the "call" button for emergency numbers. -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_ALLOW_EMERGENCY_NUMBERS_IN_CALL_LOG_BOOL -->
+    <bool name="allow_emergency_numbers_in_call_log">false</bool>
+
+    <!-- If this is true, the SIM card (through Customer Service Profile EF file) will be
+         able to prevent manual operator selection. If false, this SIM setting will be
+         ignored and manual operator selection will always be available. See
+         CPHS4_2.WW6, CPHS B.4.7.1 for more information -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_CSP_ENABLED_BOOL -->
+    <bool name="csp_enabled">false</bool>
+
+    <!-- If true, removes the Voice Privacy option from Call Settings -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_VOICE_PRIVACY_DISABLE_UI_BOOL -->
+    <bool name="config_voice_privacy_disable">false</bool>
+
+    <!-- Configure certain GsmUmtsOptions to be available or not. The
+         default values are in Phone/res/values/config.xml and maybe overridden
+         in operator specific resource directories or device specific overlays. -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_APN_EXPAND_BOOL -->
+    <bool name="config_apn_expand" translatable="false">true</bool>
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_OPERATOR_SELECTION_EXPAND_BOOL -->
+    <bool name="config_operator_selection_expand" translatable="false">true</bool>
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_PREFER_2G_BOOL -->
+    <bool name="config_prefer_2g" translatable="false">true</bool>
+    <!-- Show enabled lte option for lte device -->
+    <bool name="config_enabled_lte" translatable="false">false</bool>
+    <!-- Show enabled tdscdma option for device -->
+    <bool name="config_support_tdscdma" translatable="false">false</bool>
+    <!-- Show enabled tdscdma option for device when connect roaming network -->
+    <string-array name="config_support_tdscdma_roaming_on_networks" translatable="false">
+    </string-array>
+    <!-- Show cdma auto network mode in (glabal) roaming -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_SHOW_CDMA_CHOICES_BOOL -->
+    <bool name="config_show_cdma" translatable="false">false</bool>
+
+    <!-- Package name for the default in-call UI and dialer [DO NOT TRANSLATE] -->
+    <string name="ui_default_package" translatable="false">com.android.dialer</string>
+
+    <!-- Class name for the default main Dialer activity [DO NOT TRANSLATE] -->
+    <string name="dialer_default_class" translatable="false">com.android.dialer.DialtactsActivity</string>
+
+    <!-- Package name for the network operator settings [DO NOT TRANSLATE] -->
+    <string name="network_operator_settings_package" translatable="false">com.android.phone</string>
+    <!-- Class name for the network operator settings activity [DO NOT TRANSLATE] -->
+    <string name="network_operator_settings_class" translatable="false">com.android.phone.NetworkSetting</string>
+
+    <!-- CDMA activation goes through HFA -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_USE_HFA_FOR_PROVISIONING_BOOL -->
+    <bool name="config_use_hfa_for_provisioning">false</bool>
+
+    <!-- CDMA activation goes through OTASP.
+        TODO: This should be combined with config_use_hfa_for_provisioning and implemented
+        as an enum (NONE, HFA, OTASP). -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_USE_OTASP_FOR_PROVISIONING_BOOL -->
+    <bool name="config_use_otasp_for_provisioning">false</bool>
+
+    <!-- Display carrier settings menu if true -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_CARRIER_SETTINGS_ENABLE_BOOL -->
+    <bool name="config_carrier_settings_enable">false</bool>
+    <!-- carrier settings menu -->
+    <string name="carrier_settings" translatable="false"></string>
+    <string name="carrier_settings_menu" translatable="false"></string>
+
+    <!-- Does not display additional call seting for IMS phone based on GSM Phone -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_ADDITIONAL_CALL_SETTING_BOOL -->
+    <bool name="config_additional_call_setting">true</bool>
+
+    <!-- Show APN Settings for some CDMA carriers -->
+    <!-- DEPRECATED: Use CarrierConfigManager#KEY_SHOW_APN_SETTING_CDMA_BOOL -->
+    <bool name="config_show_apn_setting_cdma">false</bool>
+
+    <!-- Allows the telephony HFA logic to run even if we're not in setup wizard. -->
+    <bool name="config_allow_hfa_outside_of_setup_wizard">true</bool>
+
+    <!-- After a CDMA conference call is merged, the swap button should be displayed. -->
+    <bool name="support_swap_after_merge" translatable="false">true</bool>
+
+    <!-- Determine whether the voicemail notification is persistent in the notification bar.
+         If true, the voicemail notifications cannot be dismissed from the notification bar. -->
+    <bool name="voicemail_notification_persistent">false</bool>
+
+    <!-- Disables dialing "*228" (OTASP provisioning) on CDMA carriers where it is not supported or
+         is potentially harmful by locking the SIM to 3G. -->
+    <string name="config_disable_cdma_activation_code" translatable="false">false</string>
+
+    <!-- Flag indicating if SIM state should be checked before making an outgoing call. -->
+    <bool name="config_checkSimStateBeforeOutgoingCall">false</bool>
+    <!-- Package name for the SIM unlock dialog.[DO NOT TRANSLATE] -->
+    <string name="config_simUnlockUiPackage" translatable="false">@null</string>
+    <!-- Class name for the SIM unlock dialog.[DO NOT TRANSLATE] -->
+    <string name="config_simUnlockUiClass" translatable="false">@null</string>
+
+    <!-- Flag indicating whether to allow visual voicemail if available on the device.[DO NOT TRANSLATE] -->
+    <bool name="allow_visual_voicemail">true</bool>
+
+    <!-- The package to handle visual voicemail if the default dialer or the package
+    CarrierConfigManager.KEY_CARRIER_VVM_PACKAGE_NAME_STRING does not handle it -->
+    <string name="system_visual_voicemail_client"></string>
+
+    <!-- Flag to enable VVM3 visual voicemail. VVM3 is used by Verizon Wireless. -->
+    <bool name="vvm3_enabled">true</bool>
+
+    <!-- Flag indicating whether to allow pstn phone accounts [DO NOT TRANSLATE] -->
+    <bool name="config_pstn_phone_accounts_enabled">true</bool>
+
+    <!-- Flag indicating whether the the emergency phone account should be emergency calls only -->
+    <bool name="config_emergency_account_emergency_calls_only">false</bool>
+
+    <!-- Whether the emergency only account can make emergency calls -->
+    <bool name="config_pstnCanPlaceEmergencyCalls">true</bool>
+
+    <!-- The package name for the platform carrier config app, bundled with system image. -->
+    <string name="platform_carrier_config_package" translatable="false">com.android.carrierconfig</string>
+</resources>
