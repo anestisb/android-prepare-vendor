@@ -74,6 +74,15 @@ array_contains() {
   return 1
 }
 
+is_naked_config() {
+  local inConfDir="$1"
+  if [[ "$(basename "$inConfDir")" == "config-naked" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
 
@@ -156,6 +165,14 @@ do
   if array_contains "$FILE" "${VENDOR_SKIP_FILES[@]}"; then
     continue
   fi
+
+  # Additional skips only for naked configs
+  if is_naked_config "$CONFIGS_DIR"; then
+    if array_contains "$FILE" "${VENDOR_SKIP_FILES_NAKED[@]}"; then
+      continue
+    fi
+  fi
+
   echo "vendor/$FILE" >> "$OUT_BLOBS_FILE_TMP"
 done
 

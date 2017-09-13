@@ -24,12 +24,17 @@ readonly D_OATDUMP_URL_API26='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 # sub-directories that contain bytecode archives
 declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
 
-# Files to skip from vendor partition when parsing factory images
+# Files to skip from vendor partition when parsing factory images (for all configs)
 declare -ra VENDOR_SKIP_FILES=(
   "build.prop"
   "compatibility_matrix.xml"
   "default.prop"
   "etc/NOTICE.xml.gz"
+  "manifest.xml"
+)
+
+# Files to skip from vendor partition when parsing factory images (for naked config only)
+declare -ra VENDOR_SKIP_FILES_NAKED=(
   "etc/selinux/nonplat_file_contexts"
   "etc/selinux/nonplat_hwservice_contexts"
   "etc/selinux/nonplat_mac_permissions.xml"
@@ -41,7 +46,6 @@ declare -ra VENDOR_SKIP_FILES=(
   "etc/selinux/precompiled_sepolicy"
   "etc/selinux/precompiled_sepolicy.plat_and_mapping.sha256"
   "etc/selinux/vndservice_contexts"
-  "manifest.xml"
 )
 
 declare -ra PIXEL_AB_PARTITIONS=(
