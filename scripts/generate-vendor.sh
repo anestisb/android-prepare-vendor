@@ -1242,27 +1242,27 @@ if [[ "$AOSP_ROOT" != "" ]]; then
     # Device name matches device family (e.g. marlin)
     if [[ "$DEVICE" == "$DEVICE_FAMILY" ]]; then
       # Do not '--delete' here since it will remove shared files
-      rsync -arz "$OUT_BASE/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
+      rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
         echo "[-] rsync failed"
         abort 1
       }
     # Device name does not match device family (e.g. sailfish)
     elif [[ "$DEVICE" != "$DEVICE_FAMILY"  ]]; then
       # Soft update for device family dir so that co-existing configs are not affected
-      rsync -arz "$OUT_BASE/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
+      rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
         echo "[-] rsync failed"
         abort 1
       }
 
       # Force update for device (--delete old copies no longer present)
-      rsync -arz --delete "$OUT_BASE/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
+      rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
         echo "[-] rsync failed"
         abort 1
       }
     fi
   # Non-pixel devices have separate vendor names so it's safe to force update
   else
-    rsync -arz --delete "$OUT_BASE/vendor/$VENDOR_DIR/" "$AOSP_ROOT/vendor/$VENDOR_DIR" || {
+    rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/" "$AOSP_ROOT/vendor/$VENDOR_DIR" || {
       echo "[-] rsync failed"
       abort 1
     }
@@ -1271,7 +1271,7 @@ if [[ "$AOSP_ROOT" != "" ]]; then
 
   # Vendor overlays are always under separate directories so it's safe to force update
   mkdir -p "$AOSP_ROOT/vendor_overlay/$VENDOR_DIR"
-  rsync -arz --delete "$OUT_BASE/vendor_overlay/$VENDOR_DIR/" "$AOSP_ROOT/vendor_overlay/$VENDOR_DIR/" || {
+  rsync -arz --delete "$OUTPUT_DIR/vendor_overlay/$VENDOR_DIR/" "$AOSP_ROOT/vendor_overlay/$VENDOR_DIR/" || {
     echo "[-] rsync failed"
     abort 1
   }
