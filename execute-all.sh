@@ -552,7 +552,7 @@ if [ $FORCE_VIMG = true ]; then
   VGEN_SCRIPT_EXTRA_ARGS+=" --force-vimg"
 fi
 if [[ "$AOSP_ROOT" != "" ]]; then
-  VGEN_SCRIPT_EXTRA_ARGS+=" --aosp-root \"$AOSP_ROOT\""
+  VGEN_SCRIPT_EXTRA_ARGS+=" --aosp-root $AOSP_ROOT"
 fi
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
