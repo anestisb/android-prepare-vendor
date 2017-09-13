@@ -17,6 +17,8 @@ system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/OemDmTrigger/OemDmTrigger.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk
 system/priv-app/TetheringEntitlement/TetheringEntitlement.apk
+vendor/app/QAS_DVC_MSP/QAS_DVC_MSP.apk::PRESIGNED
+vendor/app/vzw_msdc_api/vzw_msdc_api.apk::PRESIGNED
 
 # Sprint
 system/priv-app/SprintDM/SprintDM.apk

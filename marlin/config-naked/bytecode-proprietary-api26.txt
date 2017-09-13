@@ -3,3 +3,5 @@
 # Radio
 system/priv-app/CNEService/CNEService.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk
+vendor/app/QAS_DVC_MSP/QAS_DVC_MSP.apk::PRESIGNED
+vendor/app/vzw_msdc_api/vzw_msdc_api.apk::PRESIGNED
