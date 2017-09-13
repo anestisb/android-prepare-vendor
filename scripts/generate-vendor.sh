@@ -47,12 +47,13 @@ cat <<_EOF
     OPTIONS:
       -i|--input     : Root path of extracted /system & /vendor partitions
       -o|--output    : Path to save vendor blobs & makefiles in AOSP compatible structure
+      --aosp-root    : [OPTIONAL] AOSP ROOT SRC directoy to directly rsync output
       --conf-dir     : Directory containing device configuration files
       --api          : API level in order to pick appropriate config file
-      --allow-preopt : Don't disable LOCAL_DEX_PREOPT for /system
-      --force-vimg   : Always override AOSP definitions with included vendor blobs
+      --allow-preopt : [OPTIONAL] Don't disable LOCAL_DEX_PREOPT for /system
+      --force-vimg   : [OPTIONAL] Always override AOSP definitions with included vendor blobs
     INFO:
-      * Output should be moved/synced with AOSP root, unless -o is AOSP root
+      * If '--aosp-root' is used intermediate output is set to /tmp and rsynced when success
 _EOF
   abort 1
 }
@@ -956,10 +957,10 @@ strip_trail_slash_from_file() {
 
 gen_sigs_file() {
   local inDir="$1"
-  local sigsFile="$inDir/file_signatures.txt"
+  local sigsFile="$2"
   > "$sigsFile"
 
-  find "$inDir" -type f ! -name "file_signatures.txt" | sort | while read -r file
+  find "$inDir"/vendor* -type f ! -name "file_signatures.txt" | sort | while read -r file
   do
     shasum -a1 "$file" | sed "s#$inDir/##" >> "$sigsFile"
   done
@@ -990,6 +991,7 @@ trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
 
 INPUT_DIR=""
+AOSP_ROOT=""
 OUTPUT_DIR=""
 CONFIGS_DIR=""
 API_LEVEL=""
@@ -1022,6 +1024,10 @@ do
       ;;
     -o|--output)
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
+      shift
+      ;;
+    --asop-root)
+      AOSP_ROOT=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
     --conf-dir)
@@ -1098,6 +1104,8 @@ if [[ "$VENDOR" == "google" ]]; then
     DEVICE_FAMILY="marlin"
   fi
   mkdir -p "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
+else
+  DEVICE_FAMILY="$DEVICE"
 fi
 
 echo "[*] Generating blobs for vendor/$VENDOR_DIR/$DEVICE"
@@ -1217,11 +1225,57 @@ fi
 
 # Generate file signatures list
 echo "[*] Generating signatures file"
-gen_sigs_file "$OUTPUT_VENDOR"
+gen_sigs_file "$OUTPUT_DIR" "$OUTPUT_VENDOR/file_signatures.txt"
 
 # Can be used from AOSP build infrastructure to verify that build is performed
 # against a matching factory images vendor blobs extract
 echo "[*] Generating build_id file"
 echo "$BUILD_ID" > "$OUTPUT_VENDOR/build_id.txt"
+
+if [[ "$AOSP_ROOT" != "" ]]; then
+  mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE"
+  mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
+
+  # If Pixel device we need to do some special directory handling due to shared
+  # assets under google_devices/marlin
+  if [ "$IS_PIXEL" = true ]; then
+    # Device name matches device family (e.g. marlin)
+    if [[ "$DEVICE" == "$DEVICE_FAMILY" ]]; then
+      # Do not '--delete' here since it will remove shared files
+      rsync -arz "$OUT_BASE/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
+        echo "[-] rsync failed"
+        abort 1
+      }
+    # Device name does not match device family (e.g. sailfish)
+    elif [[ "$DEVICE" != "$DEVICE_FAMILY"  ]]; then
+      # Soft update for device family dir so that co-existing configs are not affected
+      rsync -arz "$OUT_BASE/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
+        echo "[-] rsync failed"
+        abort 1
+      }
+
+      # Force update for device (--delete old copies no longer present)
+      rsync -arz --delete "$OUT_BASE/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
+        echo "[-] rsync failed"
+        abort 1
+      }
+    fi
+  # Non-pixel devices have separate vendor names so it's safe to force update
+  else
+    rsync -arz --delete "$OUT_BASE/vendor/$VENDOR_DIR/" "$AOSP_ROOT/vendor/$VENDOR_DIR" || {
+      echo "[-] rsync failed"
+      abort 1
+    }
+  fi
+  echo "[*] Vendor blobs copied to '$AOSP_ROOT/vendor/$VENDOR_DIR'"
+
+  # Vendor overlays are always under separate directories so it's safe to force update
+  mkdir -p "$AOSP_ROOT/vendor_overlay/$VENDOR_DIR"
+  rsync -arz --delete "$OUT_BASE/vendor_overlay/$VENDOR_DIR/" "$AOSP_ROOT/vendor_overlay/$VENDOR_DIR/" || {
+    echo "[-] rsync failed"
+    abort 1
+  }
+  echo "[*] Vendor overlays copied to '$AOSP_ROOT/vendor_overlay/$VENDOR_DIR'"
+fi
 
 abort 0

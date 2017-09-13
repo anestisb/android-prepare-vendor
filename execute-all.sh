@@ -551,8 +551,12 @@ fi
 if [ $FORCE_VIMG = true ]; then
   VGEN_SCRIPT_EXTRA_ARGS+=" --force-vimg"
 fi
+if [[ "$AOSP_ROOT" != "" ]]; then
+  VGEN_SCRIPT_EXTRA_ARGS+=" --aosp-root \"$AOSP_ROOT\""
+fi
 
-$VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" --output "$OUT_BASE" \
+$VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
+  --output "$OUT_BASE" \
   --api "$API_LEVEL" \
   --conf-dir "$SCRIPTS_ROOT/$DEVICE/$CONFIG" \
   $VGEN_SCRIPT_EXTRA_ARGS || {
@@ -570,47 +574,9 @@ if [ "$KEEP_DATA" = false ]; then
   rm -rf "$FACTORY_IMGS_R_DATA"
 fi
 
-if [[ "$AOSP_ROOT" != "" ]]; then
-  VENDOR="$(basename "$(find "$OUT_BASE"/vendor/* -maxdepth 0 -type d -print | head -n1)")"
-  mkdir -p "$AOSP_ROOT/vendor/$VENDOR"
-
-  # If Pixel device we need to do some special directory handling due to common
-  # files for the marlin codename
-  if is_pixel "$DEVICE"; then
-    # If sailfish, don't delete the marlin files - just override the affected ones
-    # sailfish blobs include marlin configs too
-    if [[ "$DEVICE" == "sailfish" ]]; then
-      rsync -arz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
-        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
-        abort 1
-      }
-
-      rsync -arz --delete "$OUT_BASE/vendor/$VENDOR/sailfish/" "$AOSP_ROOT/vendor/$VENDOR/sailfish" || {
-        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
-        abort 1
-      }
-    # If marlin, don't delete the sailfish files - just override the affected ones
-    elif [[ "$DEVICE" == "marlin" ]]; then
-      rsync -arz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
-        echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
-        abort 1
-      }
-    fi
-  else
-    rsync -arz --delete "$OUT_BASE/vendor/$VENDOR/" "$AOSP_ROOT/vendor/$VENDOR" || {
-      echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
-      abort 1
-    }
-  fi
-  echo "[*] Vendor blobs copied to '$AOSP_ROOT/vendor'"
-
-  mkdir -p "$AOSP_ROOT/vendor_overlay/$VENDOR"
-  rsync -aruz "$OUT_BASE/vendor_overlay/$VENDOR/" "$AOSP_ROOT/vendor_overlay/$VENDOR/" || {
-    echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor_overlay/$VENDOR')"
-    abort 1
-  }
-  echo "[*] Vendor overlays copied to '$AOSP_ROOT/vendor_overlay'"
-else
+# If output dir is not AOSP SRC root print some user messages, otherwise the
+# generate-vendor.sh script will rsync output intermediates
+if [[ "$AOSP_ROOT" == "" ]]; then
   echo "[*] Import '$OUT_BASE/vendor' vendor blobs to AOSP root"
   echo "[*] Import '$OUT_BASE/vendor_overlay' vendor overlays to AOSP root"
 fi
