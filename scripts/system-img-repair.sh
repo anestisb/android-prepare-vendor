@@ -584,9 +584,11 @@ smali_repair() {
         counter=1
         while read -r dexEntry
         do
+          local baksmali_log="$TMP_WORK_DIR/baksmali_log.txt"
           java -jar "$BAKSMALI_JAR" x -o "$deoptDir" -d "$TMP_WORK_DIR/$abi" \
-                    "$curOdex" &>/dev/null || {
+                    "$curOdex" &> "$baksmali_log" || {
             echo "[-] '$relFile/oat/$abi/$pkgName.odex' baksmali failed"
+            cat "$baksmali_log"
             abort 1
           }
 

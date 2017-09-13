@@ -2,7 +2,6 @@
 
 # Radio
 system/priv-app/CNEService/CNEService.apk
-system/priv-app/DiagMon/DiagMon.apk
 system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk
 
 # Wifi Calling

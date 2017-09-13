@@ -580,24 +580,24 @@ if [[ "$AOSP_ROOT" != "" ]]; then
     # If sailfish, don't delete the marlin files - just override the affected ones
     # sailfish blobs include marlin configs too
     if [[ "$DEVICE" == "sailfish" ]]; then
-      rsync -aruz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
+      rsync -arz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
         echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
         abort 1
       }
 
-      rsync -aruz --delete "$OUT_BASE/vendor/$VENDOR/sailfish/" "$AOSP_ROOT/vendor/$VENDOR/sailfish" || {
+      rsync -arz --delete "$OUT_BASE/vendor/$VENDOR/sailfish/" "$AOSP_ROOT/vendor/$VENDOR/sailfish" || {
         echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
         abort 1
       }
     # If marlin, don't delete the sailfish files - just override the affected ones
     elif [[ "$DEVICE" == "marlin" ]]; then
-      rsync -aruz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
+      rsync -arz "$OUT_BASE/vendor/$VENDOR/marlin/" "$AOSP_ROOT/vendor/$VENDOR/marlin" || {
         echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
         abort 1
       }
     fi
   else
-    rsync -aruz --delete "$OUT_BASE/vendor/$VENDOR/" "$AOSP_ROOT/vendor/$VENDOR" || {
+    rsync -arz --delete "$OUT_BASE/vendor/$VENDOR/" "$AOSP_ROOT/vendor/$VENDOR" || {
       echo "[!] Failed to rsync output in AOSP root ('$AOSP_ROOT/vendor/$VENDOR')"
       abort 1
     }
