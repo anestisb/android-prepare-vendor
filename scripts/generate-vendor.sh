@@ -1026,7 +1026,7 @@ do
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
-    --asop-root)
+    --aosp-root)
       AOSP_ROOT=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
