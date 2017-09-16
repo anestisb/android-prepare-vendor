@@ -30,6 +30,7 @@ declare -ra VENDOR_SKIP_FILES=(
   "compatibility_matrix.xml"
   "default.prop"
   "etc/NOTICE.xml.gz"
+  "etc/wifi/wpa_supplicant.conf"
   "manifest.xml"
 )
 
