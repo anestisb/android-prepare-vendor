@@ -679,6 +679,7 @@ gen_mk_for_bytecode() {
       # Overlay APKs should only contain resource files
       if [[ "$relSubRoot" =~ ^overlay/.* ]]; then
         echo "LOCAL_IS_RUNTIME_RESOURCE_OVERLAY := true"
+        echo "LOCAL_DEX_PREOPT := false"
       fi
 
       echo 'include $(BUILD_PREBUILT)'
