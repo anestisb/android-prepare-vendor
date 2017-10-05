@@ -639,6 +639,7 @@ gen_mk_for_bytecode() {
         pkgs_SLinks+=("$dsoMName")
         apk_lib_slinks+="$(gen_apk_dso_symlink "$dsoName" "$dsoMName" "$dsoRoot" \
                            "$lcMPath/$pkgName" "$arch")"
+        echo "${dsoRoot:1}/$dsoName" >> "$APK_SYSTEM_LIB_BLOBS_LIST"
       done < <(find -L "$appDir/lib" -type l -iname '*.so')
     fi
 
@@ -1004,6 +1005,7 @@ DEVICE_FAMILY=""
 IS_PIXEL=false
 VENDOR=""
 DEV_FAMILY_BOARD_CONFIG_VENDOR_MK=""
+APK_SYSTEM_LIB_BLOBS_LIST="$TMP_WORK_DIR/apk_system_lib_blobs.txt"
 RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
 
 # Check that system tools exist
@@ -1216,9 +1218,16 @@ if [ -f "$RUNTIME_EXTRA_BLOBS_LIST" ]; then
   update_vendor_blobs_mk "$RUNTIME_EXTRA_BLOBS_LIST"
 
   cat "$RUNTIME_EXTRA_BLOBS_LIST" >> "$BLOBS_LIST"
-  sort "$BLOBS_LIST" > "$BLOBS_LIST.tmp"
-  mv "$BLOBS_LIST.tmp" "$BLOBS_LIST"
 fi
+if [ -f "$APK_SYSTEM_LIB_BLOBS_LIST" ]; then
+  echo "[*] Processing additional runtime generated product files from APK symlinks"
+  extract_blobs "$APK_SYSTEM_LIB_BLOBS_LIST" "$INPUT_DIR" "$OUTPUT_VENDOR"
+  update_vendor_blobs_mk "$APK_SYSTEM_LIB_BLOBS_LIST"
+
+  cat "$APK_SYSTEM_LIB_BLOBS_LIST" >> "$BLOBS_LIST"
+fi
+sort "$BLOBS_LIST" > "$BLOBS_LIST.tmp"
+mv "$BLOBS_LIST.tmp" "$BLOBS_LIST"
 
 if [ "$IS_PIXEL" = true ]; then
   update_ab_ota_partitions "$DEVICE_VENDOR_MK"
