@@ -21,6 +21,15 @@ readonly D_OATDUMP_URL_API25='https://onedrive.live.com/download?cid=D1FAC8CC6BE
 readonly L_OATDUMP_URL_API26='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21557&authkey=AG47qhXu164sYwc'
 readonly D_OATDUMP_URL_API26='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21561&authkey=ABu-oqJbQDwQ-ZQ'
 
+readonly L_OATDUMP_API23_SIG='688f1c1f97e3b9eb32702c60ca05abbf313bc98a25334aa3ed4a108095162244'
+readonly D_OATDUMP_API23_SIG='688f1c1f97e3b9eb32702c60ca05abbf313bc98a25334aa3ed4a108095162244'
+readonly L_OATDUMP_API24_SIG='1f99e7d0f2894cfe52fb7f2a24d5076f217977cbb1a46fafdf5ea38b0a11adce'
+readonly D_OATDUMP_API24_SIG='4a7f5614eb04d9bea85bfa05853523843f9cc80a64eab4c98efed2f70ed3d90e'
+readonly L_OATDUMP_API25_SIG='8b8cd18f08afd00fc6bf33d5b7f5be4faab9f39849b258bade5d15c3e5f33ce8'
+readonly D_OATDUMP_API25_SIG='97f26b40cdc1fb2b5e5babe7ff8c63b70e7d3a3ab8dee19b035bbb0fdfa5477e'
+readonly L_OATDUMP_API26_SIG='b0fba0d6ceae8e921c11ce5b7325da6ca885628243bf19b5679530d7196f18bf'
+readonly D_OATDUMP_API26_SIG='231eb72e788debfe61e805a82a8f5bac26fd1412212b64c6c228ba8cf604cf24' # Unquicken art patches TBC
+
 # sub-directories that contain bytecode archives
 declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
 

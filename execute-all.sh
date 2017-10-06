@@ -96,7 +96,7 @@ unmount_raw_image() {
   fi
 }
 
-oatdump_prepare_env() {
+oatdump_deps_download() {
   local api_level="$1"
 
   local download_url
@@ -115,10 +115,42 @@ oatdump_prepare_env() {
     abort 1
   }
 
-  unzip -qq "$out_file" -d "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level" || {
+  unzip -qq -o "$out_file" -d "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level" || {
     echo "[-] oatdump dependencies unzip failed"
     abort 1
   }
+}
+
+needs_oatdump_update() {
+  local api_level="$1"
+  local deps_zip deps_cur_sig deps_latest_sig
+
+  deps_zip="$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level/oatdump_deps.zip"
+  deps_cur_sig=$(shasum -a256 "$deps_zip" | cut -d ' ' -f1)
+  if [[ "$HOST_OS" == "Darwin" ]]; then
+    deps_latest_sig="D_OATDUMP_API$api_level""_SIG"
+  else
+    deps_latest_sig="L_OATDUMP_API$api_level""_SIG"
+  fi
+
+  if [[ "${!deps_latest_sig}" == "$deps_cur_sig" ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+oatdump_prepare_env() {
+  local api_level="$1"
+  if [ ! -f "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$api_level/bin/oatdump" ]; then
+    echo "[*] First run detected - downloading oatdump host bin & lib dependencies"
+    oatdump_deps_download "$api_level"
+  fi
+
+  if needs_oatdump_update "$api_level"; then
+    echo "[*] Outdated version detected - downloading oatdump host bin & lib dependencies"
+    oatdump_deps_download "$api_level"
+  fi
 }
 
 is_aosp_root() {
@@ -482,10 +514,7 @@ case $BYTECODE_REPAIR_METHOD in
     REPAIR_SCRIPT_ARG=""
     ;;
   "OATDUMP")
-    if [ ! -f "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump" ]; then
-      echo "[*] First run detected - downloading oatdump host bin & lib dependencies"
-      oatdump_prepare_env "$API_LEVEL"
-    fi
+    oatdump_prepare_env "$API_LEVEL"
     REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump \
                        --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/dexrepair"
 
@@ -503,10 +532,7 @@ case $BYTECODE_REPAIR_METHOD in
     FORCE_PREOPT=true
     ;;
   "SMALIDEODEX")
-    if [ ! -f "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump" ]; then
-      echo "[*] First run detected - downloading oatdump host bin & lib dependencies"
-      oatdump_prepare_env "$API_LEVEL"
-    fi
+    oatdump_prepare_env "$API_LEVEL"
     REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump \
                        --smali $SCRIPTS_ROOT/hostTools/Java/smali.jar \
                        --baksmali $SCRIPTS_ROOT/hostTools/Java/baksmali.jar"
