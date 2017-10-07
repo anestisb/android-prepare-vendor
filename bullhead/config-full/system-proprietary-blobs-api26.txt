@@ -22,8 +22,6 @@ system/bin/qmakernote-xtract
 system/bin/qmuxd
 system/bin/radish
 system/bin/rmt_storage
-system/bin/service
-system/bin/servicemanager
 system/bin/subsystem_ramdump
 system/bin/thermal-engine
 system/bin/time_daemon
@@ -58,16 +56,12 @@ system/etc/sysconfig/google.xml
 system/etc/sysconfig/google_build.xml
 system/etc/sysconfig/whitelist_com.android.omadm.service.xml
 system/etc/thermal-engine-8992.conf
-system/lib/hw/camera.msm8992.so
 system/lib/hw/gps.msm8992.so
 system/lib/libdmengine.so
 system/lib/libdmjavaplugin.so
 system/lib/libgps.utils.so
 system/lib/libloc_core.so
 system/lib/libloc_eng.so
-system/lib/libmmcamera_interface.so
-system/lib/libmmjpeg_interface.so
-system/lib/libqomx_core.so
 system/lib64/hw/gps.msm8992.so
 system/lib64/libgps.utils.so
 system/lib64/libloc_core.so
