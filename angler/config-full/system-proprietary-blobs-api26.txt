@@ -25,7 +25,6 @@ system/etc/sysconfig/angler_common.xml
 system/etc/sysconfig/google_build.xml
 system/etc/sysconfig/google.xml
 system/etc/sysconfig/whitelist_com.android.omadm.service.xml
-system/lib/hw/camera.msm8994.so
 system/lib/hw/gps.msm8994.so
 system/lib/libdmengine.so
 system/lib/libdmjavaplugin.so
@@ -33,10 +32,6 @@ system/lib/libfilterpack_facedetect.so
 system/lib/libgps.utils.so
 system/lib/libloc_core.so
 system/lib/libloc_eng.so
-system/lib/libmm-qcamera.so
-system/lib/libmmcamera_interface.so
-system/lib/libmmjpeg_interface.so
-system/lib/libqomx_core.so
 system/lib64/hw/gps.msm8994.so
 system/lib64/libManufacture.so
 system/lib64/libfilterpack_facedetect.so
