@@ -521,8 +521,13 @@ case $BYTECODE_REPAIR_METHOD in
     # dex2oat is invoked from host with aggressive verifier flags. So there is a
     # high chance it will fail to preoptimize bytecode repaired with oatdump method.
     # Let the user know.
-    if [ $FORCE_PREOPT = true ]; then
-      echo "[!] AOSP builds might fail when LOCAL_DEX_PREOPT isn't false when using OATDUMP bytecode repair method"
+    if [ "$API_LEVEL" -ge 26 ]; then
+      # LOCAL_DEX_PREOPT can be safely used due to the unquicken patch added to oatdump
+      FORCE_PREOPT=true
+    else
+      if [ $FORCE_PREOPT = true ]; then
+        echo "[!] AOSP builds might fail when LOCAL_DEX_PREOPT isn't false when using OATDUMP bytecode repair method"
+      fi
     fi
     ;;
   "OAT2DEX")
