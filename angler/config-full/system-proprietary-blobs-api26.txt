@@ -1,3 +1,7 @@
+system/bin/imscmservice
+system/bin/imsdatadaemon
+system/bin/imsqmidaemon
+system/bin/ims_rtp_daemon
 system/bin/mm-qcamera-app
 system/bin/ssr_setup
 system/bin/subsystem_ramdump
