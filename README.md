@@ -1,38 +1,41 @@
 ## Introduction
-For latest Android Nexus devices (N5x, N6p, N9 LTE/WiFi), Google is no longer
-providing vendor binary archives to be included into AOSP build tree.
-Officially it is claimed that all vendor proprietary blobs have been moved to
-`/vendor` partition, which allegedly doesn't need building from users.
-Unfortunately, that is not the case since quite a few proprietary executables, DSOs
-and APKs/JARs located under `/system` are required in order to have a fully
-functional set of images, although missing from AOSP public tree. Additionally, if
-`vendor.img` is not generated when `system.img` is prepared for build, a few bits
-are broken that also require manual fixing (various symbolic links between two
-partitions, bytecode product packages, vendor shared libs dependencies, etc.).
+For the latest Android devices (Nexus and Pixel), Google is no longer providing
+vendor binary archives to be included into AOSP build tree. Officially it is
+claimed that all vendor proprietary blobs have been moved to `/vendor`
+partition, which allegedly doesn't need building from users. Unfortunately, that
+is not the case since quite a few proprietary executables, DSOs and APKs/JARs
+located under `/system` are required in order to have a fully functional set of
+images, although are missing from AOSP public tree. Additionally, if
+`vendor.img` is not generated when `system.img` is prepared for build, a few
+bits are broken that also require manual fixing (various symbolic links between
+two partitions, bytecode product packages, vendor shared library dependencies,
+etc.).
 
-Everyone's hope is that Google **will revise** this policy for Nexus devices.
+Everyone's hope is that Google **will revise** this policy for its devices.
 However until then, missing blobs need to be manually extracted from factory
-images, processed and included into AOSP tree. These processing steps are evolving
-into a total nightmare considering that all recent factory images have their
-bytecode (APKs, JARs) pre-optimized to reduce boot time and their original
+images, processed and included into AOSP tree. These processing steps are
+evolving into a total nightmare considering that all recent factory images have
+their bytecode (APKs, JARs) pre-optimized to reduce boot time and their original
 `classes.dex` stripped to reduce disk size. As such, these missing prebuilt
-components need to be repaired/de-optimized prior to be included, since AOSP build
-is not capable to import pre-optimized bytecode modules as part of the makefile tree.
+components need to be repaired/de-optimized prior to be included, since AOSP
+build is not capable to import pre-optimized bytecode modules as part of the
+makefile tree.
 
 Scripts & tools included in this repository aim to automate the extraction,
 processing and generation of vendor specific data using factory images as
-input. Data from vendor partition are mirrored to blob includes via a compatible
+input. Data from vendor partition is mirrored to blob includes via a compatible
 makefile structure, so that `vendor.img` can be generated from AOSP builds while
 specially annotating the vendor APKs to maintain pre-signed certificates and not
 pre-optimize. If you have modified the build process (such as CyanogenMod) you
 might need to apply additional changes in device configurations / makefiles.
 
 The main concept of this tool-set is to apply all required changes in vendor
-makefiles leaving the AOSP source code tree & build chain untouched. Hacks in AOSP
-tree, such as those applied by CyanogenMod, are painful to maintain and very fragile.
+makefiles leaving the AOSP source code tree & build chain untouched. Hacks in
+AOSP tree, such as those applied by CyanogenMod, are painful to maintain and
+very fragile.
 
-Repository data are LICENSE free, use them as you want at your own risk. Feedback &
-patches are more than welcome though.
+Repository data is LICENSE free, use it as you want at your own risk. Feedback
+& patches are more than welcome though.
 
 
 ### Status update (12 Feb 2017)
@@ -40,12 +43,22 @@ As of 7.1 release Google has started publishing again a set of vendor blobs for
 supported Nexus & Pixel devices. Unfortunately the distributed blobs still miss
 some functionality when compiled under AOSP:
 
-* Vendor partition is distributed in a form that does not allow to enable verified
-boot (dm-verity) against it
-* Distributed blobs do not include APK bytecode vendor packages, only some jar files. It
-is still unclear to what extend device functionalities are broken.
+* Vendor partition is distributed in a form that does not allow to enable
+verified boot (dm-verity) against it
+* Distributed blobs do not include APK bytecode vendor packages, only some jar
+files. It is still unclear to what extend device functionalities are broken.
 * Due to missing proprietary modules, required modules present in AOSP are not
-included as active dependencies resulting into skipped functionality (e.g. IMS, RCS)
+included as active dependencies resulting into skipped functionality (e.g. IMS,
+RCS).
+
+### Status update (15 Sep 2017)
+As of Oreo release (8.0) Google has improved the state of the proprietary vendor
+blobs for Pixel devices. State of supported Nexus devices has not changed much.
+FOr Pixel devices most vendor specific resources have been moved to vendor
+partition and thus simplify & reduce the amount of work that needs to be done
+to include /system dependencies. Furthermore, the original bytecode is no longer
+stripped from the factory APKs, enabling an easier inclusion of these resources
+to the generated vendor makefiles.
 
 
 ## Required steps summary
@@ -54,22 +67,26 @@ The process to extract and import vendor proprietary blobs requires to:
 1. Obtain device matching factory images archive from Google developer website
 (`scripts/download-nexus-image.sh`)
    * Users need to accept Google ToS for Nexus factory images
-2. Extract images from archive, convert from sparse to raw, mount with fuse-ext2 &
-extract data (`scripts/extract-factory-images.sh`)
-   * All vendor partition data are mirrored in order to generate a production identical `vendor.img`
-3. Repair bytecode (APKs/JARs) from factory system image (`scripts/system-img-repair.sh`) using one
-of supported bytecode de-optimization methods (see next paragraph for details)
-4. Generate vendor proprietary includes & makefiles compatible with AOSP build tree
-(`scripts/generate-vendor.sh`)
-   * Extra care in Makefile rules to not break compatibility among supported AOSP branches
+2. Extract images from archive, convert from sparse to raw, mount with fuse-ext2
+& extract data (`scripts/extract-factory-images.sh`)
+   * All vendor partition data are mirrored in order to generate a production
+   identical `vendor.img`
+3. Repair bytecode (APKs/JARs) from factory system image (
+`scripts/system-img-repair.sh`) using one of supported bytecode de-optimization
+methods (see next paragraph for details)
+4. Generate vendor proprietary includes & makefiles compatible with AOSP build
+tree (`scripts/generate-vendor.sh`)
+   * Extra care in Makefile rules to not break compatibility among supported
+   AOSP branches
 
-`execute-all.sh` runs all previous steps with required order. As an alternative to
-download images from Google's website, script can also read factory images from
-file-system location using the `-i|--img` flag.
+`execute-all.sh` runs all previous steps with required order. As an alternative
+to download images from Google's website, script can also read factory images
+from file-system location using the `-i|--img` flag.
 
-`-k|--keep` flag can be used if you want to keep extracted intermediate files for further
-investigation. Keep in mind that if used the mount-points from fuse-ext2 are not unmounted.
-So be sure that you manually remove them (or run the script again without the flag) when done.
+`-k|--keep` flag can be used if you want to keep extracted intermediate files
+for further investigation. Keep in mind that if used the mount-points from
+fuse-ext2 are not unmounted. So be sure that you manually remove them (or run
+the script again without the flag) when done.
 
 All scripts can be executed from OS X, Linux & other Unix-based systems as long
 as `fuse-ext2`, bash 4.x and other utilized command line tools are installed.
@@ -80,25 +97,28 @@ targeted advanced actions, bugs investigation & development of new features.
 
 ## Supported bytecode de-optimization methods
 ### oatdump (Default for API >= 24 or `--oatdump` flag)
-Use oatdump host tool (`platform/art` project from AOSP) to extract DEX bytecode from OAT's
-ELF `.rodata` section. Extracted DEX is not identical to original since DEX-to-DEX compiler
-transformations have already been applied when code was pre-optimized
-(more info [here](https://github.com/anestisb/oatdump_plus#dex-to-dex-optimisations)).
-[dexrepair](https://github.com/anestisb/dexRepair) is also used to repair the extracted
-DEX file CRC checksum prior to appending bytecode back to matching APK package from which
-it has been originally stripped. More info about this method [here](https://github.com/anestisb/android-prepare-vendor/issues/22).
+Use oatdump host tool (`platform/art` project from AOSP) to extract DEX
+bytecode from OAT's ELF `.rodata` section. Extracted DEX is not identical to
+original since DEX-to-DEX compiler transformations have already been applied
+when code was pre-optimized (more info
+[here](https://github.com/anestisb/oatdump_plus#dex-to-dex-optimisations)).
+[dexrepair](https://github.com/anestisb/dexRepair) is also used to repair the
+extracted DEX file CRC checksum prior to appending bytecode back to matching
+APK package from which it has been originally stripped. More info about this
+method [here](https://github.com/anestisb/android-prepare-vendor/issues/22).
 
 ### baksmali / smali (`--smali` flag)
-Use baksmali disassembler against target OAT file to generate a smali syntaxed output.
-Disassembling process relies on boot framework files (which are automatically include)
-to resolve class dependencies. Baksmali output is then forwarded to smali assembler
-to generate a functionally equivalent DEX bytecode file.
+Use baksmali disassembler against target OAT file to generate a smali syntaxed
+output. Disassembling process relies on boot framework files (which are
+automatically include) to resolve class dependencies. Baksmali output is then
+forwarded to smali assembler to generate a functionally equivalent DEX bytecode
+file.
 
 ### SmaliEx *[DEPRECATED]* (Default for API-23 or `--smaliex` flag)
-SmaliEx is an automation tool that is using baksmali/smali at the background and is
-smoothly handling all the required disassembler/assembler iterations and error handling.
-Unfortunately due to not quickly catching-up with upstream smali & dexlib it has been
-deprecated for now.
+SmaliEx is an automation tool that is using baksmali/smali at the background and
+is smoothly handling all the required disassembler/assembler iterations and
+error handling. Unfortunately due to not quickly catching-up with upstream smali
+& dexlib it has been deprecated for now.
 
 ## Configuration files explained
 ### Naked vs Full
@@ -119,24 +139,24 @@ effectively copied across as is from source vendor directory to configured AOSP
 build output directory.
 
 ### **bytecode-proprietary-apiXX.txt**
-List of bytecode archive files to extract from factory images, repair and generate
-individual target modules to be included in vendor makefile structure.
+List of bytecode archive files to extract from factory images, repair and
+generate individual target modules to be included in vendor makefile structure.
 
 ### **dep-dso-proprietary-blobs-apiXX.txt**
-Pre-built shared libraries (*.so) extracted from factory images that are included
-as a separate local module. Multi-lib support & paths are automatically generated
-based on the evidence collected while crawling factory images extracted partitions.
-Files enlisted here will excluded from `PRODUCT_COPY_FILES` and instead added to
-the `PRODUCT_PACKAGES` list.
+Prebuilt shared libraries (.so) extracted from factory images that are included
+as a separate local module. Multi-lib support & paths are automatically
+generated based on the evidence collected while crawling factory images
+extracted partitions. Files enlisted here will excluded from
+`PRODUCT_COPY_FILES` and instead added to the `PRODUCT_PACKAGES` list.
 
 ### **vendor-config-apiXX.txt**
-Additional makefile flags to be appended at the dynamically generated `BoardConfigVendor.mk`
-These flags are useful in case we want to override some default values set at
-original `BoardConfig.mk` without editing the source file.
+Additional makefile flags to be appended at the dynamically generated
+`BoardConfigVendor.mk`. These flags are useful in case we want to override some
+default values set at original `BoardConfig.mk` without editing the source file.
 
 ### **extra-modules-apiXX.txt**
-Additional target modules (with compatible structure based on rule build type) to
-be appended at master vendor `Android.mk`.
+Additional target modules (with compatible structure based on rule build type)
+to be appended at master vendor `Android.mk`.
 
 ### **device-vendor-config-apiXX.txt**
 Additional flags / properties to be appended at device vendor makefile
@@ -146,15 +166,16 @@ Additional flags / properties to be appended at device vendor makefile
 ## Supported devices
 | Device                          | API 23                      | API 24           | API 25           | API 26           |
 | ------------------------------- | --------------------------- | -----------------| -----------------| -----------------|
-| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under testing    |
-| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | Under testing    |
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump          |
+| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump          |
 | N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
 | N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
-| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | Under testing    |
-| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | Under testing    |
+| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali |
+| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali |
 
-Please check existing [issues](https://github.com/anestisb/android-prepare-vendor/issues)
-before reporting new ones
+Please check existing
+[issues](https://github.com/anestisb/android-prepare-vendor/issues) before
+reporting new ones
 
 ## Contributing
 If you want to contribute to device configuration files, please test against the
@@ -162,12 +183,16 @@ target device before any pull request.
 
 ## Change Log
 * 0.3.0 - TBC
-  * Initial support for Android Oreo (API-26): Pixel, Pixel XL, Nexus 6p, Nexus 5x
+  * Initial support for Android Oreo (API-26): Pixel, Pixel XL, Nexus 6p, Nexus
+  5x
+  * Add support for vendor overlays in order to override default AOSP resources
+  that are tweaked for specific devices
 * 0.2.1 - 1 July 2017
   * Upgrade to smali/baksmali 2.2.1
   * Add support to maintain presigned APKs
   * Add missing AB partitions for Pixel OTA images
-  * Fixed Pixel TimeService bug by adding 'system/app/TimeService.apk' to extract list
+  * Fixed Pixel TimeService bug by adding `system/app/TimeService.apk` to
+  extract list
 * 0.2.0 - 13 May 2017
   * Renamed GPlay configuration to Full configuration
   * Support for Pixel devices
@@ -179,13 +204,19 @@ target device before any pull request.
   * Follow HTTP redirects when downloading factory images
 * 0.1.7 - 8 Oct 2016
   * Nexus 9 LTE (volantisg) support
-  * Offer option to de-optimize all packages under /system despite configuration settings
-  * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex bytecode
-  * Improve supported bytecode deodex methods modularity - users can now override default methods
-  * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor generate script
-  * Respect `LOCAL_MULTILIB` `32` or `both` when 32bit bytecode prebuilts detected at 64bit devices
+  * Offer option to de-optimize all packages under /system despite configuration
+  settings
+  * Deprecate SmaliEx and use baksmali/smali as an alternative method to deodex
+  bytecode
+  * Improve supported bytecode deodex methods modularity - users can now
+  override default methods
+  * Global flag to disable /system `LOCAL_DEX_PREOPT` overrides from vendor
+  generate script
+  * Respect `LOCAL_MULTILIB` `32` or `both` when 32bit bytecode prebuilts
+  detected at 64bit devices
 * 0.1.6 - 4 Oct 2016
-  * Download automation compatibility with refactored Google Nexus images website
+  * Download automation compatibility with refactored Google Nexus images
+  website
   * Bug fixes when generating from OS X
 * 0.1.5 - 25 Sep 2016
   * Fixes issue with symlinks resolve when output path with spaces
@@ -209,21 +240,24 @@ target device before any pull request.
   * Nougat API-24 support
   * Utilize fuse-ext2 to drop required root permissions
   * Implement new bytecode repair method
-  * Read directly data from mount points - deprecate local rsync copies for speed
+  * Read directly data from mount points - deprecate local rsync copies for
+  speed
   * Add OS X support (requires OSXFuse)
   * Improved device configuration layers / files
   * AOSP compatibility bug fixes & performance optimizations
 
 ## Warnings
 * Scripts do **NOT** require root permissions to run. If you're facing problems
-with `fuse-ext2` configuration at your environment, check the following FAQ section.
+with `fuse-ext2` configuration at your environment, check the following FAQ
+section.
 * No binary vendor data against supported devices will be maintained in this
 repository. Scripts provide all necessary automation to generate them yourself.
-* No promises on how the device configuration files will be maintained. Feel free
-to contribute if you detect that something is broken/missing or not required.
+* No promises on how the device configuration files will be maintained. Feel
+free to contribute if you detect that something is broken/missing or not
+required.
 * Host tool binaries are provided for convenience, although with no promises
-that will be kept up-to-date. Prefer to adjust your env. with upstream versions and
-keep them updated.
+that will be kept up-to-date. Prefer to adjust your env. with upstream versions
+and keep them updated.
 * If you experience `already defined` type of errors when AOSP makefiles are
 included, you have other vendor makefiles that define the same packages (e.g.
 hammerhead vs bullhead from LGE). This issue is due to the developers of
@@ -232,20 +266,20 @@ conflicted vendor makefiles didn't bother to wrap them with
 device matching clauses to resolve the issue.
 * If Smali or SmaliEx de-optimization method is chosen, Java 8 is required for
 the bytecode repair process to work.
-* Bytecode repaired with oatdump method cannot be pre-optimized when building AOSP.
-As such generated targets have `LOCAL_DEXPREOPT := false`. This is because host
-dex2oat is invoked with more strict flags and results into aborting when front-end
-reaches already optimized instructions. You can use `--force-opt` flag if you have
-modified the defailt host dex2oat bytecode precompile flags.
-* If you're planning to deliver OTA updates for Nexus 5x, you need to manually extract
-`update-binary` from a factory OTA archive since it's missing from AOSP tree due to some
-proprietary LG code.
-* Nexus 9 WiFi (volantis) & Nexus 9 LTE (volantisg) vendor blobs cannot co-exist under
-same AOSP root directory. Since AOSP defines a single flounder target for both boards
-lots of definitions will conflict and create problems when building. As such ensure
-that only one of them is present when building for desired target. Generated makefiles
-include an additional defensive check that will raise a compiler error when both are
-detected under same AOSP root.
+* Bytecode repaired with oatdump method cannot be pre-optimized when building
+AOSP. As such generated targets have `LOCAL_DEXPREOPT := false`. This is because
+host dex2oat is invoked with more strict flags and results into aborting when
+front-end reaches already optimized instructions. You can use `--force-opt`
+flag if you have modified the defailt host dex2oat bytecode precompile flags.
+* If you're planning to deliver OTA updates for Nexus 5x, you need to manually
+extract `update-binary` from a factory OTA archive since it's missing from AOSP
+tree due to some proprietary LG code.
+* Nexus 9 WiFi (volantis) & Nexus 9 LTE (volantisg) vendor blobs cannot co-exist
+under same AOSP root directory. Since AOSP defines a single flounder target for
+both boards lots of definitions will conflict and create problems when building.
+As such ensure that only one of them is present when building for desired
+target. Generated makefiles include an additional defensive check that will
+raise a compiler error when both are detected under same AOSP root.
 * If tool output is not set to AOSP root directory, prefer `rsync` instead of
 `cp` or `mv` commands to copy the generated directory structure to different
 location. Some device configurations (e.g. Pixel/Pixel XL) share some root
@@ -254,7 +288,8 @@ directories and might break if `cp` or `mv` are against the wrong base paths.
 ## Frequently Spotted Issues
 ### fuse-ext2
 * `fusermount: failed to open /etc/fuse.conf: Permission denied`
-  * FIX-1: Add low privilege username to fuse group (e.g.: `# usermod -a -G fuse anestisb`)
+  * FIX-1: Add low privilege username to fuse group (e.g.:
+  `# usermod -a -G fuse anestisb`)
   * FIX-2: Change file permissions - `# chmod +r /etc/fuse.conf`
 * `fusermount: option allow_other only allowed if 'user_allow_other' is set in /etc/fuse.conf`
   * Edit `/etc/fuse.conf` and write/uncomment the `user_allow_other` flag

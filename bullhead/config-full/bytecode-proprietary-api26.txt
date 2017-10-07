@@ -4,7 +4,6 @@ system/app/HiddenMenu/HiddenMenu.apk
 system/app/RCSBootstraputil/RCSBootstraputil.apk
 system/app/RcsImsBootstraputil/RcsImsBootstraputil.apk
 system/app/TimeService/TimeService.apk
-system/app/Tycho/Tycho.apk
 system/framework/cneapiclient.jar
 system/framework/qcrilhook.jar
 system/framework/rcsimssettings.jar
