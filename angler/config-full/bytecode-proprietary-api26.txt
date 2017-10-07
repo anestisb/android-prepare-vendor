@@ -5,6 +5,7 @@ system/app/HwSarControlService/HwSarControlService.apk
 system/app/SetupSmartDeviceOverlay/SetupSmartDeviceOverlay.apk
 system/app/Tycho/Tycho.apk
 system/framework/qcrilhook.jar
+system/priv-app/atfwd/atfwd.apk
 system/priv-app/CNEService/CNEService.apk
 system/priv-app/CallStatistics/CallStatistics.apk
 system/priv-app/ConfigUpdater/ConfigUpdater.apk
