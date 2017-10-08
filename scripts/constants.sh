@@ -28,7 +28,7 @@ readonly D_OATDUMP_API24_SIG='4a7f5614eb04d9bea85bfa05853523843f9cc80a64eab4c98e
 readonly L_OATDUMP_API25_SIG='8b8cd18f08afd00fc6bf33d5b7f5be4faab9f39849b258bade5d15c3e5f33ce8'
 readonly D_OATDUMP_API25_SIG='97f26b40cdc1fb2b5e5babe7ff8c63b70e7d3a3ab8dee19b035bbb0fdfa5477e'
 readonly L_OATDUMP_API26_SIG='d8c08fe0de637412086f8433b41808d7b58e92e7b7341fb9b4da44868d4b311b'
-readonly D_OATDUMP_API26_SIG='7b3543b862e0a3298ce50e8f5c4b7c4b56950170f0248b25ee13bc757004ea8d'
+readonly D_OATDUMP_API26_SIG='6fd75110e85f0cc0316c5e7345ea4271d527aae2570552dc3c565177a4d6b743'
 
 # sub-directories that contain bytecode archives
 declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
