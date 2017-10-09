@@ -182,7 +182,7 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.3.0 - TBC
+* 0.3.0 - 9 October 2017
   * Initial support for Android Oreo (API-26): Pixel, Pixel XL, Nexus 6p, Nexus
   5x
   * Add support for vendor overlays in order to override default AOSP resources
