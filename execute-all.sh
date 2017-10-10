@@ -211,11 +211,10 @@ if [[ "$HOST_OS" == "Darwin" ]]; then
   SYS_TOOLS+=("umount")
   _UMOUNT=umount
 else
-  SYS_TOOLS+=("fusermount")
-  _UMOUNT="fusermount -u"
-
   # Until fuse-ext2 problems are resolved for Linux, use debugfs by default
   USE_DEBUGFS=true
+  # SYS_TOOLS+=("fusermount")
+  # _UMOUNT="fusermount -u"
 fi
 
 # Check that system tools exist
