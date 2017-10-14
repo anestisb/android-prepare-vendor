@@ -54,7 +54,7 @@ RCS).
 ### Status update (15 Sep 2017)
 As of Oreo release (8.0) Google has improved the state of the proprietary vendor
 blobs for Pixel devices. State of supported Nexus devices has not changed much.
-FOr Pixel devices most vendor specific resources have been moved to vendor
+For Pixel devices most vendor specific resources have been moved to vendor
 partition and thus simplify & reduce the amount of work that needs to be done
 to include /system dependencies. Furthermore, the original bytecode is no longer
 stripped from the factory APKs, enabling an easier inclusion of these resources
