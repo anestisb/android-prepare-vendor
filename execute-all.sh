@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount")
+declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "shasum")
 
 # Realpath implementation in bash
 readonly REALPATH_SCRIPT="$SCRIPTS_ROOT/scripts/realpath.sh"
@@ -211,11 +211,10 @@ if [[ "$HOST_OS" == "Darwin" ]]; then
   SYS_TOOLS+=("umount")
   _UMOUNT=umount
 else
-  SYS_TOOLS+=("fusermount")
-  _UMOUNT="fusermount -u"
-
   # Until fuse-ext2 problems are resolved for Linux, use debugfs by default
   USE_DEBUGFS=true
+  # SYS_TOOLS+=("fusermount")
+  # _UMOUNT="fusermount -u"
 fi
 
 # Check that system tools exist
