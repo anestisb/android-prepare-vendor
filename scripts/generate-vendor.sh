@@ -907,6 +907,11 @@ gen_android_mk() {
 
     echo "ifeq (\$(TARGET_DEVICE),$targetProductDevice)"
     echo ""
+    echo "expected_build_id := \$(shell cat vendor/$VENDOR_DIR/$DEVICE/build_id.txt)"
+    echo 'ifneq ($(BUILD_ID),$(expected_build_id))'
+    echo '    $(error "Expected BUILD_ID is $(expected_build_id) and currently building with $(BUILD_ID)")'
+    echo 'endif'
+    echo ""
     echo "include vendor/$VENDOR_DIR/$DEVICE/AndroidBoardVendor.mk"
   } >> "$ANDROID_MK"
 
