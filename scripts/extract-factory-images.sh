@@ -11,7 +11,7 @@ set -u # fail on undefined variable
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
+declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut" "simg2img")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -31,7 +31,6 @@ cat <<_EOF
       -i|--input    : Archive with factory images as downloaded from
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
-      -t|--simg2img : Path to simg2img binary for converting sparse images
       --debugfs     : Use debugfs instead of default fuse-ext2
 
     INFO:
@@ -197,7 +196,6 @@ trap "abort 1" SIGINT SIGTERM
 DEVICE=""
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
-SIMG2IMG=""
 USE_DEBUGFS=false
 
 # Compatibility
@@ -221,10 +219,6 @@ do
       ;;
     -i|--input)
       INPUT_ARCHIVE=$2
-      shift
-      ;;
-    -t|--simg2img)
-      SIMG2IMG=$2
       shift
       ;;
     --debugfs)
@@ -261,7 +255,6 @@ done
 # Input args check
 check_dir "$OUTPUT_DIR" "Output"
 check_file "$INPUT_ARCHIVE" "Input archive"
-check_file "$SIMG2IMG" "simg2img"
 
 # Prepare output folders
 SYSTEM_DATA_OUT="$OUTPUT_DIR/system"
@@ -322,11 +315,11 @@ fi
 rawSysImg="$extractDir/images/system.img.raw"
 rawVImg="$extractDir/images/vendor.img.raw"
 
-$SIMG2IMG "$sysImg" "$rawSysImg" || {
+simg2img "$sysImg" "$rawSysImg" || {
   echo "[-] simg2img failed to convert system.img from sparse"
   abort 1
 }
-$SIMG2IMG "$vImg" "$rawVImg" || {
+simg2img "$vImg" "$rawVImg" || {
   echo "[-] simg2img failed to convert vendor.img from sparse"
   abort 1
 }

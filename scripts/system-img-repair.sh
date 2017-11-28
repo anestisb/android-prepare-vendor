@@ -32,7 +32,7 @@ set -u # fail on undefined variable
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_repair.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut")
+declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut" "dexrepair")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -54,7 +54,6 @@ cat <<_EOF
       -m|--method     : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP', 'SMALIDEODEX')
       --oat2dex       : [OPTIONAL] Path to SmaliEx oat2dex.jar (when 'OAT2DEX' method)
       --oatdump       : [OPTIONAL] Path to ART oatdump executable (when 'OATDUMP' or 'SMALIDEODEX' method)
-      --dexrepair     : [OPTIONAL] Path to dexrepair executable (when 'OATDUMP' method)
       --smali         : [OPTIONAL] Path to smali.jar (when 'SMALIDEODEX' method)
       --baksmali      : [OPTIONAL] Path to baksmali.jar (when 'SMALIDEODEX' method)
       --bytecode-list : [OPTIONAL] list with bytecode archive files to be included in
@@ -424,7 +423,7 @@ oatdump_repair() {
       done
 
       # Repair CRC for all dex files & remove un-repaired original dumps
-      $DEXREPAIR_BIN -I "$TMP_WORK_DIR" &>/dev/null
+      dexrepair -I "$TMP_WORK_DIR" &>/dev/null
       rm -f "$TMP_WORK_DIR/"*_export.dex
 
       # Copy APK/jar to workspace for repair
@@ -684,7 +683,6 @@ BYTECODE_LIST_FILE=""
 # Paths for external tools provided from args
 OAT2DEX_JAR=""
 OATDUMP_BIN=""
-DEXREPAIR_BIN=""
 SMALI_JAR=""
 BAKSMALI_JAR=""
 
@@ -714,10 +712,6 @@ do
       ;;
     --oatdump)
       OATDUMP_BIN="$2"
-      shift
-      ;;
-    --dexrepair)
-      DEXREPAIR_BIN="$2"
       shift
       ;;
     --smali)
@@ -756,7 +750,6 @@ check_opt_file "$BYTECODE_LIST_FILE" "BYTECODE_LIST_FILE"
 # tools are set prior to start processing
 check_opt_file "$OAT2DEX_JAR" "oat2dex.jar"
 check_opt_file "$OATDUMP_BIN" "oatdump"
-check_opt_file "$DEXREPAIR_BIN" "dexrepair"
 check_opt_file "$SMALI_JAR" "smali.jar"
 check_opt_file "$BAKSMALI_JAR" "baksmali.jar"
 
@@ -823,8 +816,8 @@ if [[ "$REPAIR_METHOD" == "OAT2DEX" ]]; then
   echo "[*] Repairing bytecode under /system partition using oat2dex method"
   oat2dex_repair
 elif [[ "$REPAIR_METHOD" == "OATDUMP" ]]; then
-  if [[ "$OATDUMP_BIN" == "" || "$DEXREPAIR_BIN" == "" ]]; then
-    echo "[-] Missing oatdump and/or dexrepair external tool(s)"
+  if [[ "$OATDUMP_BIN" == "" ]]; then
+    echo "[-] Missing oatdump external tool"
     abort 1
   fi
 

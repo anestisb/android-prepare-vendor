@@ -32,6 +32,9 @@ readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 # Helper script to generate vendor AOSP includes & makefiles
 readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
 
+# Directory with host specific binaries
+readonly LC_BIN="$SCRIPTS_ROOT/hostTools/$HOST_OS/bin"
+
 abort() {
   # Remove mount points in case of error
   if [[ $1 -ne 0 && "$FACTORY_IMGS_DATA" != "" ]]; then
@@ -172,6 +175,9 @@ is_pixel() {
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
+
+# Save the trouble to pass explicit binary paths
+export PATH="$PATH:$LC_BIN"
 
 # Global variables
 DEVICE=""
@@ -439,8 +445,7 @@ else
 fi
 
 EXTRACT_SCRIPT_ARGS="--device "$DEVICE" --input "$factoryImgArchive" \
---output "$FACTORY_IMGS_DATA" \
---simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img""
+--output "$FACTORY_IMGS_DATA""
 
 if [ "$USE_DEBUGFS" = true ]; then
   EXTRACT_SCRIPT_ARGS+=" --debugfs"
@@ -514,8 +519,7 @@ case $BYTECODE_REPAIR_METHOD in
     ;;
   "OATDUMP")
     oatdump_prepare_env "$API_LEVEL"
-    REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump \
-                       --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/dexrepair"
+    REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump"
 
     # dex2oat is invoked from host with aggressive verifier flags. So there is a
     # high chance it will fail to preoptimize bytecode repaired with oatdump method.
