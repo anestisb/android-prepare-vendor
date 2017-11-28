@@ -2,24 +2,24 @@
 
 # Ignore merged / intermediate files & generated data
 angler/*
-!angler/config-*
-angler/config-*/proprietary-blobs.txt
+!angler/config.json
+!angler/overlays-*
 
 bullhead/*
-!bullhead/config-*
-bullhead/config-*/proprietary-blobs.txt
+!bullhead/config.json
+!bullhead/overlays-*
 
 flounder/*
-!flounder/config-*
-flounder/config-*/proprietary-blobs.txt
+!flounder/config.json
+!flounder/overlays-*
 
 sailfish/*
-!sailfish/config-*
-sailfish/config-*/proprietary-blobs.txt
+!sailfish/config.json
+!sailfish/overlays-*
 
 marlin/*
-!marlin/config-*
-marlin/config-*/proprietary-blobs.txt
+!marlin/config.json
+!marlin/overlays-*
 
 # Due to large files they're downloaded at manual step
 # and not part of git files

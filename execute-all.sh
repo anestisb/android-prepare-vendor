@@ -10,6 +10,7 @@ set -u # fail on undefined variable
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "shasum")
+readonly HOST_OS="$(uname -s)"
 
 # Realpath implementation in bash
 readonly REALPATH_SCRIPT="$SCRIPTS_ROOT/scripts/realpath.sh"
@@ -85,6 +86,22 @@ check_bash_version() {
   if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
     echo "[-] Minimum supported version of bash is 4.x"
     abort 1
+  fi
+}
+
+check_compatible_system() {
+  local hostOS=$(uname)
+  if [[ "$hostOS" != "Linux" && "$hostOS" != "Darwin" ]]; then
+    echo "[-] '$hostOS' OS is not supported"
+    abort 1
+  fi
+}
+
+isDarwin() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    return 0
+  else
+    return 1
   fi
 }
 
@@ -172,6 +189,91 @@ is_pixel() {
   return 1
 }
 
+check_input_args() {
+  if [[ "$DEVICE" == "" ]]; then
+    echo "[-] device codename cannot be empty"
+    usage
+  fi
+  if [[ "$BUILDID" == "" ]]; then
+    echo "[-] buildId cannot be empty"
+    usage
+  fi
+  if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
+    echo "[-] Invalid output directory"
+    usage
+  fi
+  if [[ "$INPUT_IMG" != "" && ! -f "$INPUT_IMG" ]]; then
+    echo "[-] Invalid '$INPUT_IMG' file"
+    abort 1
+  fi
+  if [[ "$USER_JAVA_PATH" != "" ]]; then
+    if  [ ! -f "$USER_JAVA_PATH" ]; then
+      echo "[-] '$USER_JAVA_PATH' path not found"
+      abort 1
+    fi
+    if [[ "$(basename "$USER_JAVA_PATH")" != "java" ]]; then
+      echo "[-] Invalid java path"
+      abort 1
+    fi
+  fi
+
+  # Some business logic related checks
+  if [[ "$DEODEX_ALL" = true && $KEEP_DATA = false ]]; then
+    echo "[!] It's pointless to deodex all if not keeping runtime generated data"
+    echo "    After vendor generate finishes all files not part of configs will be deleted"
+    abort 1
+  fi
+}
+
+update_java_path() {
+  local __javapath=""
+  local __javadir=""
+  local __javahome=""
+
+  if [[ "$USER_JAVA_PATH" != "" ]]; then
+    __javapath=$(_realpath "$USER_JAVA_PATH")
+    __javadir=$(dirname "$__javapath")
+    __javahome="$__javapath"
+    JAVA_FOUND=true
+  else
+    readonly __JAVALINK=$(which java)
+    if [[ "$__JAVALINK" == "" ]]; then
+      echo "[!] Java not found in system"
+    else
+      if [[ "$HOST_OS" == "Darwin" ]]; then
+        __javahome="$(/usr/libexec/java_home)"
+        __javadir="$__javahome/bin"
+      else
+        __javapath=$(_realpath "$__JAVALINK")
+        __javadir=$(dirname "$__javapath")
+        __javahome="$__javapath"
+      fi
+      JAVA_FOUND=true
+    fi
+  fi
+
+  if [ "$JAVA_FOUND" = true ]; then
+    export JAVA_HOME="$__javahome"
+    export PATH="$__javadir":$PATH
+  fi
+}
+
+checkJava() {
+  if [ "$JAVA_FOUND" = false ]; then
+    echo "[-] Java is required"
+    abort 1
+  fi
+}
+
+jqRawArray() {
+  local query="$1"
+
+  jq -r '.'"\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\""'[]' "$CONFIG_FILE" || {
+    echo "[-] json parse failed" >&2
+    abort 1
+  }
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
@@ -185,13 +287,13 @@ BUILDID=""
 OUTPUT_DIR=""
 INPUT_IMG=""
 KEEP_DATA=false
-HOST_OS=""
 DEV_ALIAS=""
 API_LEVEL=""
 SKIP_SYSDEOPT=false
 _UMOUNT=""
 FACTORY_IMGS_DATA=""
-CONFIG="config-naked"
+CONFIG_TYPE="naked"
+CONFIG_FILE=""
 USER_JAVA_PATH=""
 AUTO_TOS_ACCEPT=false
 FORCE_PREOPT=false
@@ -203,17 +305,14 @@ DEODEX_ALL=false
 AOSP_ROOT=""
 USE_DEBUGFS=false
 FORCE_VIMG=false
+JAVA_FOUND=false
 
 # Compatibility
 check_bash_version
-HOST_OS=$(uname)
-if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
-  echo "[-] '$HOST_OS' OS is not supported"
-  abort 1
-fi
+check_compatible_system
 
 # Platform specific commands
-if [[ "$HOST_OS" == "Darwin" ]]; then
+if isDarwin; then
   SYS_TOOLS+=("umount")
   _UMOUNT=umount
 else
@@ -257,7 +356,7 @@ do
       shift
       ;;
     -f|--full)
-      CONFIG="config-full"
+      CONFIG_TYPE="full"
       ;;
     -k|--keep)
       KEEP_DATA=true
@@ -302,44 +401,12 @@ do
 done
 
 # Check user input args
-if [[ "$DEVICE" == "" ]]; then
-  echo "[-] device codename cannot be empty"
-  usage
-fi
-if [[ "$BUILDID" == "" ]]; then
-  echo "[-] buildID cannot be empty"
-  usage
-fi
-if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
-  echo "[-] Output directory not found"
-  usage
-fi
-if [[ "$INPUT_IMG" != "" && ! -f "$INPUT_IMG" ]]; then
-  echo "[-] '$INPUT_IMG' file not found"
-  abort 1
-fi
-if [[ "$USER_JAVA_PATH" != "" ]]; then
-  if  [ ! -f "$USER_JAVA_PATH" ]; then
-    echo "[-] '$USER_JAVA_PATH' path not found"
-    abort 1
-  fi
-  if [[ "$(basename "$USER_JAVA_PATH")" != "java" ]]; then
-    echo "[-] Invalid java path"
-    abort 1
-  fi
-fi
-
-# Some business logic related checks
-if [[ "$DEODEX_ALL" = true && $KEEP_DATA = false ]]; then
-  echo "[!] It's pointless to deodex all if not keeping runtime generated data"
-  echo "    After vendor generate finishes all files not part of configs will be deleted"
-  abort 1
-fi
+check_input_args
 
 # Check if output directory is AOSP root
 if is_aosp_root "$OUTPUT_DIR"; then
   if [ "$KEEP_DATA" = true ]; then
-    echo "[!] Cannot keep data when output directory is AOSP root - choose different path"
+    echo "[!] Not safe to keep data when output directory is AOSP root - choose different path"
     abort 1
   fi
   AOSP_ROOT="$OUTPUT_DIR"
@@ -347,31 +414,7 @@ if is_aosp_root "$OUTPUT_DIR"; then
 fi
 
 # Resolve Java location
-__JAVAPATH=""
-__JAVADIR=""
-__JAVA_HOME=""
-if [[ "$USER_JAVA_PATH" != "" ]]; then
-  __JAVAPATH=$(_realpath "$USER_JAVA_PATH")
-  __JAVADIR=$(dirname "$__JAVAPATH")
-  __JAVA_HOME="$__JAVAPATH"
-else
-  readonly __JAVALINK=$(which java)
-  if [[ "$__JAVALINK" == "" ]]; then
-    # We don't fail since Java is required only when oat2dex method is used
-    echo "[-] Java not found in system"
-  else
-    if [[ "$HOST_OS" == "Darwin" ]]; then
-      __JAVA_HOME="$(/usr/libexec/java_home)"
-      __JAVADIR="$__JAVA_HOME/bin"
-    else
-      __JAVAPATH=$(_realpath "$__JAVALINK")
-      __JAVADIR=$(dirname "$__JAVAPATH")
-      __JAVA_HOME="$__JAVAPATH"
-    fi
-  fi
-fi
-export JAVA_HOME="$__JAVA_HOME"
-export PATH="$__JAVADIR":$PATH
+update_java_path
 
 # Check if supported device
 deviceOK=false
@@ -385,6 +428,7 @@ if [ "$deviceOK" = false ]; then
   echo "[-] '$DEVICE' is not supported"
   abort 1
 fi
+CONFIG_FILE="$SCRIPTS_ROOT/$DEVICE/config.json"
 
 # Prepare output dir structure
 OUT_BASE="$OUTPUT_DIR/$DEVICE/$BUILDID"
@@ -470,13 +514,14 @@ if [[ "$API_LEVEL" == "" ]]; then
   abort 1
 fi
 
-echo "[*] Processing with 'API-$API_LEVEL $CONFIG' configuration"
+echo "[*] Processing with 'API-$API_LEVEL $CONFIG_TYPE' configuration"
 
 # Generate unified readonly "proprietary-blobs.txt"
 $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
-    --output "$SCRIPTS_ROOT/$DEVICE/$CONFIG" \
+    --output "$SCRIPTS_ROOT/$DEVICE" \
     --api "$API_LEVEL" \
-    --conf-dir "$SCRIPTS_ROOT/$DEVICE/$CONFIG" || {
+    --conf-file "$CONFIG_FILE" \
+    --conf-type "$CONFIG_TYPE" || {
   echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
 }
@@ -534,12 +579,14 @@ case $BYTECODE_REPAIR_METHOD in
     fi
     ;;
   "OAT2DEX")
+    checkJava
     REPAIR_SCRIPT_ARG="--oat2dex $SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"
 
     # LOCAL_DEX_PREOPT can be safely used so enable globally for /system
     FORCE_PREOPT=true
     ;;
   "SMALIDEODEX")
+    checkJava
     oatdump_prepare_env "$API_LEVEL"
     REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump \
                        --smali $SCRIPTS_ROOT/hostTools/Java/smali.jar \
@@ -556,7 +603,9 @@ esac
 
 # If deodex all not set provide a list of packages to repair
 if [ $DEODEX_ALL = false ]; then
-  REPAIR_SCRIPT_ARG+=" --bytecode-list $SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt"
+  BYTECODE_LIST="$TMP_WORK_DIR/bytecode_list.txt"
+  jqRawArray "system-bytecode" > "$BYTECODE_LIST"
+  REPAIR_SCRIPT_ARG+=" --bytecode-list $BYTECODE_LIST"
 fi
 
 $REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$SYSTEM_ROOT" \
@@ -592,7 +641,8 @@ fi
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
   --output "$OUT_BASE" \
   --api "$API_LEVEL" \
-  --conf-dir "$SCRIPTS_ROOT/$DEVICE/$CONFIG" \
+  --conf-file "$CONFIG_FILE" \
+  --conf-type "$CONFIG_TYPE" \
   $VGEN_SCRIPT_EXTRA_ARGS || {
   echo "[-] Vendor generation failed"
   abort 1

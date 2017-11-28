@@ -48,7 +48,8 @@ cat <<_EOF
       -i|--input     : Root path of extracted /system & /vendor partitions
       -o|--output    : Path to save vendor blobs & makefiles in AOSP compatible structure
       --aosp-root    : [OPTIONAL] AOSP ROOT SRC directoy to directly rsync output
-      --conf-dir     : Directory containing device configuration files
+      --conf-file    : Device configuration file
+      --conf-type    : 'naked' or 'full' configuration profile
       --api          : API level in order to pick appropriate config file
       --allow-preopt : [OPTIONAL] Don't disable LOCAL_DEX_PREOPT for /system
       --force-vimg   : [OPTIONAL] Always override AOSP definitions with included vendor blobs
@@ -320,14 +321,14 @@ update_vendor_blobs_mk() {
 process_extra_modules() {
   local module
 
-  if [ ! -s "$EXTRA_MODULES" ]; then
+  if [[ "$EXTRA_MODULES" == "" ]]; then
     return
   fi
 
   {
     echo "# Extra modules from user configuration"
     echo 'PRODUCT_PACKAGES += \'
-    grep 'LOCAL_MODULE :=' "$EXTRA_MODULES" | cut -d "=" -f2- | \
+    echo "$EXTRA_MODULES" | grep 'LOCAL_MODULE :=' | cut -d "=" -f2- | \
       awk '{$1=$1;print}' | while read -r module
     do
       echo "    $module \\"
@@ -339,14 +340,14 @@ process_extra_modules() {
 process_enforced_modules() {
   local module
 
-  if [ ! -s "$FORCE_MODULES" ]; then
+  if [[ "$FORCE_MODULES" == "" ]]; then
     return
   fi
 
   {
     echo "# Enforced modules from user configuration"
     echo 'PRODUCT_PACKAGES += \'
-    grep -Ev '(^#|^$)' "$FORCE_MODULES" | while read -r module
+    echo "$FORCE_MODULES" | grep -Ev '(^#|^$)' | while read -r module
     do
       echo "    $module \\"
     done
@@ -395,7 +396,7 @@ gen_board_cfg_mk() {
     echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz"
 
     # Update with user selected extra flags
-    grep -Ev '(^#|^$)' "$MK_FLAGS_LIST" || true
+    echo "$MK_FLAGS_LIST"
   } >> "$BOARD_CONFIG_VENDOR_MK"
 }
 
@@ -941,10 +942,10 @@ gen_android_mk() {
   fi
 
   # Append extra modules if present
-  if [ -s "$EXTRA_MODULES" ]; then
+  if [[ "$EXTRA_MODULES" != "" ]]; then
     {
       echo ""
-      cat "$EXTRA_MODULES"
+      echo "$EXTRA_MODULES"
     } >> "$ANDROID_MK"
   fi
 
@@ -993,6 +994,49 @@ check_file() {
   fi
 }
 
+isValidConfigType() {
+  local confType="$1"
+  if [[ "$confType" != "naked" && "$confType" != "full" ]]; then
+    echo "[-] Invalid config type '$confType'"
+    abort 1
+  fi
+}
+
+isValidApiLevel() {
+  local apiLevel="$1"
+  if [[ ! "$apiLevel" = *[[:digit:]]* ]]; then
+    echo "[-] Invalid API level '$apiLevel'"
+    abort 1
+  fi
+}
+
+jqRawString() {
+  local query="$1"
+
+  jq -r ".\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\"" "$CONFIG_FILE" || {
+    echo "[-] json raw string parse failed" >&2
+    abort 1
+  }
+}
+
+jqRawArray() {
+  local query="$1"
+
+  jq -r ".\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\"[]" "$CONFIG_FILE" || {
+    echo "[-] json raw string array parse failed" >&2
+    abort 1
+  }
+}
+
+setOverlaysDir() {
+  local relDir="$(jqRawString "overlays-dir")"
+  if [[ "$relDir" == "" ]]; then
+    echo ""
+  else
+    echo "$DEVICE_CONFIG_DIR/$relDir"
+  fi
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
@@ -1000,11 +1044,13 @@ trap "abort 1" SIGINT SIGTERM
 INPUT_DIR=""
 AOSP_ROOT=""
 OUTPUT_DIR=""
-CONFIGS_DIR=""
+CONFIG_FILE=""
+CONFIG_TYPE="naked"
 API_LEVEL=""
 ALLOW_PREOPT=false
 FORCE_VIMG=false
 
+DEVICE_CONFIG_DIR=""
 DEVICE=""
 DEVICE_FAMILY=""
 IS_PIXEL=false
@@ -1038,8 +1084,12 @@ do
       AOSP_ROOT=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
-    --conf-dir)
-      CONFIGS_DIR=$(echo "$2" | sed 's:/*$::')
+    --conf-file)
+      CONFIG_FILE="$2"
+      shift
+      ;;
+    --conf-type)
+      CONFIG_TYPE="$2"
       shift
       ;;
     --api)
@@ -1063,30 +1113,21 @@ done
 # Input args check
 check_dir "$INPUT_DIR" "Input"
 check_dir "$OUTPUT_DIR" "Output"
-check_dir "$CONFIGS_DIR" "Base Config Dir"
+check_file "$CONFIG_FILE" "Device Config File"
 
-# Check if API level is a number
-if [[ ! "$API_LEVEL" = *[[:digit:]]* ]]; then
-  echo "[-] Invalid API level (not a number)"
-  abort 1
-fi
+# Check if valid config type & API level
+isValidConfigType "$CONFIG_TYPE"
+isValidApiLevel "$API_LEVEL"
 
 # Populate config files from base conf dir
-readonly BLOBS_LIST="$CONFIGS_DIR/proprietary-blobs.txt"
-readonly DEP_DSO_BLOBS_LIST="$CONFIGS_DIR/dep-dso-proprietary-blobs-api$API_LEVEL.txt"
-readonly MK_FLAGS_LIST="$CONFIGS_DIR/vendor-config-api$API_LEVEL.txt"
-readonly EXTRA_MODULES="$CONFIGS_DIR/extra-modules-api$API_LEVEL.txt"
-readonly FORCE_MODULES="$CONFIGS_DIR/modules-force-api$API_LEVEL.txt"
-readonly DEVICE_VENDOR_CONFIG="$CONFIGS_DIR/device-vendor-config-api$API_LEVEL.txt"
-readonly OVERLAYS_DIR="$CONFIGS_DIR/overlays-api$API_LEVEL"
-
-# Mandatory configuration files
-check_file "$BLOBS_LIST" "Vendor proprietary-blobs"
-check_file "$DEP_DSO_BLOBS_LIST" "Vendor dep-dso-proprietary"
-check_file "$MK_FLAGS_LIST" "Vendor vendor-config"
-check_file "$EXTRA_MODULES" "Vendor extra modules"
-check_file "$FORCE_MODULES" "Vendor enforce modules"
-check_file "$DEVICE_VENDOR_CONFIG" "Vendor device config extra flags"
+readonly DEVICE_CONFIG_DIR="$(dirname "$CONFIG_FILE")"
+readonly BLOBS_LIST="$DEVICE_CONFIG_DIR/proprietary-blobs.txt"
+readonly OVERLAYS_DIR="$(setOverlaysDir)"
+readonly DEP_DSO_BLOBS_LIST="$(jqRawArray "dep-dso" | grep -Ev '(^#|^$)')"
+readonly MK_FLAGS_LIST="$(jqRawArray "BoardConfigVendor")"
+readonly DEVICE_VENDOR_CONFIG="$(jqRawArray "device-vendor")"
+readonly EXTRA_MODULES="$(jqRawArray "new-modules")"
+readonly FORCE_MODULES="$(jqRawArray "forced-modules")"
 
 # Populate the array with the APK that need to maintain their signature
 readarray -t PSIG_BC_FILES < <(
@@ -1159,10 +1200,9 @@ do
   echo -e "# [$(date +%Y-%m-%d)] Auto-generated file, do not edit\n" > "$file"
 done
 
-# Update from DSO_MODULES array from DEP_DSO_BLOBS_LIST file
-entries=$(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST" | wc -l | tr -d ' ')
-if [ "$entries" -gt 0 ]; then
-  readarray -t DSO_MODULES < <(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST")
+# Update from DSO_MODULES array from DEP_DSO_BLOBS_LIST
+if [[ "$DEP_DSO_BLOBS_LIST" != "" ]]; then
+  readarray -t DSO_MODULES < <(echo "$DEP_DSO_BLOBS_LIST")
   HAS_DSO_MODULES=true
 fi
 
@@ -1182,12 +1222,12 @@ echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blob
 
 # Append items listed in device vendor configuration file
 {
-  cat "$DEVICE_VENDOR_CONFIG"
+  echo "$DEVICE_VENDOR_CONFIG"
   echo ""
 } >> "$DEVICE_VENDOR_MK"
 
 # Activate & populate overlay directory if overlays defined in device config
-if [ "$(ls -A $OVERLAYS_DIR)" ]; then
+if [[ "$OVERLAYS_DIR" != "" ]]; then
   cp -a "$OVERLAYS_DIR"/* "$OUTPUT_VENDOR_OVERLAY"
   echo -e "PRODUCT_PACKAGE_OVERLAYS += $REL_VENDOR_OVERLAY\n" >> "$DEVICE_VENDOR_MK"
 fi
