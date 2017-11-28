@@ -3,6 +3,7 @@
   "device-model": "sailfish",
   "device-aliases": [],
   "vendor": "google",
+  "aosp-vendor-dir": "google_devices",
   "aosp-device-profile": "marlin",
   "supported-apis": ["api-25", "api-26"],
   "api-25": {
