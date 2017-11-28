@@ -1,5 +1,0 @@
-# Bytecode archive files to extract from factory images
-
-# Radio
-system/priv-app/CNEService/CNEService.apk
-system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk
