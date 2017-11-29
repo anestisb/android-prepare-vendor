@@ -1010,7 +1010,7 @@ isValidApiLevel() {
   fi
 }
 
-jqRawString() {
+jqRawStr() {
   local query="$1"
 
   jq -r ".\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\"" "$CONFIG_FILE" || {
@@ -1019,17 +1019,27 @@ jqRawString() {
   }
 }
 
-jqRawArray() {
+jqIncRawArray() {
   local query="$1"
 
-  jq -r ".\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\"[]" "$CONFIG_FILE" || {
+  jq -r ".\"api-$API_LEVEL\".naked.\"$query\"[]" "$CONFIG_FILE" || {
     echo "[-] json raw string array parse failed" >&2
     abort 1
   }
+
+  if [[ "$CONFIG_TYPE" == "naked" ]]; then
+    return
+  fi
+
+  jq -r ".\"api-$API_LEVEL\".full.\"$query\"[]" "$CONFIG_FILE" || {
+    echo "[-] json raw string array parse failed" >&2
+    abort 1
+  }
+
 }
 
 setOverlaysDir() {
-  local relDir="$(jqRawString "overlays-dir")"
+  local relDir="$(jqRawStr "overlays-dir")"
   if [[ "$relDir" == "" ]]; then
     echo ""
   else
@@ -1123,11 +1133,11 @@ isValidApiLevel "$API_LEVEL"
 readonly DEVICE_CONFIG_DIR="$(dirname "$CONFIG_FILE")"
 readonly BLOBS_LIST="$DEVICE_CONFIG_DIR/proprietary-blobs.txt"
 readonly OVERLAYS_DIR="$(setOverlaysDir)"
-readonly DEP_DSO_BLOBS_LIST="$(jqRawArray "dep-dso" | grep -Ev '(^#|^$)')"
-readonly MK_FLAGS_LIST="$(jqRawArray "BoardConfigVendor")"
-readonly DEVICE_VENDOR_CONFIG="$(jqRawArray "device-vendor")"
-readonly EXTRA_MODULES="$(jqRawArray "new-modules")"
-readonly FORCE_MODULES="$(jqRawArray "forced-modules")"
+readonly DEP_DSO_BLOBS_LIST="$(jqIncRawArray "dep-dso" | grep -Ev '(^#|^$)')"
+readonly MK_FLAGS_LIST="$(jqIncRawArray "BoardConfigVendor")"
+readonly DEVICE_VENDOR_CONFIG="$(jqIncRawArray "device-vendor")"
+readonly EXTRA_MODULES="$(jqIncRawArray "new-modules")"
+readonly FORCE_MODULES="$(jqIncRawArray "forced-modules")"
 
 # Populate the array with the APK that need to maintain their signature
 readarray -t PSIG_BC_FILES < <(
