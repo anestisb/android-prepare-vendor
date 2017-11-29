@@ -1222,8 +1222,10 @@ echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blob
 
 # Append items listed in device vendor configuration file
 {
-  echo "$DEVICE_VENDOR_CONFIG"
-  echo ""
+  if [[ "$DEVICE_VENDOR_CONFIG" != "" ]]; then
+    echo "$DEVICE_VENDOR_CONFIG"
+    echo ""
+  fi
 } >> "$DEVICE_VENDOR_MK"
 
 # Activate & populate overlay directory if overlays defined in device config
