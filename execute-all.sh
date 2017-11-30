@@ -499,14 +499,13 @@ else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
 
-EXTRACT_SCRIPT_ARGS="--device "$DEVICE" --input "$factoryImgArchive" \
---output "$FACTORY_IMGS_DATA""
+EXTRACT_SCRIPT_ARGS=(--device "$DEVICE" --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA")
 
 if [ "$USE_DEBUGFS" = true ]; then
-  EXTRACT_SCRIPT_ARGS+=" --debugfs"
+  EXTRACT_SCRIPT_ARGS+=( --debugfs)
 fi
 
-$EXTRACT_SCRIPT $EXTRACT_SCRIPT_ARGS || {
+$EXTRACT_SCRIPT "${EXTRACT_SCRIPT_ARGS[@]}" || {
   echo "[-] Factory images data extract failed"
   abort 1
 }
@@ -571,11 +570,11 @@ fi
 # Adjust arguments of system repair script based on chosen method
 case $BYTECODE_REPAIR_METHOD in
   "NONE")
-    REPAIR_SCRIPT_ARG=""
+    REPAIR_SCRIPT_ARG=()
     ;;
   "OATDUMP")
     oatdump_prepare_env "$API_LEVEL"
-    REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump"
+    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump")
 
     # dex2oat is invoked from host with aggressive verifier flags. So there is a
     # high chance it will fail to preoptimize bytecode repaired with oatdump method.
@@ -591,7 +590,7 @@ case $BYTECODE_REPAIR_METHOD in
     ;;
   "OAT2DEX")
     checkJava
-    REPAIR_SCRIPT_ARG="--oat2dex $SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"
+    REPAIR_SCRIPT_ARG=(--oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar")
 
     # LOCAL_DEX_PREOPT can be safely used so enable globally for /system
     FORCE_PREOPT=true
@@ -599,9 +598,9 @@ case $BYTECODE_REPAIR_METHOD in
   "SMALIDEODEX")
     checkJava
     oatdump_prepare_env "$API_LEVEL"
-    REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump \
-                       --smali $SCRIPTS_ROOT/hostTools/Java/smali.jar \
-                       --baksmali $SCRIPTS_ROOT/hostTools/Java/baksmali.jar"
+    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump")
+    REPAIR_SCRIPT_ARG+=( --smali "$SCRIPTS_ROOT/hostTools/Java/smali.jar")
+    REPAIR_SCRIPT_ARG+=( --baksmali "$SCRIPTS_ROOT/hostTools/Java/baksmali.jar")
 
     # LOCAL_DEX_PREOPT can be safely used so enable globally for /system
     FORCE_PREOPT=true
@@ -616,11 +615,11 @@ esac
 if [ $DEODEX_ALL = false ]; then
   BYTECODE_LIST="$TMP_WORK_DIR/bytecode_list.txt"
   jqIncRawArray "system-bytecode" > "$BYTECODE_LIST"
-  REPAIR_SCRIPT_ARG+=" --bytecode-list $BYTECODE_LIST"
+  REPAIR_SCRIPT_ARG+=( --bytecode-list "$BYTECODE_LIST")
 fi
 
 $REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$SYSTEM_ROOT" \
-     --output "$FACTORY_IMGS_R_DATA" $REPAIR_SCRIPT_ARG || {
+     --output "$FACTORY_IMGS_R_DATA" "${REPAIR_SCRIPT_ARG[@]}" || {
   echo "[-] System partition bytecode repair failed"
   abort 1
 }
@@ -638,15 +637,15 @@ cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 # Make radio files available to vendor generate script
 ln -s "$FACTORY_IMGS_DATA/radio" "$FACTORY_IMGS_R_DATA/radio"
 
-VGEN_SCRIPT_EXTRA_ARGS=""
+VGEN_SCRIPT_EXTRA_ARGS=()
 if [ $FORCE_PREOPT = true ]; then
-  VGEN_SCRIPT_EXTRA_ARGS="--allow-preopt"
+  VGEN_SCRIPT_EXTRA_ARGS=(--allow-preopt)
 fi
 if [ $FORCE_VIMG = true ]; then
-  VGEN_SCRIPT_EXTRA_ARGS+=" --force-vimg"
+  VGEN_SCRIPT_EXTRA_ARGS+=( --force-vimg)
 fi
 if [[ "$AOSP_ROOT" != "" ]]; then
-  VGEN_SCRIPT_EXTRA_ARGS+=" --aosp-root $AOSP_ROOT"
+  VGEN_SCRIPT_EXTRA_ARGS+=( --aosp-root "$AOSP_ROOT")
 fi
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
@@ -654,7 +653,7 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
   --api "$API_LEVEL" \
   --conf-file "$CONFIG_FILE" \
   --conf-type "$CONFIG_TYPE" \
-  $VGEN_SCRIPT_EXTRA_ARGS || {
+  "${VGEN_SCRIPT_EXTRA_ARGS[@]}" || {
   echo "[-] Vendor generation failed"
   abort 1
 }
