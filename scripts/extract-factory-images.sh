@@ -10,6 +10,7 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut" "simg2img")
 
@@ -39,10 +40,6 @@ cat <<_EOF
       * debugfs support is experimental
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 extract_archive() {
@@ -170,28 +167,9 @@ mount_img() {
   fi
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
-    echo "[-] $fileDesc file not found"
-    usage
-  fi
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 DEVICE=""
 INPUT_ARCHIVE=""

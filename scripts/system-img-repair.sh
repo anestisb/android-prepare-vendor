@@ -31,6 +31,7 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_repair.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut" "dexrepair")
 
@@ -71,10 +72,6 @@ _EOF
   abort 1
 }
 
-command_exists() {
-  type "$1" &> /dev/null
-}
-
 # Print RAM size memory warning when using smali jar tools
 check_ram_size() {
   local host_os
@@ -91,13 +88,6 @@ check_ram_size() {
   if [ "$ram_size" -le 2 ]; then
     echo "[!] Host RAM size <= 2GB - jars might crash due to low memory"
   fi
-}
-
-get_build_id() {
-  local build_id
-
-  build_id=$(grep 'ro.build.id=' "$1" | cut -d "=" -f2)
-  echo "$build_id"
 }
 
 check_java_version() {
@@ -119,12 +109,6 @@ check_java_version() {
     echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
     abort 1
   fi
-}
-
-array_contains() {
-  local element
-  for element in "${@:2}"; do [[ "$element" =~ $1 ]] && return 0; done
-  return 1
 }
 
 oat2dex_repair() {
@@ -180,7 +164,7 @@ oat2dex_repair() {
 
     # If APKs selection enabled, skip if not in list
     if [[ "$hasBytecodeList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
-      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
+      if ! array_contains_rel "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -353,13 +337,13 @@ oatdump_repair() {
     fi
 
     # If boot jar skip
-    if array_contains "$fileName" "${bootJars[@]}"; then
+    if array_contains_rel "$fileName" "${bootJars[@]}"; then
       continue
     fi
 
     # If APKs selection enabled, skip if not in list
     if [ "$hasBytecodeList" = true ]; then
-      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
+      if ! array_contains_rel "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -521,7 +505,7 @@ smali_repair() {
 
     # If APKs selection enabled, skip if not in list
     if [ "$hasBytecodeList" = true ]; then
-      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
+      if ! array_contains_rel "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -643,28 +627,9 @@ smali_repair() {
   done < <(find "$INPUT_DIR" -not -type d)
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_opt_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" != "" && ! -f "$filePath" ]]; then
-    echo "[-] '$fileDesc' file not found"
-    usage
-  fi
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 # Check that system tools exist
 for i in "${SYS_TOOLS[@]}"

@@ -15,8 +15,9 @@ readonly HOST_OS="$(uname -s)"
 # Realpath implementation in bash
 readonly REALPATH_SCRIPT="$SCRIPTS_ROOT/scripts/realpath.sh"
 
-# Script that contain global constants
+# Common & global constants scripts
 readonly CONSTS_SCRIPT="$SCRIPTS_ROOT/scripts/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_ROOT/scripts/common.sh"
 
 # Helper script to download Nexus factory images from web
 readonly DOWNLOAD_SCRIPT="$SCRIPTS_ROOT/scripts/download-nexus-image.sh"
@@ -76,10 +77,6 @@ cat <<_EOF
       * Until fuse-ext2 problems are resolved for Linux workstations, "--debugfs" is used by default
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 check_bash_version() {
@@ -289,42 +286,10 @@ check_supported_api() {
   abort 1
 }
 
-jqRawStr() {
-  local query="$1"
-
-  jq -r ".\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\"" "$CONFIG_FILE" || {
-    echo "[-] json raw string parse failed" >&2
-    abort 1
-  }
-}
-
-jqIncRawArray() {
-  local query="$1"
-
-  jq -r ".\"api-$API_LEVEL\".naked.\"$query\"[]" "$CONFIG_FILE" || {
-    echo "[-] json raw string array parse failed" >&2
-    abort 1
-  }
-
-  if [[ "$CONFIG_TYPE" == "naked" ]]; then
-    return
-  fi
-
-  jq -r ".\"api-$API_LEVEL\".full.\"$query\"[]" "$CONFIG_FILE" || {
-    echo "[-] json raw string array parse failed" >&2
-    abort 1
-  }
-}
-
-array_contains() {
-  local element
-  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
-  return 1
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 # Save the trouble to pass explicit binary paths
 export PATH="$PATH:$LC_BIN"
@@ -644,7 +609,7 @@ esac
 # If deodex all not set provide a list of packages to repair
 if [ $DEODEX_ALL = false ]; then
   BYTECODE_LIST="$TMP_WORK_DIR/bytecode_list.txt"
-  jqIncRawArray "system-bytecode" > "$BYTECODE_LIST"
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "system-bytecode" "$CONFIG_FILE" > "$BYTECODE_LIST"
   REPAIR_SCRIPT_ARG+=( --bytecode-list "$BYTECODE_LIST")
 fi
 

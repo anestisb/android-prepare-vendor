@@ -13,6 +13,7 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 declare -a SYS_TOOLS=("find" "sed" "sort" "jq")
 
 abort() {
@@ -32,10 +33,6 @@ _EOF
   abort 1
 }
 
-command_exists() {
-  type "$1" &> /dev/null
-}
-
 verify_input() {
   if [[ ! -f "$1/build.prop" ]]; then
     echo "[-] Invalid input directory structure"
@@ -49,69 +46,9 @@ verify_input() {
   fi
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
-    echo "[-] $fileDesc file not found"
-    usage
-  fi
-}
-
-isValidConfigType() {
-  local confType="$1"
-  if [[ "$confType" != "naked" && "$confType" != "full" ]]; then
-    echo "[-] Invalid config type '$confType'"
-    abort 1
-  fi
-}
-
-isValidApiLevel() {
-  local apiLevel="$1"
-  if [[ ! "$apiLevel" = *[[:digit:]]* ]]; then
-    echo "[-] Invalid API level '$apiLevel'"
-    abort 1
-  fi
-}
-
-array_contains() {
-  local element
-  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
-  return 1
-}
-
-jqIncRawArray() {
-  local query="$1"
-
-  jq -r ".\"api-$API_LEVEL\".naked.\"$query\"[]" "$CONFIG_FILE" || {
-    echo "[-] json raw string array parse failed" >&2
-    abort 1
-  }
-
-  if [[ "$CONFIG_TYPE" == "naked" ]]; then
-    return
-  fi
-
-  jq -r ".\"api-$API_LEVEL\".full.\"$query\"[]" "$CONFIG_FILE" || {
-    echo "[-] json raw string array parse failed" >&2
-    abort 1
-  }
-
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 # Check that system tools exist
 for i in "${SYS_TOOLS[@]}"
@@ -199,13 +136,13 @@ done
 
 {
   # Then append system-proprietary-blobs
-  jqIncRawArray "system-other" | grep -Ev '(^#|^$)' || true
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "system-other" "$CONFIG_FILE" | grep -Ev '(^#|^$)' || true
 
   # Then append dep-dso-proprietary-blobs
-  jqIncRawArray "dep-dso" | grep -Ev '(^#|^$)' || true
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "dep-dso" "$CONFIG_FILE" | grep -Ev '(^#|^$)' || true
 
   # Then append bytecode-proprietary
-  jqIncRawArray "system-bytecode" | grep -Ev '(^#|^$)' || true
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "system-bytecode" "$CONFIG_FILE" | grep -Ev '(^#|^$)' || true
 } >> "$OUT_BLOBS_FILE_TMP"
 
 # Sort merged file with all lists

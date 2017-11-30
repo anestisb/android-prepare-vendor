@@ -11,6 +11,7 @@ set -u # fail on undefined variable
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly REALPATH_SCRIPT="$SCRIPTS_DIR/realpath.sh"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jarsigner" "awk" "shasum")
 
@@ -57,10 +58,6 @@ cat <<_EOF
       * If '--aosp-root' is used intermediate output is set to /tmp and rsynced when success
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 verify_input() {
@@ -136,12 +133,6 @@ read_invalid_symlink() {
   local inBase="$1"
   local relTarget="$2"
   ls -l "$inBase/$relTarget" | sed -e 's/.* -> //'
-}
-
-array_contains() {
-  local element
-  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
-  return 1
 }
 
 copy_radio_files() {
@@ -974,73 +965,9 @@ gen_sigs_file() {
   done
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
-    echo "[-] $fileDesc file not found"
-    usage
-  fi
-}
-
-isValidConfigType() {
-  local confType="$1"
-  if [[ "$confType" != "naked" && "$confType" != "full" ]]; then
-    echo "[-] Invalid config type '$confType'"
-    abort 1
-  fi
-}
-
-isValidApiLevel() {
-  local apiLevel="$1"
-  if [[ ! "$apiLevel" = *[[:digit:]]* ]]; then
-    echo "[-] Invalid API level '$apiLevel'"
-    abort 1
-  fi
-}
-
-jqRawStr() {
-  local query="$1"
-
-  jq -r ".\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\"" "$CONFIG_FILE" || {
-    echo "[-] json raw string parse failed" >&2
-    abort 1
-  }
-}
-
-jqIncRawArray() {
-  local query="$1"
-
-  jq -r ".\"api-$API_LEVEL\".naked.\"$query\"[]" "$CONFIG_FILE" || {
-    echo "[-] json raw string array parse failed" >&2
-    abort 1
-  }
-
-  if [[ "$CONFIG_TYPE" == "naked" ]]; then
-    return
-  fi
-
-  jq -r ".\"api-$API_LEVEL\".full.\"$query\"[]" "$CONFIG_FILE" || {
-    echo "[-] json raw string array parse failed" >&2
-    abort 1
-  }
-
-}
-
 setOverlaysDir() {
   local relDir
-  relDir="$(jqRawStr "overlays-dir")"
+  relDir="$(jqRawStr "$API_LEVEL" "$CONFIG_TYPE" "overlays-dir" "$CONFIG_FILE")"
   if [[ "$relDir" == "" ]]; then
     echo ""
   else
@@ -1051,6 +978,7 @@ setOverlaysDir() {
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 INPUT_DIR=""
 AOSP_ROOT=""
@@ -1134,11 +1062,11 @@ isValidApiLevel "$API_LEVEL"
 readonly DEVICE_CONFIG_DIR="$(dirname "$CONFIG_FILE")"
 readonly BLOBS_LIST="$DEVICE_CONFIG_DIR/proprietary-blobs.txt"
 readonly OVERLAYS_DIR="$(setOverlaysDir)"
-readonly DEP_DSO_BLOBS_LIST="$(jqIncRawArray "dep-dso" | grep -Ev '(^#|^$)')"
-readonly MK_FLAGS_LIST="$(jqIncRawArray "BoardConfigVendor")"
-readonly DEVICE_VENDOR_CONFIG="$(jqIncRawArray "device-vendor")"
-readonly EXTRA_MODULES="$(jqIncRawArray "new-modules")"
-readonly FORCE_MODULES="$(jqIncRawArray "forced-modules")"
+readonly DEP_DSO_BLOBS_LIST="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "dep-dso" "$CONFIG_FILE" | grep -Ev '(^#|^$)')"
+readonly MK_FLAGS_LIST="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "BoardConfigVendor" "$CONFIG_FILE")"
+readonly DEVICE_VENDOR_CONFIG="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "device-vendor" "$CONFIG_FILE")"
+readonly EXTRA_MODULES="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "new-modules" "$CONFIG_FILE")"
+readonly FORCE_MODULES="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "forced-modules" "$CONFIG_FILE")"
 
 # Populate the array with the APK that need to maintain their signature
 readarray -t PSIG_BC_FILES < <(
