@@ -266,6 +266,38 @@ checkJava() {
   fi
 }
 
+check_supported_device() {
+  local deviceOK=false
+  for devNm in "${SUPPORTED_DEVICES[@]}"
+  do
+    if [[ "$devNm" == "$DEVICE" ]]; then
+      deviceOK=true
+    fi
+  done
+  if [ "$deviceOK" = false ]; then
+    echo "[-] '$DEVICE' is not supported"
+    abort 1
+  fi
+}
+
+check_supported_api() {
+  readarray -t supportedAPIs < <(jq -r '."supported-apis"[]' "$CONFIG_FILE")
+  if array_contains "api-$API_LEVEL" "${supportedAPIs[@]}"; then
+    return
+  fi
+  echo "[-] api-$API_LEVEL is not supported for $DEVICE device"
+  abort 1
+}
+
+jqRawStr() {
+  local query="$1"
+
+  jq -r ".\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\"" "$CONFIG_FILE" || {
+    echo "[-] json raw string parse failed" >&2
+    abort 1
+  }
+}
+
 jqIncRawArray() {
   local query="$1"
 
@@ -282,7 +314,12 @@ jqIncRawArray() {
     echo "[-] json raw string array parse failed" >&2
     abort 1
   }
+}
 
+array_contains() {
+  local element
+  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
+  return 1
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -428,17 +465,9 @@ fi
 update_java_path
 
 # Check if supported device
-deviceOK=false
-for devNm in "${SUPPORTED_DEVICES[@]}"
-do
-  if [[ "$devNm" == "$DEVICE" ]]; then
-    deviceOK=true
-  fi
-done
-if [ "$deviceOK" = false ]; then
-  echo "[-] '$DEVICE' is not supported"
-  abort 1
-fi
+check_supported_device
+
+# Check supported API for device
 CONFIG_FILE="$SCRIPTS_ROOT/$DEVICE/config.json"
 
 # Prepare output dir structure
@@ -523,6 +552,7 @@ if [[ "$API_LEVEL" == "" ]]; then
   echo "[-] Failed to extract API level from build.prop"
   abort 1
 fi
+check_supported_api
 
 echo "[*] Processing with 'API-$API_LEVEL $CONFIG_TYPE' configuration"
 
