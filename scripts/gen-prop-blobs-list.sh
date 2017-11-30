@@ -91,13 +91,23 @@ array_contains() {
   return 1
 }
 
-jqRawArray() {
+jqIncRawArray() {
   local query="$1"
 
-  jq -r '.'"\"api-$API_LEVEL\".\"$CONFIG_TYPE\".\"$query\""'[]' "$CONFIG_FILE" || {
-    echo "[-] json parse failed" >&2
+  jq -r ".\"api-$API_LEVEL\".naked.\"$query\"[]" "$CONFIG_FILE" || {
+    echo "[-] json raw string array parse failed" >&2
     abort 1
   }
+
+  if [[ "$CONFIG_TYPE" == "naked" ]]; then
+    return
+  fi
+
+  jq -r ".\"api-$API_LEVEL\".full.\"$query\"[]" "$CONFIG_FILE" || {
+    echo "[-] json raw string array parse failed" >&2
+    abort 1
+  }
+
 }
 
 trap "abort 1" SIGINT SIGTERM
@@ -189,13 +199,13 @@ done
 
 {
   # Then append system-proprietary-blobs
-  jqRawArray "system-other" | grep -Ev '(^#|^$)' || true
+  jqIncRawArray "system-other" | grep -Ev '(^#|^$)' || true
 
   # Then append dep-dso-proprietary-blobs
-  jqRawArray "dep-dso" | grep -Ev '(^#|^$)' || true
+  jqIncRawArray "dep-dso" | grep -Ev '(^#|^$)' || true
 
   # Then append bytecode-proprietary
-  jqRawArray "system-bytecode" | grep -Ev '(^#|^$)' || true
+  jqIncRawArray "system-bytecode" | grep -Ev '(^#|^$)' || true
 } >> "$OUT_BLOBS_FILE_TMP"
 
 # Sort merged file with all lists
