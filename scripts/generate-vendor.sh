@@ -1039,7 +1039,8 @@ jqIncRawArray() {
 }
 
 setOverlaysDir() {
-  local relDir="$(jqRawStr "overlays-dir")"
+  local relDir
+  relDir="$(jqRawStr "overlays-dir")"
   if [[ "$relDir" == "" ]]; then
     echo ""
   else
