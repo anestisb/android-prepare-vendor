@@ -179,14 +179,6 @@ is_aosp_root() {
   return 1
 }
 
-is_pixel() {
-  local device="$1"
-  if [[ "$device" == "marlin" || "$device" == "sailfish" ]]; then
-    return 0
-  fi
-  return 1
-}
-
 check_input_args() {
   if [[ "$DEVICE" == "" ]]; then
     echo "[-] device codename cannot be empty"
