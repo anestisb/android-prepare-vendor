@@ -88,9 +88,9 @@ for further investigation. Keep in mind that if used the mount-points from
 fuse-ext2 are not unmounted. So be sure that you manually remove them (or run
 the script again without the flag) when done.
 
-All scripts can be executed from OS X, Linux & other Unix-based systems as long
-as `fuse-ext2`, bash 4.x and other utilized command line tools are installed.
-Scripts will abort if any of the required tools is missing from the host.
+All scripts can be executed from macOS, Linux & other Unix-based systems as long
+as bash 4.x and other utilized command line tools are installed. Scripts will
+abort if any of the required tools is missing from the host.
 
 Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
@@ -133,35 +133,6 @@ marked as non-essential, although might be required for some carriers or in case
 of GApps being installed (either manually post-boot or included as additional
 vendor blobs).
 
-### **system-proprietary-blobs-apiXX.txt**
-List of files to be appended at the `PRODUCT_COPY_FILES` list. These files are
-effectively copied across as is from source vendor directory to configured AOSP
-build output directory.
-
-### **bytecode-proprietary-apiXX.txt**
-List of bytecode archive files to extract from factory images, repair and
-generate individual target modules to be included in vendor makefile structure.
-
-### **dep-dso-proprietary-blobs-apiXX.txt**
-Prebuilt shared libraries (.so) extracted from factory images that are included
-as a separate local module. Multi-lib support & paths are automatically
-generated based on the evidence collected while crawling factory images
-extracted partitions. Files enlisted here will excluded from
-`PRODUCT_COPY_FILES` and instead added to the `PRODUCT_PACKAGES` list.
-
-### **vendor-config-apiXX.txt**
-Additional makefile flags to be appended at the dynamically generated
-`BoardConfigVendor.mk`. These flags are useful in case we want to override some
-default values set at original `BoardConfig.mk` without editing the source file.
-
-### **extra-modules-apiXX.txt**
-Additional target modules (with compatible structure based on rule build type)
-to be appended at master vendor `Android.mk`.
-
-### **device-vendor-config-apiXX.txt**
-Additional flags / properties to be appended at device vendor makefile
-(`device-vendor.mk` for Nexus or `device-vendor-${board_name}.mk` for Pixel).
-
 
 ## Supported devices
 | Device                          | API 23                      | API 24           | API 25           | API 26           |
@@ -182,6 +153,9 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.4.0 - xx December 2017
+  * Refactored configuration files
+  * Various code cleanups
 * 0.3.0 - 9 October 2017
   * Initial support for Android Oreo (API-26): Pixel, Pixel XL, Nexus 6p, Nexus
   5x
