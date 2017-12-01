@@ -227,37 +227,38 @@ section.
 * No binary vendor data against supported devices will be maintained in this
 repository. Scripts provide all necessary automation to generate them yourself.
 * No promises on how the device configuration files will be maintained. Feel
-free to contribute if you detect that something is broken/missing or not
+free to contribute if you detect that something is broken, missing or not
 required.
 * Host tool binaries are provided for convenience, although with no promises
 that will be kept up-to-date. Prefer to adjust your env. with upstream versions
 and keep them updated.
 * If you experience `already defined` type of errors when AOSP makefiles are
 included, you have other vendor makefiles that define the same packages (e.g.
-hammerhead vs bullhead from LGE). This issue is due to the developers of
-conflicted vendor makefiles didn't bother to wrap them with
-`ifeq ($(TARGET_DEVICE),<device_model>)`. Wrap conflicting makefiles with
-device matching clauses to resolve the issue.
+hammerhead vs bullhead for LGE vendor). This issue is due to other vendor
+makefiles not wrapping them with `ifeq ($(TARGET_DEVICE),<device_model>)`.
+Wrap conflicting makefiles with device matching clauses to resolve the issue.
 * If Smali or SmaliEx de-optimization method is chosen, Java 8 is required for
 the bytecode repair process to work.
-* Bytecode repaired with oatdump method cannot be pre-optimized when building
-AOSP. As such generated targets have `LOCAL_DEXPREOPT := false`. This is because
-host dex2oat is invoked with more strict flags and results into aborting when
-front-end reaches already optimized instructions. You can use `--force-opt`
-flag if you have modified the defailt host dex2oat bytecode precompile flags.
+* Bytecode repaired with oatdump method might not be able to be pre-optimized
+when building AOSP. As such generated targets have `LOCAL_DEXPREOPT := false`.
+This is because host dex2oat is invoked with more strict flags and results into
+aborting when front-end reaches already optimized instructions. You can use
+`--force-opt` flag if you have modified the default host dex2oat bytecode
+pre-compilation flags.
 * If you're planning to deliver OTA updates for Nexus 5x, you need to manually
-extract `update-binary` from a factory OTA archive since it's missing from AOSP
-tree due to some proprietary LG code.
+extract `update-binary` from a factory OTA archive since it's missing from
+the AOSP tree due to some proprietary LG code.
 * Nexus 9 WiFi (volantis) & Nexus 9 LTE (volantisg) vendor blobs cannot co-exist
 under same AOSP root directory. Since AOSP defines a single flounder target for
-both boards lots of definitions will conflict and create problems when building.
+both boards, lots of definitions will conflict and create problems when building.
 As such ensure that only one of them is present when building for desired
 target. Generated makefiles include an additional defensive check that will
 raise a compiler error when both are detected under same AOSP root.
 * If tool output is not set to AOSP root directory, prefer `rsync` instead of
 `cp` or `mv` commands to copy the generated directory structure to different
 location. Some device configurations (e.g. Pixel/Pixel XL) share some root
-directories and might break if `cp` or `mv` are against the wrong base paths.
+directories and might break if `cp` or `mv` are invoked with the wrong base
+paths.
 
 ## Frequently Spotted Issues
 ### fuse-ext2
