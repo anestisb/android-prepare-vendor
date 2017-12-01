@@ -1222,10 +1222,11 @@ echo "$BUILD_ID" > "$OUTPUT_VENDOR/build_id.txt"
 
 if [[ "$AOSP_ROOT" != "" ]]; then
   mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE"
-  mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
 
   # Device name does not match device family (e.g. sailfish)
   if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
+    mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
+
     # Soft update for device family dir so that co-existing configs are not affected
     rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
       echo "[-] rsync failed"
@@ -1238,7 +1239,7 @@ if [[ "$AOSP_ROOT" != "" ]]; then
       abort 1
     }
   else
-    rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/" "$AOSP_ROOT/vendor/$VENDOR_DIR" || {
+    rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
       echo "[-] rsync failed"
       abort 1
     }
