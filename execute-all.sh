@@ -51,30 +51,29 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -d|--device  : Device codename (angler, bullhead, etc.)
-      -a|--alias   : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
-      -b|--buildID : BuildID string (e.g. MMB29P)
-      -o|--output  : Path to save generated vendor data
-      -f|--full    : Use blobs configuration with all non-essential OEM packages + compatible with GApps
-      -i|--img     : [OPTIONAL] Read factory image archive from file instead of downloading
-      -k|--keep    : [OPTIONAL] Keep all factory images extracted & repaired data
-      -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
-      -j|--java    : [OPTIONAL] Java path to use instead of system auto detected global version
-      -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images
-      --force-opt  : [OPTIONAL] Disable LOCAL_DEX_PREOPT overrides for /system bytecode
-      --oatdump    : [OPTIONAL] Force use of oatdump method to revert preoptimized bytecode
-      --smali      : [OPTIONAL] Force use of smali/baksmali to revert preoptimized bytecode
-      --smaliex    : [OPTIONAL] Force use of smaliEx to revert preoptimized bytecode [DEPRECATED]
-      --deodex-all : [OPTIONAL] De-optimize all packages under /system
-      --debugfs    : [OPTIONAL] Use debugfs instead of default fuse-ext2, to extract image files data
-      --force-vimg : [OPTIONAL] Force factory extracted blobs under /vendor to be always used regardless AOSP definitions
+      -d|--device <name> : Device codename (angler, bullhead, etc.)
+      -a|--alias <alias> : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
+      -b|--buildID <id>  : BuildID string (e.g. MMB29P)
+      -o|--output <path> : Path to save generated vendor data
+      -i|--img <path>    : [OPTIONAL] Read factory image archive from file instead of downloading
+      -j|--java <path    : [OPTIONAL] Java path to use instead of system auto detected global version
+      -f|--full    : [OPTIONAL] Use config with all non-essential OEM blobs to be compatible with GApps (default: false)
+      -k|--keep    : [OPTIONAL] Keep all extracted factory images & repaired data (default: false)
+      -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (default: false)
+      -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images (default: false)
+      --force-opt  : [OPTIONAL] Override LOCAL_DEX_PREOPT to always pre-optimize /system bytecode (default: false)
+      --oatdump    : [OPTIONAL] Force use of oatdump method to revert pre-optimized bytecode
+      --smali      : [OPTIONAL] Force use of smali/baksmali to revert pre-optimized bytecode
+      --smaliex    : [OPTIONAL] Force use of smaliEx to revert pre-optimized bytecode [DEPRECATED]
+      --deodex-all : [OPTIONAL] De-optimize all packages under /system (default: false)
+      --force-vimg : [OPTIONAL] Force factory extracted blobs under /vendor to be always used regardless AOSP definitions (default: false)
 
     INFO:
       * Default configuration is naked. Use "-f|--full" if you plan to install Google Play Services
         or you have issues with some carriers
-      * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method
-        If you need something on the top of defaults, you can select manually.
-      * Until fuse-ext2 problems are resolved for Linux workstations, "--debugfs" is used by default
+      * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method.
+        If you need to change the defaults, you can select manually.
+      * Darwin uses fuse-ext2 and Linux uses debugfs to extract data from ext4 images without root
 _EOF
   abort 1
 }
@@ -321,10 +320,8 @@ if isDarwin; then
   SYS_TOOLS+=("umount")
   _UMOUNT=umount
 else
-  # Until fuse-ext2 problems are resolved for Linux, use debugfs by default
+  # For Linux use debugfs
   USE_DEBUGFS=true
-  # SYS_TOOLS+=("fusermount")
-  # _UMOUNT="fusermount -u"
 fi
 
 # Check that system tools exist
@@ -390,9 +387,6 @@ do
       ;;
     --deodex-all)
       DEODEX_ALL=true
-      ;;
-    --debugfs)
-      USE_DEBUGFS=true
       ;;
     --force-vimg)
       FORCE_VIMG=true
