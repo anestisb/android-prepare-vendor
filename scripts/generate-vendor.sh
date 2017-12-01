@@ -153,7 +153,7 @@ copy_radio_files() {
     abort 1
   }
 
-  if [ "$IS_PIXEL" = true ]; then
+  if [[ "$VENDOR" == "google" ]]; then
     for img in "${PIXEL_AB_PARTITIONS[@]}"
     do
       cp "$inDir/radio/$img.img" "$outDir/radio/"
@@ -360,7 +360,7 @@ gen_board_vendor_mk() {
       echo "\$(call add-radio-file,radio/radio.img,version-baseband)"
     fi
 
-    if [ "$IS_PIXEL" = true ]; then
+    if [[ "$VENDOR" == "google" ]]; then
       for img in "${PIXEL_AB_PARTITIONS[@]}"
       do
         echo "\$(call add-radio-file,radio/$img.img)"
@@ -392,10 +392,7 @@ gen_board_cfg_mk() {
 }
 
 gen_board_family_cfg_mk() {
-  if [ "$IS_PIXEL" = false ]; then
-    return
-  fi
-
+  # So far required only for Pixel 1st generation
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
     {
       echo 'AB_OTA_PARTITIONS += vendor'
@@ -992,7 +989,6 @@ FORCE_VIMG=false
 DEVICE_CONFIG_DIR=""
 DEVICE=""
 DEVICE_FAMILY=""
-IS_PIXEL=false
 VENDOR=""
 DEV_FAMILY_BOARD_CONFIG_VENDOR_MK=""
 APK_SYSTEM_LIB_BLOBS_LIST="$TMP_WORK_DIR/apk_system_lib_blobs.txt"
@@ -1079,26 +1075,16 @@ verify_input "$INPUT_DIR"
 
 # Get device details
 DEVICE=$(get_device_codename "$INPUT_DIR/system/build.prop")
+DEVICE_FAMILY="$(jqRawStrTop "aosp-device-profile" "$CONFIG_FILE")"
 VENDOR=$(get_vendor "$INPUT_DIR/system/build.prop")
-VENDOR_DIR="$VENDOR"
+VENDOR_DIR="$(jqRawStrTop "aosp-vendor-dir" "$CONFIG_FILE")"
 RADIO_VER=$(get_radio_ver "$INPUT_DIR/system/build.prop")
 BOOTLOADER_VER=$(get_bootloader_ver "$INPUT_DIR/system/build.prop")
 BUILD_ID=$(get_build_id "$INPUT_DIR/system/build.prop")
 
-if [[ "$VENDOR" == "google" ]]; then
-  VENDOR_DIR="google_devices"
-  IS_PIXEL=true
-  if [[ "$DEVICE" == "marlin" || "$DEVICE" == "sailfish" ]]; then
-    DEVICE_FAMILY="marlin"
-  fi
-  mkdir -p "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
-else
-  DEVICE_FAMILY="$DEVICE"
-fi
+echo "[*] Generating '$DEVICE' vendor blobs"
 
-echo "[*] Generating blobs for vendor/$VENDOR_DIR/$DEVICE"
-
-# Clean-up output
+# Prepare vendor output directory structure
 OUTPUT_VENDOR="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE"
 if [ -d "$OUTPUT_VENDOR" ]; then
   rm -rf "${OUTPUT_VENDOR:?}"/*
@@ -1106,7 +1092,13 @@ fi
 PROP_EXTRACT_BASE="$OUTPUT_VENDOR/proprietary"
 mkdir -p "$PROP_EXTRACT_BASE"
 
-# Clean-up output vendor overlay
+if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
+  # We don't clean here since we might corrupt other device configurations
+  # if output is directly set to AOSP root
+  mkdir -p "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
+fi
+
+# Prepare vendor overlays output directory structure
 readonly REL_VENDOR_OVERLAY="vendor_overlay/$VENDOR_DIR/$DEVICE/overlay"
 OUTPUT_VENDOR_OVERLAY="$OUTPUT_DIR/$REL_VENDOR_OVERLAY"
 if [ -d "$OUTPUT_VENDOR_OVERLAY" ]; then
@@ -1115,22 +1107,22 @@ fi
 mkdir -p "$OUTPUT_VENDOR_OVERLAY"
 
 # Prepare generated make files
-DEVICE_VENDOR_MK="$OUTPUT_VENDOR/device-vendor.mk";              touch "$DEVICE_VENDOR_MK"
-DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk"; touch "$DEVICE_VENDOR_BLOBS_MK"
-BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";    touch "$BOARD_CONFIG_VENDOR_MK"
-ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";  touch "$ANDROID_BOARD_VENDOR_MK"
-ANDROID_MK="$OUTPUT_VENDOR/Android.mk";                          touch "$ANDROID_MK"
+DEVICE_VENDOR_MK="$OUTPUT_VENDOR/device-vendor.mk";              > "$DEVICE_VENDOR_MK"
+DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk"; > "$DEVICE_VENDOR_BLOBS_MK"
+BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";    > "$BOARD_CONFIG_VENDOR_MK"
+ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";  > "$ANDROID_BOARD_VENDOR_MK"
+ANDROID_MK="$OUTPUT_VENDOR/Android.mk";                          > "$ANDROID_MK"
 
-if [ "$IS_PIXEL" = true ]; then
+if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
   DEV_FAMILY_BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
-  touch "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
+  > "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
 
   BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendorPartial.mk"
-  touch "$BOARD_CONFIG_VENDOR_MK"
+  > "$BOARD_CONFIG_VENDOR_MK"
 
   rm "$DEVICE_VENDOR_MK"
   DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
-  touch "$DEVICE_VENDOR_MK"
+  > "$DEVICE_VENDOR_MK"
 fi
 
 # And prefix them
@@ -1215,7 +1207,7 @@ fi
 sort "$BLOBS_LIST" > "$BLOBS_LIST.tmp"
 mv "$BLOBS_LIST.tmp" "$BLOBS_LIST"
 
-if [ "$IS_PIXEL" = true ]; then
+if [[ "$VENDOR" == "google" ]]; then
   update_ab_ota_partitions "$DEVICE_VENDOR_MK"
 fi
 
@@ -1232,31 +1224,19 @@ if [[ "$AOSP_ROOT" != "" ]]; then
   mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE"
   mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
 
-  # If Pixel device we need to do some special directory handling due to shared
-  # assets under google_devices/marlin
-  if [ "$IS_PIXEL" = true ]; then
-    # Device name matches device family (e.g. marlin)
-    if [[ "$DEVICE" == "$DEVICE_FAMILY" ]]; then
-      # Do not '--delete' here since it will remove shared files
-      rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
-        echo "[-] rsync failed"
-        abort 1
-      }
-    # Device name does not match device family (e.g. sailfish)
-    elif [[ "$DEVICE" != "$DEVICE_FAMILY"  ]]; then
-      # Soft update for device family dir so that co-existing configs are not affected
-      rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
-        echo "[-] rsync failed"
-        abort 1
-      }
+  # Device name does not match device family (e.g. sailfish)
+  if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
+    # Soft update for device family dir so that co-existing configs are not affected
+    rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
+      echo "[-] rsync failed"
+      abort 1
+    }
 
-      # Force update for device (--delete old copies no longer present)
-      rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
-        echo "[-] rsync failed"
-        abort 1
-      }
-    fi
-  # Non-pixel devices have separate vendor names so it's safe to force update
+    # Force update for device (--delete old copies no longer present)
+    rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
+      echo "[-] rsync failed"
+      abort 1
+    }
   else
     rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/" "$AOSP_ROOT/vendor/$VENDOR_DIR" || {
       echo "[-] rsync failed"
