@@ -394,6 +394,8 @@ gen_board_cfg_mk() {
 gen_board_family_cfg_mk() {
   # So far required only for Pixel 1st generation
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
+    local familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
+    > "$familyBoardCfgVendorMk"
     {
       echo 'AB_OTA_PARTITIONS += vendor'
       echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
@@ -402,7 +404,7 @@ gen_board_family_cfg_mk() {
       echo '  LOCAL_STEM := marlin/BoardConfigVendorPartial.mk'
       echo 'endif'
       echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
-    } >> "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
+    } >> "$familyBoardCfgVendorMk"
   fi
 }
 
@@ -990,7 +992,6 @@ DEVICE_CONFIG_DIR=""
 DEVICE=""
 DEVICE_FAMILY=""
 VENDOR=""
-DEV_FAMILY_BOARD_CONFIG_VENDOR_MK=""
 APK_SYSTEM_LIB_BLOBS_LIST="$TMP_WORK_DIR/apk_system_lib_blobs.txt"
 RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
 
@@ -1106,24 +1107,23 @@ if [ -d "$OUTPUT_VENDOR_OVERLAY" ]; then
 fi
 mkdir -p "$OUTPUT_VENDOR_OVERLAY"
 
-# Prepare generated make files
-DEVICE_VENDOR_MK="$OUTPUT_VENDOR/device-vendor.mk";              > "$DEVICE_VENDOR_MK"
-DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk"; > "$DEVICE_VENDOR_BLOBS_MK"
-BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";    > "$BOARD_CONFIG_VENDOR_MK"
-ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";  > "$ANDROID_BOARD_VENDOR_MK"
-ANDROID_MK="$OUTPUT_VENDOR/Android.mk";                          > "$ANDROID_MK"
+# Prepare generated makefiles
+DEVICE_VENDOR_MK="$OUTPUT_VENDOR/device-vendor.mk";
+DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk";
+BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";
+ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";
+ANDROID_MK="$OUTPUT_VENDOR/Android.mk";
 
 if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
-  DEV_FAMILY_BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
-  > "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
-
   BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendorPartial.mk"
-  > "$BOARD_CONFIG_VENDOR_MK"
-
-  rm "$DEVICE_VENDOR_MK"
   DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
-  > "$DEVICE_VENDOR_MK"
 fi
+
+> "$DEVICE_VENDOR_MK"
+> "$DEVICE_VENDOR_BLOBS_MK"
+> "$BOARD_CONFIG_VENDOR_MK"
+> "$ANDROID_BOARD_VENDOR_MK"
+> "$ANDROID_MK"
 
 # And prefix them
 find "$OUTPUT_DIR/vendor/$VENDOR_DIR" -type f -name '*.mk' | while read -r file
