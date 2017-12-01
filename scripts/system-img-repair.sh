@@ -147,7 +147,7 @@ oat2dex_repair() {
     fileName=$(basename "$relFile")
 
     # Skip special files
-    if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
+    if array_contains "$fileExt" "${ART_FILE_EXTS[@]}"; then
       continue
     fi
 
@@ -321,7 +321,7 @@ oatdump_repair() {
     dexsExported=0
 
     # Skip special files
-    if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
+    if array_contains "$fileExt" "${ART_FILE_EXTS[@]}"; then
       continue
     fi
 
@@ -488,7 +488,7 @@ smali_repair() {
     fileName=$(basename "$relFile")
 
     # Skip special files
-    if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
+    if array_contains "$fileExt" "${ART_FILE_EXTS[@]}"; then
       continue
     fi
 
