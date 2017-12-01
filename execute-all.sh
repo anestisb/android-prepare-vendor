@@ -88,7 +88,7 @@ check_bash_version() {
 
 check_compatible_system() {
   local hostOS
-  hostOS=$(uname)
+  hostOS=$(uname -s)
   if [[ "$hostOS" != "Linux" && "$hostOS" != "Darwin" ]]; then
     echo "[-] '$hostOS' OS is not supported"
     abort 1

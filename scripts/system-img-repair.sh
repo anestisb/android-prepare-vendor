@@ -77,7 +77,7 @@ check_ram_size() {
   local host_os
   local ram_size
 
-  host_os=$(uname)
+  host_os=$(uname -s)
   ram_size=0
   if [[ "$host_os" == "Darwin" ]]; then
     ram_size=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
