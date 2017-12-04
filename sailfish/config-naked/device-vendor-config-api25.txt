@@ -1,4 +1,0 @@
-# Missing device vendor build properties
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.hardware.egl=adreno \
-    ro.hardware.fingerprint=fpc

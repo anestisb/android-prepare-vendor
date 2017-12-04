@@ -13,7 +13,8 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
-declare -a SYS_TOOLS=("find" "sed" "sort")
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
+declare -a SYS_TOOLS=("find" "sed" "sort" "jq")
 
 abort() {
   exit "$1"
@@ -25,14 +26,11 @@ cat <<_EOF
     OPTIONS:
       -i|--input  : Root path of /vendor partition
       -o|--output : Path to save generated "proprietary-blobs.txt" file
-      --conf-dir  : Directory containing device configuration files
-      --api       : API level in order to pick appropriate config file
+      --conf-file : Device configuration file
+      --conf-type : 'naked' or 'full' configuration profile
+      --api       : API level
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 verify_input() {
@@ -48,43 +46,9 @@ verify_input() {
   fi
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
-    echo "[-] $fileDesc file not found"
-    usage
-  fi
-}
-
-array_contains() {
-  local element
-  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
-  return 1
-}
-
-is_naked_config() {
-  local inConfDir="$1"
-  if [[ "$(basename "$inConfDir")" == "config-naked" ]]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 # Check that system tools exist
 for i in "${SYS_TOOLS[@]}"
@@ -97,7 +61,8 @@ done
 
 INPUT_DIR=""
 OUTPUT_DIR=""
-CONFIGS_DIR=""
+CONFIG_FILE=""
+CONFIG_TYPE="naked"
 API_LEVEL=""
 
 while [[ $# -gt 1 ]]
@@ -112,8 +77,12 @@ do
       INPUT_DIR="$(echo "$2" | sed 's:/*$::')"
       shift
       ;;
-    --conf-dir)
-      CONFIGS_DIR=$(echo "$2" | sed 's:/*$::')
+    --conf-file)
+      CONFIG_FILE="$2"
+      shift
+      ;;
+    --conf-type)
+      CONFIG_TYPE="$2"
       shift
       ;;
     --api)
@@ -131,22 +100,11 @@ done
 # Input args check
 check_dir "$INPUT_DIR" "Input"
 check_dir "$OUTPUT_DIR" "Output"
-check_dir "$CONFIGS_DIR" "Base Config Dir"
+check_file "$CONFIG_FILE" "Device Config File"
 
-# Check if API level is a number
-if [[ ! "$API_LEVEL" = *[[:digit:]]* ]]; then
-  echo "[-] Invalid API level (not a number)"
-  abort 1
-fi
-
-readonly IN_SYS_FILE="$CONFIGS_DIR/system-proprietary-blobs-api$API_LEVEL.txt"
-readonly IN_BYTECODE_FILE="$CONFIGS_DIR/bytecode-proprietary-api$API_LEVEL.txt"
-readonly IN_DEP_DSO_FILE="$CONFIGS_DIR/dep-dso-proprietary-blobs-api$API_LEVEL.txt"
-
-# Mandatory configuration files
-check_file "$IN_SYS_FILE" "system-proprietary-blobs"
-check_file "$IN_BYTECODE_FILE" "bytecode-proprietary-blobs"
-check_file "$IN_DEP_DSO_FILE" "dep-dso-proprietary-blobs"
+# Check if valid config type & API level
+isValidConfigType "$CONFIG_TYPE"
+isValidApiLevel "$API_LEVEL"
 
 # Verify input directory structure
 verify_input "$INPUT_DIR"
@@ -167,7 +125,7 @@ do
   fi
 
   # Additional skips only for naked configs
-  if is_naked_config "$CONFIGS_DIR"; then
+  if [[ "$CONFIG_TYPE" == "naked" ]]; then
     if array_contains "$FILE" "${VENDOR_SKIP_FILES_NAKED[@]}"; then
       continue
     fi
@@ -178,13 +136,13 @@ done
 
 {
   # Then append system-proprietary-blobs
-  grep -Ev '(^#|^$)' "$IN_SYS_FILE" || true
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "system-other" "$CONFIG_FILE" | grep -Ev '(^#|^$)' || true
 
   # Then append dep-dso-proprietary-blobs
-  grep -Ev '(^#|^$)' "$IN_DEP_DSO_FILE" || true
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "dep-dso" "$CONFIG_FILE" | grep -Ev '(^#|^$)' || true
 
   # Then append bytecode-proprietary
-  grep -Ev '(^#|^$)' "$IN_BYTECODE_FILE" || true
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "system-bytecode" "$CONFIG_FILE" | grep -Ev '(^#|^$)' || true
 } >> "$OUT_BLOBS_FILE_TMP"
 
 # Sort merged file with all lists

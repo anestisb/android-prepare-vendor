@@ -10,12 +10,14 @@ set -u # fail on undefined variable
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "shasum")
+readonly HOST_OS="$(uname -s)"
 
 # Realpath implementation in bash
 readonly REALPATH_SCRIPT="$SCRIPTS_ROOT/scripts/realpath.sh"
 
-# Script that contain global constants
+# Common & global constants scripts
 readonly CONSTS_SCRIPT="$SCRIPTS_ROOT/scripts/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_ROOT/scripts/common.sh"
 
 # Helper script to download Nexus factory images from web
 readonly DOWNLOAD_SCRIPT="$SCRIPTS_ROOT/scripts/download-nexus-image.sh"
@@ -32,6 +34,9 @@ readonly REPAIR_SCRIPT="$SCRIPTS_ROOT/scripts/system-img-repair.sh"
 # Helper script to generate vendor AOSP includes & makefiles
 readonly VGEN_SCRIPT="$SCRIPTS_ROOT/scripts/generate-vendor.sh"
 
+# Directory with host specific binaries
+readonly LC_BIN="$SCRIPTS_ROOT/hostTools/$HOST_OS/bin"
+
 abort() {
   # Remove mount points in case of error
   if [[ $1 -ne 0 && "$FACTORY_IMGS_DATA" != "" ]]; then
@@ -46,42 +51,54 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -d|--device  : Device codename (angler, bullhead, etc.)
-      -a|--alias   : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
-      -b|--buildID : BuildID string (e.g. MMB29P)
-      -o|--output  : Path to save generated vendor data
-      -f|--full    : Use blobs configuration with all non-essential OEM packages + compatible with GApps
-      -i|--img     : [OPTIONAL] Read factory image archive from file instead of downloading
-      -k|--keep    : [OPTIONAL] Keep all factory images extracted & repaired data
-      -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (for debug purposes)
-      -j|--java    : [OPTIONAL] Java path to use instead of system auto detected global version
-      -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images
-      --force-opt  : [OPTIONAL] Disable LOCAL_DEX_PREOPT overrides for /system bytecode
-      --oatdump    : [OPTIONAL] Force use of oatdump method to revert preoptimized bytecode
-      --smali      : [OPTIONAL] Force use of smali/baksmali to revert preoptimized bytecode
-      --smaliex    : [OPTIONAL] Force use of smaliEx to revert preoptimized bytecode [DEPRECATED]
-      --deodex-all : [OPTIONAL] De-optimize all packages under /system
-      --debugfs    : [OPTIONAL] Use debugfs instead of default fuse-ext2, to extract image files data
-      --force-vimg : [OPTIONAL] Force factory extracted blobs under /vendor to be always used regardless AOSP definitions
+      -d|--device <name> : Device codename (angler, bullhead, etc.)
+      -a|--alias <alias> : Device alias (e.g. flounder volantis (WiFi) vs volantisg (LTE))
+      -b|--buildID <id>  : BuildID string (e.g. MMB29P)
+      -o|--output <path> : Path to save generated vendor data
+      -i|--img <path>    : [OPTIONAL] Read factory image archive from file instead of downloading
+      -j|--java <path    : [OPTIONAL] Java path to use instead of system auto detected global version
+      -f|--full    : [OPTIONAL] Use config with all non-essential OEM blobs to be compatible with GApps (default: false)
+      -k|--keep    : [OPTIONAL] Keep all extracted factory images & repaired data (default: false)
+      -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (default: false)
+      -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images (default: false)
+      --force-opt  : [OPTIONAL] Override LOCAL_DEX_PREOPT to always pre-optimize /system bytecode (default: false)
+      --oatdump    : [OPTIONAL] Force use of oatdump method to revert pre-optimized bytecode
+      --smali      : [OPTIONAL] Force use of smali/baksmali to revert pre-optimized bytecode
+      --smaliex    : [OPTIONAL] Force use of smaliEx to revert pre-optimized bytecode [DEPRECATED]
+      --deodex-all : [OPTIONAL] De-optimize all packages under /system (default: false)
+      --force-vimg : [OPTIONAL] Force factory extracted blobs under /vendor to be always used regardless AOSP definitions (default: false)
 
     INFO:
       * Default configuration is naked. Use "-f|--full" if you plan to install Google Play Services
         or you have issues with some carriers
-      * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method
-        If you need something on the top of defaults, you can select manually.
-      * Until fuse-ext2 problems are resolved for Linux workstations, "--debugfs" is used by default
+      * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method.
+        If you need to change the defaults, you can select manually.
+      * Darwin uses fuse-ext2 and Linux uses debugfs to extract data from ext4 images without root
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 check_bash_version() {
   if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
     echo "[-] Minimum supported version of bash is 4.x"
     abort 1
+  fi
+}
+
+check_compatible_system() {
+  local hostOS
+  hostOS=$(uname -s)
+  if [[ "$hostOS" != "Linux" && "$hostOS" != "Darwin" ]]; then
+    echo "[-] '$hostOS' OS is not supported"
+    abort 1
+  fi
+}
+
+isDarwin() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    return 0
+  else
+    return 1
   fi
 }
 
@@ -161,17 +178,112 @@ is_aosp_root() {
   return 1
 }
 
-is_pixel() {
-  local device="$1"
-  if [[ "$device" == "marlin" || "$device" == "sailfish" ]]; then
-    return 0
+check_input_args() {
+  if [[ "$DEVICE" == "" ]]; then
+    echo "[-] device codename cannot be empty"
+    usage
   fi
-  return 1
+  if [[ "$BUILDID" == "" ]]; then
+    echo "[-] buildId cannot be empty"
+    usage
+  fi
+  if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
+    echo "[-] Invalid output directory"
+    usage
+  fi
+  if [[ "$INPUT_IMG" != "" && ! -f "$INPUT_IMG" ]]; then
+    echo "[-] Invalid '$INPUT_IMG' file"
+    abort 1
+  fi
+  if [[ "$USER_JAVA_PATH" != "" ]]; then
+    if  [ ! -f "$USER_JAVA_PATH" ]; then
+      echo "[-] '$USER_JAVA_PATH' path not found"
+      abort 1
+    fi
+    if [[ "$(basename "$USER_JAVA_PATH")" != "java" ]]; then
+      echo "[-] Invalid java path"
+      abort 1
+    fi
+  fi
+
+  # Some business logic related checks
+  if [[ "$DEODEX_ALL" = true && $KEEP_DATA = false ]]; then
+    echo "[!] It's pointless to deodex all if not keeping runtime generated data"
+    echo "    After vendor generate finishes all files not part of configs will be deleted"
+    abort 1
+  fi
+}
+
+update_java_path() {
+  local __javapath=""
+  local __javadir=""
+  local __javahome=""
+
+  if [[ "$USER_JAVA_PATH" != "" ]]; then
+    __javapath=$(_realpath "$USER_JAVA_PATH")
+    __javadir=$(dirname "$__javapath")
+    __javahome="$__javapath"
+    JAVA_FOUND=true
+  else
+    readonly __JAVALINK=$(which java)
+    if [[ "$__JAVALINK" == "" ]]; then
+      echo "[!] Java not found in system"
+    else
+      if [[ "$HOST_OS" == "Darwin" ]]; then
+        __javahome="$(/usr/libexec/java_home)"
+        __javadir="$__javahome/bin"
+      else
+        __javapath=$(_realpath "$__JAVALINK")
+        __javadir=$(dirname "$__javapath")
+        __javahome="$__javapath"
+      fi
+      JAVA_FOUND=true
+    fi
+  fi
+
+  if [ "$JAVA_FOUND" = true ]; then
+    export JAVA_HOME="$__javahome"
+    export PATH="$__javadir":$PATH
+  fi
+}
+
+checkJava() {
+  if [ "$JAVA_FOUND" = false ]; then
+    echo "[-] Java is required"
+    abort 1
+  fi
+}
+
+check_supported_device() {
+  local deviceOK=false
+  for devNm in "${SUPPORTED_DEVICES[@]}"
+  do
+    if [[ "$devNm" == "$DEVICE" ]]; then
+      deviceOK=true
+    fi
+  done
+  if [ "$deviceOK" = false ]; then
+    echo "[-] '$DEVICE' is not supported"
+    abort 1
+  fi
+}
+
+check_supported_api() {
+  readarray -t supportedAPIs < <(jq -r '."supported-apis"[]' "$CONFIG_FILE")
+  if array_contains "api-$API_LEVEL" "${supportedAPIs[@]}"; then
+    return
+  fi
+  echo "[-] api-$API_LEVEL is not supported for $DEVICE device"
+  abort 1
 }
 
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
+
+# Save the trouble to pass explicit binary paths
+export PATH="$PATH:$LC_BIN"
 
 # Global variables
 DEVICE=""
@@ -179,13 +291,13 @@ BUILDID=""
 OUTPUT_DIR=""
 INPUT_IMG=""
 KEEP_DATA=false
-HOST_OS=""
 DEV_ALIAS=""
 API_LEVEL=""
 SKIP_SYSDEOPT=false
 _UMOUNT=""
 FACTORY_IMGS_DATA=""
-CONFIG="config-naked"
+CONFIG_TYPE="naked"
+CONFIG_FILE=""
 USER_JAVA_PATH=""
 AUTO_TOS_ACCEPT=false
 FORCE_PREOPT=false
@@ -197,24 +309,19 @@ DEODEX_ALL=false
 AOSP_ROOT=""
 USE_DEBUGFS=false
 FORCE_VIMG=false
+JAVA_FOUND=false
 
 # Compatibility
 check_bash_version
-HOST_OS=$(uname)
-if [[ "$HOST_OS" != "Linux" && "$HOST_OS" != "Darwin" ]]; then
-  echo "[-] '$HOST_OS' OS is not supported"
-  abort 1
-fi
+check_compatible_system
 
 # Platform specific commands
-if [[ "$HOST_OS" == "Darwin" ]]; then
+if isDarwin; then
   SYS_TOOLS+=("umount")
   _UMOUNT=umount
 else
-  # Until fuse-ext2 problems are resolved for Linux, use debugfs by default
+  # For Linux use debugfs
   USE_DEBUGFS=true
-  # SYS_TOOLS+=("fusermount")
-  # _UMOUNT="fusermount -u"
 fi
 
 # Check that system tools exist
@@ -251,7 +358,7 @@ do
       shift
       ;;
     -f|--full)
-      CONFIG="config-full"
+      CONFIG_TYPE="full"
       ;;
     -k|--keep)
       KEEP_DATA=true
@@ -281,9 +388,6 @@ do
     --deodex-all)
       DEODEX_ALL=true
       ;;
-    --debugfs)
-      USE_DEBUGFS=true
-      ;;
     --force-vimg)
       FORCE_VIMG=true
       ;;
@@ -296,44 +400,12 @@ do
 done
 
 # Check user input args
-if [[ "$DEVICE" == "" ]]; then
-  echo "[-] device codename cannot be empty"
-  usage
-fi
-if [[ "$BUILDID" == "" ]]; then
-  echo "[-] buildID cannot be empty"
-  usage
-fi
-if [[ "$OUTPUT_DIR" == "" || ! -d "$OUTPUT_DIR" ]]; then
-  echo "[-] Output directory not found"
-  usage
-fi
-if [[ "$INPUT_IMG" != "" && ! -f "$INPUT_IMG" ]]; then
-  echo "[-] '$INPUT_IMG' file not found"
-  abort 1
-fi
-if [[ "$USER_JAVA_PATH" != "" ]]; then
-  if  [ ! -f "$USER_JAVA_PATH" ]; then
-    echo "[-] '$USER_JAVA_PATH' path not found"
-    abort 1
-  fi
-  if [[ "$(basename "$USER_JAVA_PATH")" != "java" ]]; then
-    echo "[-] Invalid java path"
-    abort 1
-  fi
-fi
-
-# Some business logic related checks
-if [[ "$DEODEX_ALL" = true && $KEEP_DATA = false ]]; then
-  echo "[!] It's pointless to deodex all if not keeping runtime generated data"
-  echo "    After vendor generate finishes all files not part of configs will be deleted"
-  abort 1
-fi
+check_input_args
 
 # Check if output directory is AOSP root
 if is_aosp_root "$OUTPUT_DIR"; then
   if [ "$KEEP_DATA" = true ]; then
-    echo "[!] Cannot keep data when output directory is AOSP root - choose different path"
+    echo "[!] Not safe to keep data when output directory is AOSP root - choose different path"
     abort 1
   fi
   AOSP_ROOT="$OUTPUT_DIR"
@@ -341,44 +413,13 @@ if is_aosp_root "$OUTPUT_DIR"; then
 fi
 
 # Resolve Java location
-__JAVAPATH=""
-__JAVADIR=""
-__JAVA_HOME=""
-if [[ "$USER_JAVA_PATH" != "" ]]; then
-  __JAVAPATH=$(_realpath "$USER_JAVA_PATH")
-  __JAVADIR=$(dirname "$__JAVAPATH")
-  __JAVA_HOME="$__JAVAPATH"
-else
-  readonly __JAVALINK=$(which java)
-  if [[ "$__JAVALINK" == "" ]]; then
-    # We don't fail since Java is required only when oat2dex method is used
-    echo "[-] Java not found in system"
-  else
-    if [[ "$HOST_OS" == "Darwin" ]]; then
-      __JAVA_HOME="$(/usr/libexec/java_home)"
-      __JAVADIR="$__JAVA_HOME/bin"
-    else
-      __JAVAPATH=$(_realpath "$__JAVALINK")
-      __JAVADIR=$(dirname "$__JAVAPATH")
-      __JAVA_HOME="$__JAVAPATH"
-    fi
-  fi
-fi
-export JAVA_HOME="$__JAVA_HOME"
-export PATH="$__JAVADIR":$PATH
+update_java_path
 
 # Check if supported device
-deviceOK=false
-for devNm in "${SUPPORTED_DEVICES[@]}"
-do
-  if [[ "$devNm" == "$DEVICE" ]]; then
-    deviceOK=true
-  fi
-done
-if [ "$deviceOK" = false ]; then
-  echo "[-] '$DEVICE' is not supported"
-  abort 1
-fi
+check_supported_device
+
+# Check supported API for device
+CONFIG_FILE="$SCRIPTS_ROOT/$DEVICE/config.json"
 
 # Prepare output dir structure
 OUT_BASE="$OUTPUT_DIR/$DEVICE/$BUILDID"
@@ -438,15 +479,13 @@ else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
 
-EXTRACT_SCRIPT_ARGS="--device "$DEVICE" --input "$factoryImgArchive" \
---output "$FACTORY_IMGS_DATA" \
---simg2img "$SCRIPTS_ROOT/hostTools/$HOST_OS/bin/simg2img""
+EXTRACT_SCRIPT_ARGS=(--device "$DEVICE" --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA")
 
 if [ "$USE_DEBUGFS" = true ]; then
-  EXTRACT_SCRIPT_ARGS+=" --debugfs"
+  EXTRACT_SCRIPT_ARGS+=( --debugfs)
 fi
 
-$EXTRACT_SCRIPT $EXTRACT_SCRIPT_ARGS || {
+$EXTRACT_SCRIPT "${EXTRACT_SCRIPT_ARGS[@]}" || {
   echo "[-] Factory images data extract failed"
   abort 1
 }
@@ -464,14 +503,16 @@ if [[ "$API_LEVEL" == "" ]]; then
   echo "[-] Failed to extract API level from build.prop"
   abort 1
 fi
+check_supported_api
 
-echo "[*] Processing with 'API-$API_LEVEL $CONFIG' configuration"
+echo "[*] Processing with 'API-$API_LEVEL $CONFIG_TYPE' configuration"
 
 # Generate unified readonly "proprietary-blobs.txt"
 $GEN_BLOBS_LIST_SCRIPT --input "$FACTORY_IMGS_DATA/vendor" \
-    --output "$SCRIPTS_ROOT/$DEVICE/$CONFIG" \
+    --output "$SCRIPTS_ROOT/$DEVICE" \
     --api "$API_LEVEL" \
-    --conf-dir "$SCRIPTS_ROOT/$DEVICE/$CONFIG" || {
+    --conf-file "$CONFIG_FILE" \
+    --conf-type "$CONFIG_TYPE" || {
   echo "[-] 'proprietary-blobs.txt' generation failed"
   abort 1
 }
@@ -510,12 +551,11 @@ fi
 # Adjust arguments of system repair script based on chosen method
 case $BYTECODE_REPAIR_METHOD in
   "NONE")
-    REPAIR_SCRIPT_ARG=""
+    REPAIR_SCRIPT_ARG=()
     ;;
   "OATDUMP")
     oatdump_prepare_env "$API_LEVEL"
-    REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump \
-                       --dexrepair $SCRIPTS_ROOT/hostTools/$HOST_OS/bin/dexrepair"
+    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump")
 
     # dex2oat is invoked from host with aggressive verifier flags. So there is a
     # high chance it will fail to preoptimize bytecode repaired with oatdump method.
@@ -530,16 +570,18 @@ case $BYTECODE_REPAIR_METHOD in
     fi
     ;;
   "OAT2DEX")
-    REPAIR_SCRIPT_ARG="--oat2dex $SCRIPTS_ROOT/hostTools/Java/oat2dex.jar"
+    checkJava
+    REPAIR_SCRIPT_ARG=(--oat2dex "$SCRIPTS_ROOT/hostTools/Java/oat2dex.jar")
 
     # LOCAL_DEX_PREOPT can be safely used so enable globally for /system
     FORCE_PREOPT=true
     ;;
   "SMALIDEODEX")
+    checkJava
     oatdump_prepare_env "$API_LEVEL"
-    REPAIR_SCRIPT_ARG="--oatdump $SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump \
-                       --smali $SCRIPTS_ROOT/hostTools/Java/smali.jar \
-                       --baksmali $SCRIPTS_ROOT/hostTools/Java/baksmali.jar"
+    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump")
+    REPAIR_SCRIPT_ARG+=( --smali "$SCRIPTS_ROOT/hostTools/Java/smali.jar")
+    REPAIR_SCRIPT_ARG+=( --baksmali "$SCRIPTS_ROOT/hostTools/Java/baksmali.jar")
 
     # LOCAL_DEX_PREOPT can be safely used so enable globally for /system
     FORCE_PREOPT=true
@@ -552,11 +594,13 @@ esac
 
 # If deodex all not set provide a list of packages to repair
 if [ $DEODEX_ALL = false ]; then
-  REPAIR_SCRIPT_ARG+=" --bytecode-list $SCRIPTS_ROOT/$DEVICE/$CONFIG/bytecode-proprietary-api$API_LEVEL.txt"
+  BYTECODE_LIST="$TMP_WORK_DIR/bytecode_list.txt"
+  jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "system-bytecode" "$CONFIG_FILE" > "$BYTECODE_LIST"
+  REPAIR_SCRIPT_ARG+=( --bytecode-list "$BYTECODE_LIST")
 fi
 
 $REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$SYSTEM_ROOT" \
-     --output "$FACTORY_IMGS_R_DATA" $REPAIR_SCRIPT_ARG || {
+     --output "$FACTORY_IMGS_R_DATA" "${REPAIR_SCRIPT_ARG[@]}" || {
   echo "[-] System partition bytecode repair failed"
   abort 1
 }
@@ -574,22 +618,23 @@ cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 # Make radio files available to vendor generate script
 ln -s "$FACTORY_IMGS_DATA/radio" "$FACTORY_IMGS_R_DATA/radio"
 
-VGEN_SCRIPT_EXTRA_ARGS=""
+VGEN_SCRIPT_EXTRA_ARGS=()
 if [ $FORCE_PREOPT = true ]; then
-  VGEN_SCRIPT_EXTRA_ARGS="--allow-preopt"
+  VGEN_SCRIPT_EXTRA_ARGS=(--allow-preopt)
 fi
 if [ $FORCE_VIMG = true ]; then
-  VGEN_SCRIPT_EXTRA_ARGS+=" --force-vimg"
+  VGEN_SCRIPT_EXTRA_ARGS+=( --force-vimg)
 fi
 if [[ "$AOSP_ROOT" != "" ]]; then
-  VGEN_SCRIPT_EXTRA_ARGS+=" --aosp-root $AOSP_ROOT"
+  VGEN_SCRIPT_EXTRA_ARGS+=( --aosp-root "$AOSP_ROOT")
 fi
 
 $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
   --output "$OUT_BASE" \
   --api "$API_LEVEL" \
-  --conf-dir "$SCRIPTS_ROOT/$DEVICE/$CONFIG" \
-  $VGEN_SCRIPT_EXTRA_ARGS || {
+  --conf-file "$CONFIG_FILE" \
+  --conf-type "$CONFIG_TYPE" \
+  "${VGEN_SCRIPT_EXTRA_ARGS[@]}" || {
   echo "[-] Vendor generation failed"
   abort 1
 }

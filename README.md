@@ -88,9 +88,9 @@ for further investigation. Keep in mind that if used the mount-points from
 fuse-ext2 are not unmounted. So be sure that you manually remove them (or run
 the script again without the flag) when done.
 
-All scripts can be executed from OS X, Linux & other Unix-based systems as long
-as `fuse-ext2`, bash 4.x and other utilized command line tools are installed.
-Scripts will abort if any of the required tools is missing from the host.
+All scripts can be executed from macOS, Linux & other Unix-based systems as long
+as bash 4.x and other utilized command line tools are installed. Scripts will
+abort if any of the required tools is missing from the host.
 
 Scripts include individual usage info and additional flags that be used for
 targeted advanced actions, bugs investigation & development of new features.
@@ -133,35 +133,6 @@ marked as non-essential, although might be required for some carriers or in case
 of GApps being installed (either manually post-boot or included as additional
 vendor blobs).
 
-### **system-proprietary-blobs-apiXX.txt**
-List of files to be appended at the `PRODUCT_COPY_FILES` list. These files are
-effectively copied across as is from source vendor directory to configured AOSP
-build output directory.
-
-### **bytecode-proprietary-apiXX.txt**
-List of bytecode archive files to extract from factory images, repair and
-generate individual target modules to be included in vendor makefile structure.
-
-### **dep-dso-proprietary-blobs-apiXX.txt**
-Prebuilt shared libraries (.so) extracted from factory images that are included
-as a separate local module. Multi-lib support & paths are automatically
-generated based on the evidence collected while crawling factory images
-extracted partitions. Files enlisted here will excluded from
-`PRODUCT_COPY_FILES` and instead added to the `PRODUCT_PACKAGES` list.
-
-### **vendor-config-apiXX.txt**
-Additional makefile flags to be appended at the dynamically generated
-`BoardConfigVendor.mk`. These flags are useful in case we want to override some
-default values set at original `BoardConfig.mk` without editing the source file.
-
-### **extra-modules-apiXX.txt**
-Additional target modules (with compatible structure based on rule build type)
-to be appended at master vendor `Android.mk`.
-
-### **device-vendor-config-apiXX.txt**
-Additional flags / properties to be appended at device vendor makefile
-(`device-vendor.mk` for Nexus or `device-vendor-${board_name}.mk` for Pixel).
-
 
 ## Supported devices
 | Device                          | API 23                      | API 24           | API 25           | API 26           |
@@ -182,6 +153,9 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.4.0 - xx December 2017
+  * Refactored configuration files
+  * Various code cleanups
 * 0.3.0 - 9 October 2017
   * Initial support for Android Oreo (API-26): Pixel, Pixel XL, Nexus 6p, Nexus
   5x
@@ -253,37 +227,38 @@ section.
 * No binary vendor data against supported devices will be maintained in this
 repository. Scripts provide all necessary automation to generate them yourself.
 * No promises on how the device configuration files will be maintained. Feel
-free to contribute if you detect that something is broken/missing or not
+free to contribute if you detect that something is broken, missing or not
 required.
 * Host tool binaries are provided for convenience, although with no promises
 that will be kept up-to-date. Prefer to adjust your env. with upstream versions
 and keep them updated.
 * If you experience `already defined` type of errors when AOSP makefiles are
 included, you have other vendor makefiles that define the same packages (e.g.
-hammerhead vs bullhead from LGE). This issue is due to the developers of
-conflicted vendor makefiles didn't bother to wrap them with
-`ifeq ($(TARGET_DEVICE),<device_model>)`. Wrap conflicting makefiles with
-device matching clauses to resolve the issue.
+hammerhead vs bullhead for LGE vendor). This issue is due to other vendor
+makefiles not wrapping them with `ifeq ($(TARGET_DEVICE),<device_model>)`.
+Wrap conflicting makefiles with device matching clauses to resolve the issue.
 * If Smali or SmaliEx de-optimization method is chosen, Java 8 is required for
 the bytecode repair process to work.
-* Bytecode repaired with oatdump method cannot be pre-optimized when building
-AOSP. As such generated targets have `LOCAL_DEXPREOPT := false`. This is because
-host dex2oat is invoked with more strict flags and results into aborting when
-front-end reaches already optimized instructions. You can use `--force-opt`
-flag if you have modified the defailt host dex2oat bytecode precompile flags.
+* Bytecode repaired with oatdump method might not be able to be pre-optimized
+when building AOSP. As such generated targets have `LOCAL_DEXPREOPT := false`.
+This is because host dex2oat is invoked with more strict flags and results into
+aborting when front-end reaches already optimized instructions. You can use
+`--force-opt` flag if you have modified the default host dex2oat bytecode
+pre-compilation flags.
 * If you're planning to deliver OTA updates for Nexus 5x, you need to manually
-extract `update-binary` from a factory OTA archive since it's missing from AOSP
-tree due to some proprietary LG code.
+extract `update-binary` from a factory OTA archive since it's missing from
+the AOSP tree due to some proprietary LG code.
 * Nexus 9 WiFi (volantis) & Nexus 9 LTE (volantisg) vendor blobs cannot co-exist
 under same AOSP root directory. Since AOSP defines a single flounder target for
-both boards lots of definitions will conflict and create problems when building.
+both boards, lots of definitions will conflict and create problems when building.
 As such ensure that only one of them is present when building for desired
 target. Generated makefiles include an additional defensive check that will
 raise a compiler error when both are detected under same AOSP root.
 * If tool output is not set to AOSP root directory, prefer `rsync` instead of
 `cp` or `mv` commands to copy the generated directory structure to different
 location. Some device configurations (e.g. Pixel/Pixel XL) share some root
-directories and might break if `cp` or `mv` are against the wrong base paths.
+directories and might break if `cp` or `mv` are invoked with the wrong base
+paths.
 
 ## Frequently Spotted Issues
 ### fuse-ext2

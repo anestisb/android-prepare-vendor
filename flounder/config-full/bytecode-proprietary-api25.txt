@@ -1,2 +1,0 @@
-# Bytecode archive files to extract from factory images
-

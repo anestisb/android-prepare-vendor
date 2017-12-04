@@ -33,6 +33,9 @@ readonly D_OATDUMP_API26_SIG='6fd75110e85f0cc0316c5e7345ea4271d527aae2570552dc3c
 # sub-directories that contain bytecode archives
 declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
 
+# ART runtime files
+declare -ra ART_FILE_EXTS=("odex" "oat" "art" "vdex")
+
 # Files to skip from vendor partition when parsing factory images (for all configs)
 declare -ra VENDOR_SKIP_FILES=(
   "build.prop"

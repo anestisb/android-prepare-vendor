@@ -10,8 +10,9 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
+declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut" "simg2img")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -31,7 +32,6 @@ cat <<_EOF
       -i|--input    : Archive with factory images as downloaded from
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
-      -t|--simg2img : Path to simg2img binary for converting sparse images
       --debugfs     : Use debugfs instead of default fuse-ext2
 
     INFO:
@@ -40,10 +40,6 @@ cat <<_EOF
       * debugfs support is experimental
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 extract_archive() {
@@ -91,19 +87,19 @@ mount_darwin() {
   local mountPoint="$2"
   local mount_log="$TMP_WORK_DIR/mount.log"
   local -a osxfuse_ver
-  local readonly os_major_ver
+  local os_major_ver
 
   os_major_ver="$(sw_vers -productVersion | cut -d '.' -f2)"
   if [ "$os_major_ver" -ge 12 ]; then
     # If Sierra and above, check that latest supported (3.5.4) osxfuse version is installed
-    local readonly osxfuse_plist="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
+    local osxfuse_plist="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
     IFS='.' read -r -a osxfuse_ver <<< "$(grep '<key>CFBundleVersion</key>' -A1 "$osxfuse_plist" | \
       grep -o '<string>.*</string>' | cut -d '>' -f2 | cut -d '<' -f1)"
 
     if [[ ("${osxfuse_ver[0]}" -lt 3 ) || \
           ("${osxfuse_ver[0]}" -eq 3 && "${osxfuse_ver[1]}" -lt 5) || \
           ("${osxfuse_ver[0]}" -eq 3 && "${osxfuse_ver[1]}" -eq 5 && "${osxfuse_ver[2]}" -lt 4) ]]; then
-      echo "[!] Detected osxfuse version is '$(echo  ${osxfuse_ver[@]} | tr ' ' '.')'"
+      echo "[!] Detected osxfuse version is '$(echo  "${osxfuse_ver[@]}" | tr ' ' '.')'"
       echo "[-] Update to latest or disable the check if you know that you're doing"
       abort 1
     fi
@@ -171,33 +167,13 @@ mount_img() {
   fi
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
-    echo "[-] $fileDesc file not found"
-    usage
-  fi
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 DEVICE=""
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
-SIMG2IMG=""
 USE_DEBUGFS=false
 
 # Compatibility
@@ -221,10 +197,6 @@ do
       ;;
     -i|--input)
       INPUT_ARCHIVE=$2
-      shift
-      ;;
-    -t|--simg2img)
-      SIMG2IMG=$2
       shift
       ;;
     --debugfs)
@@ -261,7 +233,6 @@ done
 # Input args check
 check_dir "$OUTPUT_DIR" "Output"
 check_file "$INPUT_ARCHIVE" "Input archive"
-check_file "$SIMG2IMG" "simg2img"
 
 # Prepare output folders
 SYSTEM_DATA_OUT="$OUTPUT_DIR/system"
@@ -322,11 +293,11 @@ fi
 rawSysImg="$extractDir/images/system.img.raw"
 rawVImg="$extractDir/images/vendor.img.raw"
 
-$SIMG2IMG "$sysImg" "$rawSysImg" || {
+simg2img "$sysImg" "$rawSysImg" || {
   echo "[-] simg2img failed to convert system.img from sparse"
   abort 1
 }
-$SIMG2IMG "$vImg" "$rawVImg" || {
+simg2img "$vImg" "$rawVImg" || {
   echo "[-] simg2img failed to convert vendor.img from sparse"
   abort 1
 }

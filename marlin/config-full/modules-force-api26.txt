@@ -1,6 +1,0 @@
-com.android.ims.rcsmanager
-libion
-libminui
-nanotool
-PresencePolling
-RcsService

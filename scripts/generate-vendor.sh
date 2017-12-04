@@ -11,6 +11,7 @@ set -u # fail on undefined variable
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly REALPATH_SCRIPT="$SCRIPTS_DIR/realpath.sh"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jarsigner" "awk" "shasum")
 
@@ -48,7 +49,8 @@ cat <<_EOF
       -i|--input     : Root path of extracted /system & /vendor partitions
       -o|--output    : Path to save vendor blobs & makefiles in AOSP compatible structure
       --aosp-root    : [OPTIONAL] AOSP ROOT SRC directoy to directly rsync output
-      --conf-dir     : Directory containing device configuration files
+      --conf-file    : Device configuration file
+      --conf-type    : 'naked' or 'full' configuration profile
       --api          : API level in order to pick appropriate config file
       --allow-preopt : [OPTIONAL] Don't disable LOCAL_DEX_PREOPT for /system
       --force-vimg   : [OPTIONAL] Always override AOSP definitions with included vendor blobs
@@ -56,10 +58,6 @@ cat <<_EOF
       * If '--aosp-root' is used intermediate output is set to /tmp and rsynced when success
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 verify_input() {
@@ -137,12 +135,6 @@ read_invalid_symlink() {
   ls -l "$inBase/$relTarget" | sed -e 's/.* -> //'
 }
 
-array_contains() {
-  local element
-  for element in "${@:2}"; do [[ "$element" == "$1" ]] && return 0; done
-  return 1
-}
-
 copy_radio_files() {
   local inDir="$1"
   local outDir="$2"
@@ -161,7 +153,7 @@ copy_radio_files() {
     abort 1
   }
 
-  if [ "$IS_PIXEL" = true ]; then
+  if [[ "$VENDOR" == "google" ]]; then
     for img in "${PIXEL_AB_PARTITIONS[@]}"
     do
       cp "$inDir/radio/$img.img" "$outDir/radio/"
@@ -320,14 +312,14 @@ update_vendor_blobs_mk() {
 process_extra_modules() {
   local module
 
-  if [ ! -s "$EXTRA_MODULES" ]; then
+  if [[ "$EXTRA_MODULES" == "" ]]; then
     return
   fi
 
   {
     echo "# Extra modules from user configuration"
     echo 'PRODUCT_PACKAGES += \'
-    grep 'LOCAL_MODULE :=' "$EXTRA_MODULES" | cut -d "=" -f2- | \
+    echo "$EXTRA_MODULES" | grep 'LOCAL_MODULE :=' | cut -d "=" -f2- | \
       awk '{$1=$1;print}' | while read -r module
     do
       echo "    $module \\"
@@ -339,14 +331,14 @@ process_extra_modules() {
 process_enforced_modules() {
   local module
 
-  if [ ! -s "$FORCE_MODULES" ]; then
+  if [[ "$FORCE_MODULES" == "" ]]; then
     return
   fi
 
   {
     echo "# Enforced modules from user configuration"
     echo 'PRODUCT_PACKAGES += \'
-    grep -Ev '(^#|^$)' "$FORCE_MODULES" | while read -r module
+    echo "$FORCE_MODULES" | grep -Ev '(^#|^$)' | while read -r module
     do
       echo "    $module \\"
     done
@@ -368,7 +360,7 @@ gen_board_vendor_mk() {
       echo "\$(call add-radio-file,radio/radio.img,version-baseband)"
     fi
 
-    if [ "$IS_PIXEL" = true ]; then
+    if [[ "$VENDOR" == "google" ]]; then
       for img in "${PIXEL_AB_PARTITIONS[@]}"
       do
         echo "\$(call add-radio-file,radio/$img.img)"
@@ -395,16 +387,15 @@ gen_board_cfg_mk() {
     echo "BOARD_VENDORIMAGE_PARTITION_SIZE := $v_img_sz"
 
     # Update with user selected extra flags
-    grep -Ev '(^#|^$)' "$MK_FLAGS_LIST" || true
+    echo "$MK_FLAGS_LIST"
   } >> "$BOARD_CONFIG_VENDOR_MK"
 }
 
 gen_board_family_cfg_mk() {
-  if [ "$IS_PIXEL" = false ]; then
-    return
-  fi
-
+  # So far required only for Pixel 1st generation
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
+    local familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
+    > "$familyBoardCfgVendorMk"
     {
       echo 'AB_OTA_PARTITIONS += vendor'
       echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
@@ -413,7 +404,7 @@ gen_board_family_cfg_mk() {
       echo '  LOCAL_STEM := marlin/BoardConfigVendorPartial.mk'
       echo 'endif'
       echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
-    } >> "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
+    } >> "$familyBoardCfgVendorMk"
   fi
 }
 
@@ -941,10 +932,10 @@ gen_android_mk() {
   fi
 
   # Append extra modules if present
-  if [ -s "$EXTRA_MODULES" ]; then
+  if [[ "$EXTRA_MODULES" != "" ]]; then
     {
       echo ""
-      cat "$EXTRA_MODULES"
+      echo "$EXTRA_MODULES"
     } >> "$ANDROID_MK"
   fi
 
@@ -973,43 +964,34 @@ gen_sigs_file() {
   done
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
-    echo "[-] $fileDesc file not found"
-    usage
+setOverlaysDir() {
+  local relDir
+  relDir="$(jqRawStr "$API_LEVEL" "$CONFIG_TYPE" "overlays-dir" "$CONFIG_FILE")"
+  if [[ "$relDir" == "" ]]; then
+    echo ""
+  else
+    echo "$DEVICE_CONFIG_DIR/$relDir"
   fi
 }
 
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 INPUT_DIR=""
 AOSP_ROOT=""
 OUTPUT_DIR=""
-CONFIGS_DIR=""
+CONFIG_FILE=""
+CONFIG_TYPE="naked"
 API_LEVEL=""
 ALLOW_PREOPT=false
 FORCE_VIMG=false
 
+DEVICE_CONFIG_DIR=""
 DEVICE=""
 DEVICE_FAMILY=""
-IS_PIXEL=false
 VENDOR=""
-DEV_FAMILY_BOARD_CONFIG_VENDOR_MK=""
 APK_SYSTEM_LIB_BLOBS_LIST="$TMP_WORK_DIR/apk_system_lib_blobs.txt"
 RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
 
@@ -1038,8 +1020,12 @@ do
       AOSP_ROOT=$(echo "$2" | sed 's:/*$::')
       shift
       ;;
-    --conf-dir)
-      CONFIGS_DIR=$(echo "$2" | sed 's:/*$::')
+    --conf-file)
+      CONFIG_FILE="$2"
+      shift
+      ;;
+    --conf-type)
+      CONFIG_TYPE="$2"
       shift
       ;;
     --api)
@@ -1063,30 +1049,21 @@ done
 # Input args check
 check_dir "$INPUT_DIR" "Input"
 check_dir "$OUTPUT_DIR" "Output"
-check_dir "$CONFIGS_DIR" "Base Config Dir"
+check_file "$CONFIG_FILE" "Device Config File"
 
-# Check if API level is a number
-if [[ ! "$API_LEVEL" = *[[:digit:]]* ]]; then
-  echo "[-] Invalid API level (not a number)"
-  abort 1
-fi
+# Check if valid config type & API level
+isValidConfigType "$CONFIG_TYPE"
+isValidApiLevel "$API_LEVEL"
 
 # Populate config files from base conf dir
-readonly BLOBS_LIST="$CONFIGS_DIR/proprietary-blobs.txt"
-readonly DEP_DSO_BLOBS_LIST="$CONFIGS_DIR/dep-dso-proprietary-blobs-api$API_LEVEL.txt"
-readonly MK_FLAGS_LIST="$CONFIGS_DIR/vendor-config-api$API_LEVEL.txt"
-readonly EXTRA_MODULES="$CONFIGS_DIR/extra-modules-api$API_LEVEL.txt"
-readonly FORCE_MODULES="$CONFIGS_DIR/modules-force-api$API_LEVEL.txt"
-readonly DEVICE_VENDOR_CONFIG="$CONFIGS_DIR/device-vendor-config-api$API_LEVEL.txt"
-readonly OVERLAYS_DIR="$CONFIGS_DIR/overlays-api$API_LEVEL"
-
-# Mandatory configuration files
-check_file "$BLOBS_LIST" "Vendor proprietary-blobs"
-check_file "$DEP_DSO_BLOBS_LIST" "Vendor dep-dso-proprietary"
-check_file "$MK_FLAGS_LIST" "Vendor vendor-config"
-check_file "$EXTRA_MODULES" "Vendor extra modules"
-check_file "$FORCE_MODULES" "Vendor enforce modules"
-check_file "$DEVICE_VENDOR_CONFIG" "Vendor device config extra flags"
+readonly DEVICE_CONFIG_DIR="$(dirname "$CONFIG_FILE")"
+readonly BLOBS_LIST="$DEVICE_CONFIG_DIR/proprietary-blobs.txt"
+readonly OVERLAYS_DIR="$(setOverlaysDir)"
+readonly DEP_DSO_BLOBS_LIST="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "dep-dso" "$CONFIG_FILE" | grep -Ev '(^#|^$)')"
+readonly MK_FLAGS_LIST="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "BoardConfigVendor" "$CONFIG_FILE")"
+readonly DEVICE_VENDOR_CONFIG="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "device-vendor" "$CONFIG_FILE")"
+readonly EXTRA_MODULES="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "new-modules" "$CONFIG_FILE")"
+readonly FORCE_MODULES="$(jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "forced-modules" "$CONFIG_FILE")"
 
 # Populate the array with the APK that need to maintain their signature
 readarray -t PSIG_BC_FILES < <(
@@ -1099,26 +1076,16 @@ verify_input "$INPUT_DIR"
 
 # Get device details
 DEVICE=$(get_device_codename "$INPUT_DIR/system/build.prop")
+DEVICE_FAMILY="$(jqRawStrTop "aosp-device-profile" "$CONFIG_FILE")"
 VENDOR=$(get_vendor "$INPUT_DIR/system/build.prop")
-VENDOR_DIR="$VENDOR"
+VENDOR_DIR="$(jqRawStrTop "aosp-vendor-dir" "$CONFIG_FILE")"
 RADIO_VER=$(get_radio_ver "$INPUT_DIR/system/build.prop")
 BOOTLOADER_VER=$(get_bootloader_ver "$INPUT_DIR/system/build.prop")
 BUILD_ID=$(get_build_id "$INPUT_DIR/system/build.prop")
 
-if [[ "$VENDOR" == "google" ]]; then
-  VENDOR_DIR="google_devices"
-  IS_PIXEL=true
-  if [[ "$DEVICE" == "marlin" || "$DEVICE" == "sailfish" ]]; then
-    DEVICE_FAMILY="marlin"
-  fi
-  mkdir -p "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
-else
-  DEVICE_FAMILY="$DEVICE"
-fi
+echo "[*] Generating '$DEVICE' vendor blobs"
 
-echo "[*] Generating blobs for vendor/$VENDOR_DIR/$DEVICE"
-
-# Clean-up output
+# Prepare vendor output directory structure
 OUTPUT_VENDOR="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE"
 if [ -d "$OUTPUT_VENDOR" ]; then
   rm -rf "${OUTPUT_VENDOR:?}"/*
@@ -1126,7 +1093,13 @@ fi
 PROP_EXTRACT_BASE="$OUTPUT_VENDOR/proprietary"
 mkdir -p "$PROP_EXTRACT_BASE"
 
-# Clean-up output vendor overlay
+if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
+  # We don't clean here since we might corrupt other device configurations
+  # if output is directly set to AOSP root
+  mkdir -p "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
+fi
+
+# Prepare vendor overlays output directory structure
 readonly REL_VENDOR_OVERLAY="vendor_overlay/$VENDOR_DIR/$DEVICE/overlay"
 OUTPUT_VENDOR_OVERLAY="$OUTPUT_DIR/$REL_VENDOR_OVERLAY"
 if [ -d "$OUTPUT_VENDOR_OVERLAY" ]; then
@@ -1134,24 +1107,23 @@ if [ -d "$OUTPUT_VENDOR_OVERLAY" ]; then
 fi
 mkdir -p "$OUTPUT_VENDOR_OVERLAY"
 
-# Prepare generated make files
-DEVICE_VENDOR_MK="$OUTPUT_VENDOR/device-vendor.mk";              touch "$DEVICE_VENDOR_MK"
-DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk"; touch "$DEVICE_VENDOR_BLOBS_MK"
-BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";    touch "$BOARD_CONFIG_VENDOR_MK"
-ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";  touch "$ANDROID_BOARD_VENDOR_MK"
-ANDROID_MK="$OUTPUT_VENDOR/Android.mk";                          touch "$ANDROID_MK"
+# Prepare generated makefiles
+DEVICE_VENDOR_MK="$OUTPUT_VENDOR/device-vendor.mk";
+DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk";
+BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";
+ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";
+ANDROID_MK="$OUTPUT_VENDOR/Android.mk";
 
-if [ "$IS_PIXEL" = true ]; then
-  DEV_FAMILY_BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
-  touch "$DEV_FAMILY_BOARD_CONFIG_VENDOR_MK"
-
+if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
   BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendorPartial.mk"
-  touch "$BOARD_CONFIG_VENDOR_MK"
-
-  rm "$DEVICE_VENDOR_MK"
   DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
-  touch "$DEVICE_VENDOR_MK"
 fi
+
+> "$DEVICE_VENDOR_MK"
+> "$DEVICE_VENDOR_BLOBS_MK"
+> "$BOARD_CONFIG_VENDOR_MK"
+> "$ANDROID_BOARD_VENDOR_MK"
+> "$ANDROID_MK"
 
 # And prefix them
 find "$OUTPUT_DIR/vendor/$VENDOR_DIR" -type f -name '*.mk' | while read -r file
@@ -1159,10 +1131,9 @@ do
   echo -e "# [$(date +%Y-%m-%d)] Auto-generated file, do not edit\n" > "$file"
 done
 
-# Update from DSO_MODULES array from DEP_DSO_BLOBS_LIST file
-entries=$(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST" | wc -l | tr -d ' ')
-if [ "$entries" -gt 0 ]; then
-  readarray -t DSO_MODULES < <(grep -Ev '(^#|^$)' "$DEP_DSO_BLOBS_LIST")
+# Update from DSO_MODULES array from DEP_DSO_BLOBS_LIST
+if [[ "$DEP_DSO_BLOBS_LIST" != "" ]]; then
+  readarray -t DSO_MODULES < <(echo "$DEP_DSO_BLOBS_LIST")
   HAS_DSO_MODULES=true
 fi
 
@@ -1182,12 +1153,14 @@ echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blob
 
 # Append items listed in device vendor configuration file
 {
-  cat "$DEVICE_VENDOR_CONFIG"
-  echo ""
+  if [[ "$DEVICE_VENDOR_CONFIG" != "" ]]; then
+    echo "$DEVICE_VENDOR_CONFIG"
+    echo ""
+  fi
 } >> "$DEVICE_VENDOR_MK"
 
 # Activate & populate overlay directory if overlays defined in device config
-if [ "$(ls -A $OVERLAYS_DIR)" ]; then
+if [[ "$OVERLAYS_DIR" != "" ]]; then
   cp -a "$OVERLAYS_DIR"/* "$OUTPUT_VENDOR_OVERLAY"
   echo -e "PRODUCT_PACKAGE_OVERLAYS += $REL_VENDOR_OVERLAY\n" >> "$DEVICE_VENDOR_MK"
 fi
@@ -1234,7 +1207,7 @@ fi
 sort "$BLOBS_LIST" > "$BLOBS_LIST.tmp"
 mv "$BLOBS_LIST.tmp" "$BLOBS_LIST"
 
-if [ "$IS_PIXEL" = true ]; then
+if [[ "$VENDOR" == "google" ]]; then
   update_ab_ota_partitions "$DEVICE_VENDOR_MK"
 fi
 
@@ -1249,35 +1222,24 @@ echo "$BUILD_ID" > "$OUTPUT_VENDOR/build_id.txt"
 
 if [[ "$AOSP_ROOT" != "" ]]; then
   mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE"
-  mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
 
-  # If Pixel device we need to do some special directory handling due to shared
-  # assets under google_devices/marlin
-  if [ "$IS_PIXEL" = true ]; then
-    # Device name matches device family (e.g. marlin)
-    if [[ "$DEVICE" == "$DEVICE_FAMILY" ]]; then
-      # Do not '--delete' here since it will remove shared files
-      rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
-        echo "[-] rsync failed"
-        abort 1
-      }
-    # Device name does not match device family (e.g. sailfish)
-    elif [[ "$DEVICE" != "$DEVICE_FAMILY"  ]]; then
-      # Soft update for device family dir so that co-existing configs are not affected
-      rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
-        echo "[-] rsync failed"
-        abort 1
-      }
+  # Device name does not match device family (e.g. sailfish)
+  if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
+    mkdir -p "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY"
 
-      # Force update for device (--delete old copies no longer present)
-      rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
-        echo "[-] rsync failed"
-        abort 1
-      }
-    fi
-  # Non-pixel devices have separate vendor names so it's safe to force update
+    # Soft update for device family dir so that co-existing configs are not affected
+    rsync -arz "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE_FAMILY" || {
+      echo "[-] rsync failed"
+      abort 1
+    }
+
+    # Force update for device (--delete old copies no longer present)
+    rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
+      echo "[-] rsync failed"
+      abort 1
+    }
   else
-    rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/" "$AOSP_ROOT/vendor/$VENDOR_DIR" || {
+    rsync -arz --delete "$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE/" "$AOSP_ROOT/vendor/$VENDOR_DIR/$DEVICE" || {
       echo "[-] rsync failed"
       abort 1
     }
