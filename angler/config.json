@@ -597,6 +597,7 @@
         "system/lib/libdmjavaplugin.so",
         "system/lib/libfilterpack_facedetect.so",
         "system/lib/libgps.utils.so",
+        "system/lib/libmm-qcamera.so",
         "system/lib/libloc_core.so",
         "system/lib/libloc_eng.so",
         "system/lib64/hw/gps.msm8994.so",
