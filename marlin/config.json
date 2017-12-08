@@ -377,7 +377,8 @@
       "device-vendor": [
         "PRODUCT_PROPERTY_OVERRIDES += \\",
         "    ro.hardware.egl=adreno \\",
-        "    ro.hardware.fingerprint=fpc"
+        "    ro.hardware.fingerprint=fpc \\",
+        "    ro.control_privapp_permissions=enforce"
       ]
     },
     "full": {
