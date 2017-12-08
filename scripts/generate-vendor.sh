@@ -1116,7 +1116,7 @@ BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendor.mk";
 ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";
 ANDROID_MK="$OUTPUT_VENDOR/Android.mk";
 
-if [[ "$DEVICE" != "$DEVICE_FAMILY" ]]; then
+if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
   BOARD_CONFIG_VENDOR_MK="$OUTPUT_VENDOR/BoardConfigVendorPartial.mk"
   DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/device-vendor-$DEVICE.mk"
 fi
