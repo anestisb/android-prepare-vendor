@@ -395,8 +395,9 @@ gen_board_family_cfg_mk() {
   # So far required only for Pixel 1st generation
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
     local familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
-    > "$familyBoardCfgVendorMk"
     {
+      echo "# [$EXEC_DATE] Auto-generated file, do not edit"
+      echo ""
       echo 'AB_OTA_PARTITIONS += vendor'
       echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
       echo '  LOCAL_STEM := sailfish/BoardConfigVendorPartial.mk'
@@ -404,7 +405,7 @@ gen_board_family_cfg_mk() {
       echo '  LOCAL_STEM := marlin/BoardConfigVendorPartial.mk'
       echo 'endif'
       echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
-    } >> "$familyBoardCfgVendorMk"
+    } > "$familyBoardCfgVendorMk"
   fi
 }
 
@@ -994,6 +995,7 @@ DEVICE_FAMILY=""
 VENDOR=""
 APK_SYSTEM_LIB_BLOBS_LIST="$TMP_WORK_DIR/apk_system_lib_blobs.txt"
 RUNTIME_EXTRA_BLOBS_LIST="$TMP_WORK_DIR/runtime_extra_blobs.txt"
+EXEC_DATE="$(date +%Y-%m-%d)"
 
 # Check that system tools exist
 for i in "${SYS_TOOLS[@]}"
@@ -1128,7 +1130,7 @@ fi
 # And prefix them
 find "$OUTPUT_DIR/vendor/$VENDOR_DIR" -type f -name '*.mk' | while read -r file
 do
-  echo -e "# [$(date +%Y-%m-%d)] Auto-generated file, do not edit\n" > "$file"
+  echo -e "# [$EXEC_DATE] Auto-generated file, do not edit\n" > "$file"
 done
 
 # Update from DSO_MODULES array from DEP_DSO_BLOBS_LIST
