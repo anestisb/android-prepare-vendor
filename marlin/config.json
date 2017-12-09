@@ -360,8 +360,18 @@
         "system/etc/sysconfig/nexus.xml",
         "system/lib64/libaptX_encoder.so",
         "system/lib64/libaptXHD_encoder.so",
+        "system/lib64/lib-imsvideocodec.so",
+        "system/lib64/lib-imsvtextutils.so",
+        "system/lib64/lib-imsvt.so",
+        "system/lib64/lib-imsvtutils.so",
+        "system/lib64/librcc.so",
         "system/lib/libaptX_encoder.so",
-        "system/lib/libaptXHD_encoder.so"
+        "system/lib/libaptXHD_encoder.so",
+        "system/lib/lib-imsvideocodec.so",
+        "system/lib/lib-imsvtextutils.so",
+        "system/lib/lib-imsvt.so",
+        "system/lib/lib-imsvtutils.so",
+        "system/lib/librcc.so"
       ],
       "forced-modules": [
         "com.android.ims.rcsmanager",
