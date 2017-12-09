@@ -156,7 +156,7 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.4.0 - xx December 2017
+* 0.4.0 - 9 December 2017
   * Refactored configuration files
   * API-27 support: Pixel, Pixel XL, Nexus 6p, Nexus 5x
   * Various code cleanups
