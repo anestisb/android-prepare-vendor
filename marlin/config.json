@@ -412,6 +412,7 @@
         "system/priv-app/SprintDM/SprintDM.apk",
         "system/priv-app/SprintHM/SprintHM.apk",
         "system/priv-app/TetheringEntitlement/TetheringEntitlement.apk",
+        "system/priv-app/VerizonAuthDialog/VerizonAuthDialog.apk",
         "system/priv-app/VzwOmaTrigger/VzwOmaTrigger.apk",
         "system/priv-app/WfcActivation/WfcActivation.apk",
         "system/priv-app/obdm_stub/obdm_stub.apk::PRESIGNED"
@@ -427,6 +428,7 @@
         "system/etc/permissions/com.verizon.llkagent.xml",
         "system/etc/permissions/com.verizon.provider.xml",
         "system/etc/permissions/com.verizon.services.xml",
+        "system/etc/permissions/features-verizon.xml",
         "system/etc/permissions/obdm_permissions.xml",
         "system/etc/permissions/privapp-permissions-google.xml",
         "system/etc/permissions/vzw_mvs_permissions.xml",
