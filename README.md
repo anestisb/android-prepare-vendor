@@ -135,14 +135,17 @@ vendor blobs).
 
 
 ## Supported devices
-| Device                          | API 23                      | API 24           | API 25           | API 26           |
-| ------------------------------- | --------------------------- | -----------------| -----------------| -----------------|
-| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump          |
-| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump          |
-| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
-| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              |
-| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali |
-| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali |
+| Device                          | API 23                      | API 24           | API 25           | API 26           | API 27  |
+| ------------------------------- | --------------------------- | -----------------| -----------------| -----------------| --------|
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump          | oatdump |
+| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump          | oatdump |
+| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              | N/A     |
+| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              | N/A     |
+| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali | oatdump |
+| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali | oatdump |
+| Pixel 2 walleye                 | N/A                         | N/A              | N/A              | TBC              | TBC     |
+| Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | TBC              | TBC     |
+
 
 Please check existing
 [issues](https://github.com/anestisb/android-prepare-vendor/issues) before
@@ -155,6 +158,7 @@ target device before any pull request.
 ## Change Log
 * 0.4.0 - xx December 2017
   * Refactored configuration files
+  * API-27 support: Pixel, Pixel XL, Nexus 6p, Nexus 5x
   * Various code cleanups
 * 0.3.0 - 9 October 2017
   * Initial support for Android Oreo (API-26): Pixel, Pixel XL, Nexus 6p, Nexus
