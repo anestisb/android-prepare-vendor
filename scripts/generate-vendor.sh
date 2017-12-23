@@ -360,7 +360,7 @@ gen_board_vendor_mk() {
       echo "\$(call add-radio-file,radio/radio.img,version-baseband)"
     fi
 
-    if [[ "$VENDOR" == "google" && && "$EXTRA_IMGS_LIST" != "" ]]; then
+    if [[ "$VENDOR" == "google" && "$EXTRA_IMGS_LIST" != "" ]]; then
       for img in "${EXTRA_IMGS[@]}"
       do
         echo "\$(call add-radio-file,radio/$img.img)"
