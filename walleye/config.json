@@ -1,0 +1,53 @@
+{
+  "device-name": "pixel2",
+  "device-model": "walleye",
+  "device-aliases": [],
+  "vendor": "google",
+  "aosp-vendor-dir": "google_devices",
+  "aosp-device-profile": "walleye",
+  "supported-apis": ["api-26", "api-27"],
+  "api-26": {
+    "naked": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    },
+    "full": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    }
+  },
+  "api-27": {
+    "naked": {
+       "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    },
+    "full": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    }
+  }
+}

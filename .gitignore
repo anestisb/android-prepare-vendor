@@ -21,6 +21,10 @@ marlin/*
 !marlin/config.json
 !marlin/overlays-*
 
+walleye/*
+!walleye/config.json
+!walleye/overlays-*
+
 # Due to large files they're downloaded at manual step
 # and not part of git files
 hostTools/Linux/api*
