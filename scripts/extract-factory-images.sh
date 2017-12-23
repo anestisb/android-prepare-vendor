@@ -328,7 +328,7 @@ mv "$bootloaderImg" "$RADIO_DATA_OUT/" || {
 }
 
 # For devices with AB partitions layout, copy additional images required for OTA
-if [[ "$DEVICE" == "sailfish" || "$DEVICE" == "marlin" ]]; then
+if [[ "$DEVICE" == "sailfish" || "$DEVICE" == "marlin" || "$DEVICE" == "walleye" ]]; then
   for img in "${PIXEL_AB_PARTITIONS[@]}"
   do
     if [ ! -f "$extractDir/images/$img.img" ]; then
