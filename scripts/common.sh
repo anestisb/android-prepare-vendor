@@ -75,6 +75,16 @@ jqRawStrTop() {
   }
 }
 
+jqIncRawArrayTop() {
+  local query="$1"
+  local conf_file="$2"
+
+  jq -r ".\"$query\"[]" "$conf_file" || {
+    echo "[-] json top raw string string parse failed" >&2
+    abort 1
+  }
+}
+
 jqRawStr() {
   local api="api-$1"
   local conf="$2"

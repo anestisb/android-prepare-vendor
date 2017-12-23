@@ -485,7 +485,7 @@ if [ "$USE_DEBUGFS" = true ]; then
   EXTRACT_SCRIPT_ARGS+=( --debugfs)
 fi
 
-$EXTRACT_SCRIPT "${EXTRACT_SCRIPT_ARGS[@]}" || {
+$EXTRACT_SCRIPT "${EXTRACT_SCRIPT_ARGS[@]}" --conf-file "$CONFIG_FILE" || {
   echo "[-] Factory images data extract failed"
   abort 1
 }

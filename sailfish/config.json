@@ -6,6 +6,22 @@
   "aosp-vendor-dir": "google_devices",
   "aosp-device-profile": "marlin",
   "supported-apis": ["api-25", "api-26", "api-27"],
+  "extra-partitions": [
+    "aboot",
+    "apdp",
+    "bootlocker",
+    "cmnlib32",
+    "cmnlib64",
+    "devcfg",
+    "hosd",
+    "hyp",
+    "keymaster",
+    "modem",
+    "pmic",
+    "rpm",
+    "tz",
+    "xbl"
+  ],
   "api-25": {
     "naked": {
       "overlays-dir": "",

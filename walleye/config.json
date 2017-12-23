@@ -6,6 +6,21 @@
   "aosp-vendor-dir": "google_devices",
   "aosp-device-profile": "walleye",
   "supported-apis": ["api-26", "api-27"],
+  "extra-partitions": [
+    "abl",
+    "apdp",
+    "cmnlib",
+    "cmnlib64",
+    "devcfg",
+    "hyp",
+    "keymaster",
+    "modem",
+    "msadp",
+    "pmic",
+    "rpm",
+    "tz",
+    "xbl"
+  ],
   "api-26": {
     "naked": {
       "overlays-dir": "",

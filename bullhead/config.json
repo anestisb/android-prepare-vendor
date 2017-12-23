@@ -6,6 +6,7 @@
   "aosp-vendor-dir": "lge",
   "aosp-device-profile": "bullhead",
   "supported-apis": ["api-23", "api-24", "api-25", "api-26", "api-27"],
+  "extra-partitions": [],
   "api-23": {
     "naked": {
       "overlays-dir": "",

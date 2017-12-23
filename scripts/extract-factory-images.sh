@@ -32,6 +32,7 @@ cat <<_EOF
       -i|--input    : Archive with factory images as downloaded from
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
+      --conf-file   : Device configuration file
       --debugfs     : Use debugfs instead of default fuse-ext2
 
     INFO:
@@ -174,6 +175,7 @@ trap "abort 1" SIGINT SIGTERM
 DEVICE=""
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
+CONFIG_FILE=""
 USE_DEBUGFS=false
 
 # Compatibility
@@ -197,6 +199,10 @@ do
       ;;
     -i|--input)
       INPUT_ARCHIVE=$2
+      shift
+      ;;
+    --conf-file)
+      CONFIG_FILE="$2"
       shift
       ;;
     --debugfs)
@@ -233,6 +239,14 @@ done
 # Input args check
 check_dir "$OUTPUT_DIR" "Output"
 check_file "$INPUT_ARCHIVE" "Input archive"
+check_file "$CONFIG_FILE" "Device Config File"
+
+# Fetch required values from config
+readonly VENDOR="$(jqRawStrTop "vendor" "$CONFIG_FILE")"
+readonly EXTRA_IMGS_LIST="$(jqIncRawArrayTop "extra-partitions" "$CONFIG_FILE")"
+if [[ "$EXTRA_IMGS_LIST" != "" ]]; then
+  readarray -t EXTRA_IMGS < <(echo "$EXTRA_IMGS_LIST")
+fi
 
 # Prepare output folders
 SYSTEM_DATA_OUT="$OUTPUT_DIR/system"
@@ -327,9 +341,9 @@ mv "$bootloaderImg" "$RADIO_DATA_OUT/" || {
   abort 1
 }
 
-# For devices with AB partitions layout, copy additional images required for OTA
-if [[ "$DEVICE" == "sailfish" || "$DEVICE" == "marlin" || "$DEVICE" == "walleye" ]]; then
-  for img in "${PIXEL_AB_PARTITIONS[@]}"
+# For Pixel devices with AB partitions layout, copy additional images required for OTA
+if [[ "$VENDOR" == "google" && "$EXTRA_IMGS_LIST" != "" ]]; then
+  for img in "${EXTRA_IMGS[@]}"
   do
     if [ ! -f "$extractDir/images/$img.img" ]; then
       echo "[-] Failed to locate '$img.img' in factory image"
