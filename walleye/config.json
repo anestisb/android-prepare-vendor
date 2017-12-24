@@ -52,7 +52,6 @@
       "system-bytecode": [
         "system/app/embms/embms.apk",
         "system/app/ims/ims.apk",
-        "system/app/RcsService/RcsService.apk",
         "system/framework/cneapiclient.jar",
         "system/framework/com.android.ims.rcsmanager.jar",
         "system/framework/com.quicinc.cne.api-V1.0-java.jar",
@@ -100,6 +99,7 @@
         "system/lib64/librcc.so"
       ],
       "forced-modules": [
+        "RcsService",
         "netutils-wrapper-1.0"
       ],
       "new-modules": [],
