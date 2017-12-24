@@ -43,7 +43,6 @@
         "system/framework/QtiTelephonyServicelibrary.jar",
         "system/framework/rcsservice.jar",
         "system/priv-app/CarrierEntitlement/CarrierEntitlement.apk",
-        "system/priv-app/CarrierServices/CarrierServices.apk",
         "system/priv-app/CNEService/CNEService.apk",
         "system/priv-app/DiagMon/DiagMon.apk",
         "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk"
@@ -287,7 +286,6 @@
         "system/app/VZWAPNLib/VZWAPNLib.apk",
         "system/framework/VerizonUnifiedSettings.jar",
         "system/priv-app/AppDirectedSMSService/AppDirectedSMSService.apk",
-        "system/priv-app/CarrierServices/CarrierServices.apk",
         "system/priv-app/CarrierSetup/CarrierSetup.apk",
         "system/priv-app/ConnMO/ConnMO.apk",
         "system/priv-app/DCMO/DCMO.apk",
@@ -416,7 +414,6 @@
         "system/app/VZWAPNLib/VZWAPNLib.apk",
         "system/framework/VerizonUnifiedSettings.jar",
         "system/priv-app/AppDirectedSMSService/AppDirectedSMSService.apk",
-        "system/priv-app/CarrierServices/CarrierServices.apk",
         "system/priv-app/CarrierSetup/CarrierSetup.apk",
         "system/priv-app/ConnMO/ConnMO.apk",
         "system/priv-app/DCMO/DCMO.apk",
