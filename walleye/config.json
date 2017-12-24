@@ -30,6 +30,7 @@
       "system-bytecode": [
         "system/app/embms/embms.apk",
         "system/app/ims/ims.apk",
+        "system/app/QAS_DVC_MSP/QAS_DVC_MSP.apk",
         "system/framework/cneapiclient.jar",
         "system/framework/com.quicinc.cne.api-V1.0-java.jar",
         "system/framework/com.quicinc.cne.jar",
@@ -63,6 +64,8 @@
         "system/lib/lib-imsvt.so",
         "system/lib/lib-imsvtutils.so",
         "system/lib/librcc.so",
+        "system/lib64/android.hardware.biometrics.fingerprint@2.1.so",
+        "system/lib64/android.hardware.oemlock@1.0.so",
         "system/lib64/com.qualcomm.qti.imsrtpservice@1.0.so",
         "system/lib64/libaptX_encoder.so",
         "system/lib64/libaptXHD_encoder.so",
@@ -78,7 +81,8 @@
       "forced-modules": [
         "com.android.ims.rcsmanager",
         "RcsService",
-        "netutils-wrapper-1.0"
+        "netutils-wrapper-1.0",
+        "libion"
       ],
       "new-modules": [],
       "dep-dso": [],
