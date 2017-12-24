@@ -480,17 +480,20 @@ gen_standalone_symlinks() {
       let cnt=cnt+1
     fi
 
+    local dst="${S_SLINKS_DST[$cnt]}"
+    local src="${S_SLINKS_SRC[$cnt]}"
+
     # Skip symbolic links the destination of which is under bytecode directories
-    if [[ "${S_SLINKS_DST[$cnt]}" == *app/* ]]; then
+    if [[ "$dst" == *app/* ]]; then
       continue
     fi
 
     if [[ "$link" == *lib64/*.so ]]; then
-      pkgName="$(basename "$link" .so)_64.so__$(basename "${S_SLINKS_DST[$cnt]}")"
+      pkgName="$(basename "$link" .so)_64.so__$(basename "$dst")"
     elif [[ "$link" == *lib/*.so ]]; then
-      pkgName="$(basename "$link" .so)_32.so__$(basename "${S_SLINKS_DST[$cnt]}")"
+      pkgName="$(basename "$link" .so)_32.so__$(basename "$dst")"
     else
-      pkgName="$(basename "$link")__$(basename "${S_SLINKS_DST[$cnt]}")"
+      pkgName="$(basename "$link")__$(basename "$dst")__${#dst}"
     fi
     pkgs_SSLinks+=("$pkgName")
 
@@ -501,8 +504,8 @@ gen_standalone_symlinks() {
       echo -e "LOCAL_MODULE_TAGS := optional"
       echo -e "LOCAL_MODULE_OWNER := $VENDOR"
       echo -e 'include $(BUILD_SYSTEM)/base_rules.mk'
-      echo -e "\$(LOCAL_BUILT_MODULE): TARGET := ${S_SLINKS_SRC[$cnt]}"
-      echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/${S_SLINKS_DST[$cnt]}"
+      echo -e "\$(LOCAL_BUILT_MODULE): TARGET := $src"
+      echo -e "\$(LOCAL_BUILT_MODULE): SYMLINK := \$(PRODUCT_OUT)/$dst"
       echo -e "\$(LOCAL_BUILT_MODULE): \$(LOCAL_PATH)/Android.mk"
       echo -e "\$(LOCAL_BUILT_MODULE):"
       echo -e "\t\$(hide) mkdir -p \$(dir \$@)"
