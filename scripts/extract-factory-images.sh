@@ -127,24 +127,31 @@ mount_linux() {
 extract_img_data() {
   local image_file="$1"
   local out_dir="$2"
+  local logFile="$TMP_WORK_DIR/debugfs.log"
 
   if [ ! -d "$out_dir" ]; then
     mkdir -p "$out_dir"
   fi
 
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    debugfs -R "rdump / \"$out_dir\"" "$image_file" &>/dev/null || {
+    debugfs -R "rdump / \"$out_dir\"" "$image_file" &> "$logFile" || {
       echo "[-] Failed to extract data from '$image_file'"
       abort 1
     }
   else
     debugfs -R 'ls -p' "$image_file" 2>/dev/null | cut -d '/' -f6 | while read -r entry
     do
-      debugfs -R "rdump \"$entry\" \"$out_dir\"" "$image_file" &>/dev/null || {
+      debugfs -R "rdump \"$entry\" \"$out_dir\"" "$image_file" >> "$logFile" 2>&1 || {
         echo "[-] Failed to extract data from '$image_file'"
         abort 1
       }
     done
+  fi
+
+  local symlink_err="rdump: Attempt to read block from filesystem resulted in short read while reading symlink"
+  if grep -Fq "$symlink_err" "$logFile"; then
+    echo "[-] Symlinks have not been properly processed from $image_file"
+    abort 1
   fi
 }
 
