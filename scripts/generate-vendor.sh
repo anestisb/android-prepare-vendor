@@ -493,7 +493,7 @@ gen_standalone_symlinks() {
     elif [[ "$link" == *lib/*.so ]]; then
       pkgName="$(basename "$link" .so)_32.so__$(basename "$dst")"
     else
-      pkgName="$(basename "$link")__$(basename "$dst")__${#dst}"
+      pkgName="$(basename "$link")__$(basename "$dst")__$cnt"
     fi
     pkgs_SSLinks+=("$pkgName")
 
