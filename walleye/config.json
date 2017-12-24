@@ -38,7 +38,6 @@
         "system/framework/rcsimssettings.jar",
         "system/framework/vendor.qti.qcril.am-V1.0-java.jar",
         "system/priv-app/CNEService/CNEService.apk",
-        "system/priv-app/QAS_DVC_MSP/QAS_DVC_MSP.apk",
         "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk"
       ],
       "system-other": [
@@ -57,7 +56,6 @@
         "system/etc/sysconfig/pixel_2017.xml",
         "system/lib/com.qualcomm.qti.imsrtpservice@1.0.so",
         "system/lib/libdiag_system.so",
-        "system/lib/libeaselcomm.so",
         "system/lib/libimscamera_jni.so",
         "system/lib/libimsmedia_jni.so",
         "system/lib/lib-imsvideocodec.so",
@@ -69,7 +67,6 @@
         "system/lib64/libaptX_encoder.so",
         "system/lib64/libaptXHD_encoder.so",
         "system/lib64/libdiag_system.so",
-        "system/lib64/libeaselcomm.so",
         "system/lib64/libimscamera_jni.so",
         "system/lib64/libimsmedia_jni.so",
         "system/lib64/lib-imsvideocodec.so",
