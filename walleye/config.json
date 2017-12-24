@@ -69,7 +69,7 @@
         "system/bin/ramoops",
         "system/etc/cne/Nexus/ROW/ROW_profiles.xml",
         "system/etc/cne/Nexus/VZW/VZW_profiles.xml",
-        "system/etc/cne/Nexus/ATT/ATT_profiles.xml"
+        "system/etc/cne/Nexus/ATT/ATT_profiles.xml",
         "system/etc/permissions/com.android.ims.rcsmanager.xml",
         "system/etc/permissions/com.google.android.hardwareinfo.xml",
         "system/etc/permissions/privapp-permissions-wahoo.xml",
