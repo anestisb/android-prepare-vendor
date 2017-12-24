@@ -111,7 +111,9 @@
       "device-vendor": [
         "PRODUCT_PROPERTY_OVERRIDES += \\",
         "    ro.hardware.fingerprint=fpc \\",
-        "    ro.gfx.driver.0=com.google.pixel.wahoo.gfxdrv"
+        "    ro.gfx.driver.0=com.google.pixel.wahoo.gfxdrv \\",
+        "    ro.oem_unlock.pst=/dev/block/platform/soc/1da4000.ufshc/by-name/misc \\",
+        "    ro.oem_unlock.pst_offset=6144"
       ]
     },
     "full": {
