@@ -978,6 +978,12 @@ setOverlaysDir() {
   fi
 }
 
+initConfig() {
+  local mkFile="$1"
+  mkdir -p "$(dirname "$mkFile")"
+  > "$mkFile"
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
@@ -1082,7 +1088,7 @@ verify_input "$INPUT_DIR"
 
 # Get device details
 DEVICE=$(get_device_codename "$INPUT_DIR/system/build.prop")
-DEVICE_FAMILY="$(jqRawStrTop "aosp-device-profile" "$CONFIG_FILE")"
+DEVICE_FAMILY="$(jqRawStrTop "device-family" "$CONFIG_FILE")"
 VENDOR=$(get_vendor "$INPUT_DIR/system/build.prop")
 VENDOR_DIR="$(jqRawStrTop "aosp-vendor-dir" "$CONFIG_FILE")"
 RADIO_VER=$(get_radio_ver "$INPUT_DIR/system/build.prop")
@@ -1127,11 +1133,11 @@ BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$(jqRawStrTop "DeviceVend
 DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk";
 ANDROID_BOARD_VENDOR_MK="$OUTPUT_VENDOR/AndroidBoardVendor.mk";
 
-> "$DEVICE_VENDOR_MK"
-> "$DEVICE_VENDOR_BLOBS_MK"
-> "$BOARD_CONFIG_VENDOR_MK"
-> "$ANDROID_BOARD_VENDOR_MK"
-> "$ANDROID_MK"
+initConfig "$DEVICE_VENDOR_MK"
+initConfig "$DEVICE_VENDOR_BLOBS_MK"
+initConfig "$BOARD_CONFIG_VENDOR_MK"
+initConfig "$ANDROID_BOARD_VENDOR_MK"
+initConfig "$ANDROID_MK"
 
 # And prefix them
 find "$OUTPUT_DIR/vendor/$VENDOR_DIR" -type f -name '*.mk' | while read -r file

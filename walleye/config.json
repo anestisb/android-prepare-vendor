@@ -4,7 +4,7 @@
   "device-aliases": [],
   "vendor": "google",
   "aosp-vendor-dir": "google_devices",
-  "aosp-device-profile": "walleye",
+  "device-family": "muskie",
   "supported-apis": ["api-26", "api-27"],
   "extra-partitions": [
     "abl",

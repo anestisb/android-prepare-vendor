@@ -4,7 +4,7 @@
   "device-aliases": ["volantis", "volantisg"],
   "vendor": "htc",
   "aosp-vendor-dir": "htc",
-  "aosp-device-profile": "flounder",
+  "device-family": "flounder",
   "supported-apis": ["api-23", "api-24", "api-25"],
   "extra-partitions": [],
   "AndroidMk": "flounder/Android.mk",

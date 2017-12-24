@@ -4,7 +4,7 @@
   "device-aliases": [],
   "vendor": "lge",
   "aosp-vendor-dir": "lge",
-  "aosp-device-profile": "bullhead",
+  "device-family": "bullhead",
   "supported-apis": ["api-23", "api-24", "api-25", "api-26", "api-27"],
   "extra-partitions": [],
   "AndroidMk": "bullhead/Android.mk",
