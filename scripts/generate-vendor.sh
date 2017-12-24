@@ -1126,8 +1126,8 @@ mkdir -p "$OUTPUT_VENDOR_OVERLAY"
 # Prepare generated makefiles
 # Master ones included from AOSP device profiles
 ANDROID_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$(jqRawStrTop "AndroidMk" "$CONFIG_FILE")"
-DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$(jqRawStrTop "BoardConfigVendorMk" "$CONFIG_FILE")"
-BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$(jqRawStrTop "DeviceVendorMk" "$CONFIG_FILE")"
+DEVICE_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$(jqRawStrTop "DeviceVendorMk" "$CONFIG_FILE")"
+BOARD_CONFIG_VENDOR_MK="$OUTPUT_DIR/vendor/$VENDOR_DIR/$(jqRawStrTop "BoardConfigVendorMk" "$CONFIG_FILE")"
 
 # Helper ones to be included from the ones we generate
 DEVICE_VENDOR_BLOBS_MK="$OUTPUT_VENDOR/$DEVICE-vendor-blobs.mk";
