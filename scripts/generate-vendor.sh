@@ -1163,7 +1163,7 @@ update_vendor_blobs_mk "$BLOBS_LIST"
 
 # Generate device-vendor.mk makefile (will be updated later)
 echo "[*] Generating '$(basename "$DEVICE_VENDOR_MK")'"
-echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
+echo -e "include vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk\n" >> "$DEVICE_VENDOR_MK"
 
 # Append items listed in device vendor configuration file
 {
