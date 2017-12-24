@@ -7,6 +7,9 @@
   "aosp-device-profile": "bullhead",
   "supported-apis": ["api-23", "api-24", "api-25", "api-26", "api-27"],
   "extra-partitions": [],
+  "AndroidMk": "bullhead/Android.mk",
+  "BoardConfigVendorMk": "bullhead/BoardConfigVendor.mk",
+  "DeviceVendorMk": "bullhead/device-vendor.mk",
   "api-23": {
     "naked": {
       "overlays-dir": "",

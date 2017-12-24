@@ -22,6 +22,9 @@
     "tz",
     "xbl"
   ],
+  "AndroidMk": "sailfish/Android.mk",
+  "BoardConfigVendorMk": "sailfish/BoardConfigVendorPartial.mk",
+  "DeviceVendorMk": "marlin/device-vendor-sailfish.mk",
   "api-25": {
     "naked": {
       "overlays-dir": "",

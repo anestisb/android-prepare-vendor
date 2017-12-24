@@ -7,6 +7,9 @@
   "aosp-device-profile": "flounder",
   "supported-apis": ["api-23", "api-24", "api-25"],
   "extra-partitions": [],
+  "AndroidMk": "flounder/Android.mk",
+  "BoardConfigVendorMk": "flounder/BoardConfigVendor.mk",
+  "DeviceVendorMk": "flounder/device-vendor.mk",
   "api-23": {
     "naked": {
       "overlays-dir": "",

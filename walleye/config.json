@@ -21,6 +21,9 @@
     "tz",
     "xbl"
   ],
+  "AndroidMk": "walleye/Android.mk",
+  "BoardConfigVendorMk": "muskie/proprietary/BoardConfigVendor.mk",
+  "DeviceVendorMk": "muskie/proprietary/device-vendor-walleye.mk",
   "api-26": {
     "naked": {
       "overlays-dir": "",
