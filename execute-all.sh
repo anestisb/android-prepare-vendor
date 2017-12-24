@@ -507,6 +507,13 @@ if [[ "$API_LEVEL" == "" ]]; then
 fi
 check_supported_api
 
+# For Pixel 2 device Google bumped libart oat version leaving other devices untouched
+if [[ "$DEVICE" == "walleye" && $API_LEVEL -eq 26 ]]; then
+  ART_API_LEVEL="$API_LEVEL""_2"
+else
+  ART_API_LEVEL="$API_LEVEL"
+fi
+
 echo "[*] Processing with 'API-$API_LEVEL $CONFIG_TYPE' configuration"
 
 # Generate unified readonly "proprietary-blobs.txt"
@@ -556,8 +563,8 @@ case $BYTECODE_REPAIR_METHOD in
     REPAIR_SCRIPT_ARG=()
     ;;
   "OATDUMP")
-    oatdump_prepare_env "$API_LEVEL"
-    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump")
+    oatdump_prepare_env "$ART_API_LEVEL"
+    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$ART_API_LEVEL/bin/oatdump")
 
     # dex2oat is invoked from host with aggressive verifier flags. So there is a
     # high chance it will fail to preoptimize bytecode repaired with oatdump method.
@@ -580,8 +587,8 @@ case $BYTECODE_REPAIR_METHOD in
     ;;
   "SMALIDEODEX")
     checkJava
-    oatdump_prepare_env "$API_LEVEL"
-    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$API_LEVEL/bin/oatdump")
+    oatdump_prepare_env "$ART_API_LEVEL"
+    REPAIR_SCRIPT_ARG=(--oatdump "$SCRIPTS_ROOT/hostTools/$HOST_OS/api-$ART_API_LEVEL/bin/oatdump")
     REPAIR_SCRIPT_ARG+=( --smali "$SCRIPTS_ROOT/hostTools/Java/smali.jar")
     REPAIR_SCRIPT_ARG+=( --baksmali "$SCRIPTS_ROOT/hostTools/Java/baksmali.jar")
 
