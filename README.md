@@ -143,7 +143,7 @@ vendor blobs).
 | N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A              | N/A     |
 | Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali | oatdump |
 | Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump<br>smali | oatdump |
-| Pixel 2 walleye                 | N/A                         | N/A              | N/A              | TBC              | TBC     |
+| Pixel 2 walleye                 | N/A                         | N/A              | N/A              | TESTING          | TESTING |
 | Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | TBC              | TBC     |
 
 
@@ -156,6 +156,9 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.4.1 - TBC
+  * Pixel 2 (walleye) support for API 26 & 27
+  * Improve debugfs error checking due to improper symlink parsing from some versions
 * 0.4.0 - 9 December 2017
   * Refactored configuration files
   * API-27 support: Pixel, Pixel XL, Nexus 6p, Nexus 5x
