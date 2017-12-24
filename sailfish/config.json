@@ -323,7 +323,6 @@
         "system/etc/permissions/vzw_sso_permissions.xml",
         "system/etc/sysconfig/dialer_experience.xml",
         "system/etc/sysconfig/google_build.xml",
-        "system/etc/sysconfig/google_vr_build.xml",
         "system/etc/sysconfig/google.xml",
         "system/etc/sysconfig/marlin_common.xml",
         "system/etc/sysconfig/whitelist_com.android.omadm.service.xml"
@@ -454,7 +453,6 @@
         "system/etc/permissions/privapp-permissions-google.xml",
         "system/etc/permissions/vzw_mvs_permissions.xml",
         "system/etc/sysconfig/google_build.xml",
-        "system/etc/sysconfig/google_vr_build.xml",
         "system/etc/sysconfig/google.xml",
         "system/etc/sysconfig/marlin_common.xml",
         "system/etc/sysconfig/whitelist_com.android.omadm.service.xml"
