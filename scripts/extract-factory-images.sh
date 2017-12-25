@@ -151,6 +151,7 @@ extract_img_data() {
   local symlink_err="rdump: Attempt to read block from filesystem resulted in short read while reading symlink"
   if grep -Fq "$symlink_err" "$logFile"; then
     echo "[-] Symlinks have not been properly processed from $image_file"
+    echo "[!] If you don't have a compatible debugfs version, modify 'execute-all.sh' to disable 'USE_DEBUGFS' flag"
     abort 1
   fi
 }
