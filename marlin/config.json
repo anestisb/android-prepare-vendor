@@ -24,7 +24,7 @@
   ],
   "AndroidMk": "marlin/Android.mk",
   "BoardConfigVendorMk": "marlin/BoardConfigVendorPartial.mk",
-  "DeviceVendorMk": "marlin/device-vendor-sailfish.mk",
+  "DeviceVendorMk": "marlin/device-vendor-marlin.mk",
   "api-25": {
     "naked": {
       "overlays-dir": "",
