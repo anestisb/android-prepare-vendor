@@ -144,7 +144,7 @@ vendor blobs).
 | Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | oatdump | oatdump |
 | Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump | oatdump |
 | Pixel 2 walleye                 | N/A                         | N/A              | N/A              | oatdump | oatdump |
-| Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | TBC     | TBC     |
+| Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | oatdump | oatdump |
 
 
 Please check existing
@@ -156,8 +156,9 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.4.1 - TBC
+* 0.4.1 - TBC (master development)
   * Pixel 2 (walleye) support for API 26 & 27
+  * Pixel 2 XL (taimen) support for API 26 & 27 (credits to @deeproot2k)
   * Improve debugfs error checking due to improper symlink parsing from some versions
 * 0.4.0 - 9 December 2017
   * Refactored configuration files
