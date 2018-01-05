@@ -1121,7 +1121,11 @@ OUTPUT_VENDOR_OVERLAY="$OUTPUT_DIR/$REL_VENDOR_OVERLAY"
 if [ -d "$OUTPUT_VENDOR_OVERLAY" ]; then
   rm -rf "${OUTPUT_VENDOR_OVERLAY:?}"/*
 fi
-mkdir -p "$OUTPUT_VENDOR_OVERLAY"
+
+# Don't generate folder if no overlays configured
+if [[ "$OVERLAYS_DIR" != "" ]]; then
+  mkdir -p "$OUTPUT_VENDOR_OVERLAY"
+fi
 
 # Prepare generated makefiles
 # Master ones included from AOSP device profiles
