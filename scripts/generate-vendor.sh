@@ -541,6 +541,7 @@ gen_mk_for_bytecode() {
   local origin="" zipName="" fileExt="" pkgName="" src="" class="" suffix=""
   local priv="" cert="" stem="" lcMPath="" appDir="" dsoRootBase="" dsoRoot=""
   local dsoName="" dsoMName="" arch="" apk_lib_slinks=""
+  local has_bc_file
 
   # Set module path (output)
   if [[ "$relRoot" == "vendor" ]]; then
@@ -660,9 +661,6 @@ gen_mk_for_bytecode() {
         echo "$priv"
       fi
       echo "LOCAL_MODULE_SUFFIX := $suffix"
-      if [[ "$ALLOW_PREOPT" = false ]]; then
-        echo "LOCAL_DEX_PREOPT := false"
-      fi
 
       # Deal with multi-lib
       if [[ ( -d "$appDir/oat/arm" && -d "$appDir/oat/arm64" ) ||
@@ -672,10 +670,20 @@ gen_mk_for_bytecode() {
         echo "LOCAL_MULTILIB := 32"
       fi
 
-      # Overlay APKs should only contain resource files
+      # If the archive is resources only (no bytecode), don't optimize
+      if zipinfo "$file" classes.dex &>/dev/null; then
+        has_bc_file=true
+      else
+        has_bc_file=false
+      fi
+
+      if [[ "$ALLOW_PREOPT" = false || "$has_bc_file" = false || "$relSubRoot" =~ ^overlay/.* ]]; then
+        echo "LOCAL_DEX_PREOPT := false"
+      fi
+
+      # Annotate overlay APKs
       if [[ "$relSubRoot" =~ ^overlay/.* ]]; then
         echo "LOCAL_IS_RUNTIME_RESOURCE_OVERLAY := true"
-        echo "LOCAL_DEX_PREOPT := false"
       fi
 
       echo 'include $(BUILD_PREBUILT)'
