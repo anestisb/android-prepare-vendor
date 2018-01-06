@@ -10,8 +10,9 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_extract.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut")
+declare -a SYS_TOOLS=("tar" "find" "unzip" "uname" "du" "stat" "tr" "cut" "simg2img")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -31,7 +32,7 @@ cat <<_EOF
       -i|--input    : Archive with factory images as downloaded from
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
-      -t|--simg2img : Path to simg2img binary for converting sparse images
+      --conf-file   : Device configuration file
       --debugfs     : Use debugfs instead of default fuse-ext2
 
     INFO:
@@ -40,10 +41,6 @@ cat <<_EOF
       * debugfs support is experimental
 _EOF
   abort 1
-}
-
-command_exists() {
-  type "$1" &> /dev/null
 }
 
 extract_archive() {
@@ -91,19 +88,19 @@ mount_darwin() {
   local mountPoint="$2"
   local mount_log="$TMP_WORK_DIR/mount.log"
   local -a osxfuse_ver
-  local readonly os_major_ver
+  local os_major_ver
 
   os_major_ver="$(sw_vers -productVersion | cut -d '.' -f2)"
   if [ "$os_major_ver" -ge 12 ]; then
     # If Sierra and above, check that latest supported (3.5.4) osxfuse version is installed
-    local readonly osxfuse_plist="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
+    local osxfuse_plist="/Library/Filesystems/osxfuse.fs/Contents/version.plist"
     IFS='.' read -r -a osxfuse_ver <<< "$(grep '<key>CFBundleVersion</key>' -A1 "$osxfuse_plist" | \
       grep -o '<string>.*</string>' | cut -d '>' -f2 | cut -d '<' -f1)"
 
     if [[ ("${osxfuse_ver[0]}" -lt 3 ) || \
           ("${osxfuse_ver[0]}" -eq 3 && "${osxfuse_ver[1]}" -lt 5) || \
           ("${osxfuse_ver[0]}" -eq 3 && "${osxfuse_ver[1]}" -eq 5 && "${osxfuse_ver[2]}" -lt 4) ]]; then
-      echo "[!] Detected osxfuse version is '$(echo  ${osxfuse_ver[@]} | tr ' ' '.')'"
+      echo "[!] Detected osxfuse version is '$(echo  "${osxfuse_ver[@]}" | tr ' ' '.')'"
       echo "[-] Update to latest or disable the check if you know that you're doing"
       abort 1
     fi
@@ -130,24 +127,32 @@ mount_linux() {
 extract_img_data() {
   local image_file="$1"
   local out_dir="$2"
+  local logFile="$TMP_WORK_DIR/debugfs.log"
 
   if [ ! -d "$out_dir" ]; then
     mkdir -p "$out_dir"
   fi
 
   if [[ "$HOST_OS" == "Darwin" ]]; then
-    debugfs -R "rdump / \"$out_dir\"" "$image_file" &>/dev/null || {
+    debugfs -R "rdump / \"$out_dir\"" "$image_file" &> "$logFile" || {
       echo "[-] Failed to extract data from '$image_file'"
       abort 1
     }
   else
     debugfs -R 'ls -p' "$image_file" 2>/dev/null | cut -d '/' -f6 | while read -r entry
     do
-      debugfs -R "rdump \"$entry\" \"$out_dir\"" "$image_file" &>/dev/null || {
+      debugfs -R "rdump \"$entry\" \"$out_dir\"" "$image_file" >> "$logFile" 2>&1 || {
         echo "[-] Failed to extract data from '$image_file'"
         abort 1
       }
     done
+  fi
+
+  local symlink_err="rdump: Attempt to read block from filesystem resulted in short read while reading symlink"
+  if grep -Fq "$symlink_err" "$logFile"; then
+    echo "[-] Symlinks have not been properly processed from $image_file"
+    echo "[!] If you don't have a compatible debugfs version, modify 'execute-all.sh' to disable 'USE_DEBUGFS' flag"
+    abort 1
   fi
 }
 
@@ -171,33 +176,14 @@ mount_img() {
   fi
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" == "" || ! -f "$filePath" ]]; then
-    echo "[-] $fileDesc file not found"
-    usage
-  fi
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 DEVICE=""
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
-SIMG2IMG=""
+CONFIG_FILE=""
 USE_DEBUGFS=false
 
 # Compatibility
@@ -223,8 +209,8 @@ do
       INPUT_ARCHIVE=$2
       shift
       ;;
-    -t|--simg2img)
-      SIMG2IMG=$2
+    --conf-file)
+      CONFIG_FILE="$2"
       shift
       ;;
     --debugfs)
@@ -261,7 +247,14 @@ done
 # Input args check
 check_dir "$OUTPUT_DIR" "Output"
 check_file "$INPUT_ARCHIVE" "Input archive"
-check_file "$SIMG2IMG" "simg2img"
+check_file "$CONFIG_FILE" "Device Config File"
+
+# Fetch required values from config
+readonly VENDOR="$(jqRawStrTop "vendor" "$CONFIG_FILE")"
+readonly EXTRA_IMGS_LIST="$(jqIncRawArrayTop "extra-partitions" "$CONFIG_FILE")"
+if [[ "$EXTRA_IMGS_LIST" != "" ]]; then
+  readarray -t EXTRA_IMGS < <(echo "$EXTRA_IMGS_LIST")
+fi
 
 # Prepare output folders
 SYSTEM_DATA_OUT="$OUTPUT_DIR/system"
@@ -322,11 +315,11 @@ fi
 rawSysImg="$extractDir/images/system.img.raw"
 rawVImg="$extractDir/images/vendor.img.raw"
 
-$SIMG2IMG "$sysImg" "$rawSysImg" || {
+simg2img "$sysImg" "$rawSysImg" || {
   echo "[-] simg2img failed to convert system.img from sparse"
   abort 1
 }
-$SIMG2IMG "$vImg" "$rawVImg" || {
+simg2img "$vImg" "$rawVImg" || {
   echo "[-] simg2img failed to convert vendor.img from sparse"
   abort 1
 }
@@ -356,9 +349,9 @@ mv "$bootloaderImg" "$RADIO_DATA_OUT/" || {
   abort 1
 }
 
-# For devices with AB partitions layout, copy additional images required for OTA
-if [[ "$DEVICE" == "sailfish" || "$DEVICE" == "marlin" ]]; then
-  for img in "${PIXEL_AB_PARTITIONS[@]}"
+# For Pixel devices with AB partitions layout, copy additional images required for OTA
+if [[ "$VENDOR" == "google" && "$EXTRA_IMGS_LIST" != "" ]]; then
+  for img in "${EXTRA_IMGS[@]}"
   do
     if [ ! -f "$extractDir/images/$img.img" ]; then
       echo "[-] Failed to locate '$img.img' in factory image"

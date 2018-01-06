@@ -1,4 +1,0 @@
-# Additional flags to be inserted at generated BoardConfigVendor.mk
-
-# Enable verizon sepolicies
-BOARD_SEPOLICY_DIRS += device/google/marlin/sepolicy/verizon

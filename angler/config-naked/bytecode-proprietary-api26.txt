@@ -1,8 +1,0 @@
-# Bytecode archive files to extract from factory images
-
-system/priv-app/atfwd/atfwd.apk
-system/app/HwMMITest/HwMMITest.apk
-system/app/HwSarControlService/HwSarControlService.apk
-system/framework/qcrilhook.jar
-system/priv-app/CNEService/CNEService.apk
-system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk

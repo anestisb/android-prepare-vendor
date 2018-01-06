@@ -31,8 +31,9 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
+readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_repair.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut")
+declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut" "dexrepair")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -54,7 +55,6 @@ cat <<_EOF
       -m|--method     : Repair methods ('NONE', 'OAT2DEX', 'OATDUMP', 'SMALIDEODEX')
       --oat2dex       : [OPTIONAL] Path to SmaliEx oat2dex.jar (when 'OAT2DEX' method)
       --oatdump       : [OPTIONAL] Path to ART oatdump executable (when 'OATDUMP' or 'SMALIDEODEX' method)
-      --dexrepair     : [OPTIONAL] Path to dexrepair executable (when 'OATDUMP' method)
       --smali         : [OPTIONAL] Path to smali.jar (when 'SMALIDEODEX' method)
       --baksmali      : [OPTIONAL] Path to baksmali.jar (when 'SMALIDEODEX' method)
       --bytecode-list : [OPTIONAL] list with bytecode archive files to be included in
@@ -72,16 +72,12 @@ _EOF
   abort 1
 }
 
-command_exists() {
-  type "$1" &> /dev/null
-}
-
 # Print RAM size memory warning when using smali jar tools
 check_ram_size() {
   local host_os
   local ram_size
 
-  host_os=$(uname)
+  host_os=$(uname -s)
   ram_size=0
   if [[ "$host_os" == "Darwin" ]]; then
     ram_size=$(sysctl hw.memsize | cut -d ":" -f 2 | awk '{$1=$1/(1024^3); print int($1);}')
@@ -92,13 +88,6 @@ check_ram_size() {
   if [ "$ram_size" -le 2 ]; then
     echo "[!] Host RAM size <= 2GB - jars might crash due to low memory"
   fi
-}
-
-get_build_id() {
-  local build_id
-
-  build_id=$(grep 'ro.build.id=' "$1" | cut -d "=" -f2)
-  echo "$build_id"
 }
 
 check_java_version() {
@@ -120,12 +109,6 @@ check_java_version() {
     echo ' # PATH=/usr/local/java/jdk1.8.0_71/bin:$PATH; ./execute-all.sh <..args..>'
     abort 1
   fi
-}
-
-array_contains() {
-  local element
-  for element in "${@:2}"; do [[ "$element" =~ $1 ]] && return 0; done
-  return 1
 }
 
 oat2dex_repair() {
@@ -164,7 +147,7 @@ oat2dex_repair() {
     fileName=$(basename "$relFile")
 
     # Skip special files
-    if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
+    if array_contains "$fileExt" "${ART_FILE_EXTS[@]}"; then
       continue
     fi
 
@@ -181,7 +164,7 @@ oat2dex_repair() {
 
     # If APKs selection enabled, skip if not in list
     if [[ "$hasBytecodeList" = true && "$fileExt" == "apk" && "$relDir" != "/framework" ]]; then
-      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
+      if ! array_contains_rel "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -338,7 +321,7 @@ oatdump_repair() {
     dexsExported=0
 
     # Skip special files
-    if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
+    if array_contains "$fileExt" "${ART_FILE_EXTS[@]}"; then
       continue
     fi
 
@@ -354,13 +337,13 @@ oatdump_repair() {
     fi
 
     # If boot jar skip
-    if array_contains "$fileName" "${bootJars[@]}"; then
+    if array_contains_rel "$fileName" "${bootJars[@]}"; then
       continue
     fi
 
     # If APKs selection enabled, skip if not in list
     if [ "$hasBytecodeList" = true ]; then
-      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
+      if ! array_contains_rel "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -424,7 +407,7 @@ oatdump_repair() {
       done
 
       # Repair CRC for all dex files & remove un-repaired original dumps
-      $DEXREPAIR_BIN -I "$TMP_WORK_DIR" &>/dev/null
+      dexrepair -I "$TMP_WORK_DIR" &>/dev/null
       rm -f "$TMP_WORK_DIR/"*_export.dex
 
       # Copy APK/jar to workspace for repair
@@ -505,7 +488,7 @@ smali_repair() {
     fileName=$(basename "$relFile")
 
     # Skip special files
-    if [[ "$fileExt" == "odex" || "$fileExt" == "oat" || "$fileExt" == "art" ]]; then
+    if array_contains "$fileExt" "${ART_FILE_EXTS[@]}"; then
       continue
     fi
 
@@ -522,7 +505,7 @@ smali_repair() {
 
     # If APKs selection enabled, skip if not in list
     if [ "$hasBytecodeList" = true ]; then
-      if ! array_contains "$relFile" "${BYTECODE_LIST[@]}"; then
+      if ! array_contains_rel "$relFile" "${BYTECODE_LIST[@]}"; then
         continue
       fi
     fi
@@ -644,28 +627,9 @@ smali_repair() {
   done < <(find "$INPUT_DIR" -not -type d)
 }
 
-check_dir() {
-  local dirPath="$1"
-  local dirDesc="$2"
-
-  if [[ "$dirPath" == "" || ! -d "$dirPath" ]]; then
-    echo "[-] $dirDesc directory not found"
-    usage
-  fi
-}
-
-check_opt_file() {
-  local filePath="$1"
-  local fileDesc="$2"
-
-  if [[ "$filePath" != "" && ! -f "$filePath" ]]; then
-    echo "[-] '$fileDesc' file not found"
-    usage
-  fi
-}
-
 trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
+. "$COMMON_SCRIPT"
 
 # Check that system tools exist
 for i in "${SYS_TOOLS[@]}"
@@ -684,7 +648,6 @@ BYTECODE_LIST_FILE=""
 # Paths for external tools provided from args
 OAT2DEX_JAR=""
 OATDUMP_BIN=""
-DEXREPAIR_BIN=""
 SMALI_JAR=""
 BAKSMALI_JAR=""
 
@@ -714,10 +677,6 @@ do
       ;;
     --oatdump)
       OATDUMP_BIN="$2"
-      shift
-      ;;
-    --dexrepair)
-      DEXREPAIR_BIN="$2"
       shift
       ;;
     --smali)
@@ -756,7 +715,6 @@ check_opt_file "$BYTECODE_LIST_FILE" "BYTECODE_LIST_FILE"
 # tools are set prior to start processing
 check_opt_file "$OAT2DEX_JAR" "oat2dex.jar"
 check_opt_file "$OATDUMP_BIN" "oatdump"
-check_opt_file "$DEXREPAIR_BIN" "dexrepair"
 check_opt_file "$SMALI_JAR" "smali.jar"
 check_opt_file "$BAKSMALI_JAR" "baksmali.jar"
 
@@ -823,8 +781,8 @@ if [[ "$REPAIR_METHOD" == "OAT2DEX" ]]; then
   echo "[*] Repairing bytecode under /system partition using oat2dex method"
   oat2dex_repair
 elif [[ "$REPAIR_METHOD" == "OATDUMP" ]]; then
-  if [[ "$OATDUMP_BIN" == "" || "$DEXREPAIR_BIN" == "" ]]; then
-    echo "[-] Missing oatdump and/or dexrepair external tool(s)"
+  if [[ "$OATDUMP_BIN" == "" ]]; then
+    echo "[-] Missing oatdump external tool"
     abort 1
   fi
 

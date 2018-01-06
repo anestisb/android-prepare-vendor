@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<!-- This is a place for vendor-specific config values. The format and
+     filtering rules are the same as those in carrier_config*.xml files. This
+     file is read after any specific config file from the assets folder, so it
+     must use explicit filters for MCC ad MNC if that is desired. -->
+<carrier_config_list>
+    <carrier_config mcc="204" mnc="04" gid1="BAE0000000000000">
+        <boolean name="ci_action_on_sys_update_bool" value="true" />
+        <string name="ci_action_on_sys_update_extra_string">ServerID</string>
+        <string name="ci_action_on_sys_update_intent_string">com.android.omadm.service.CONFIGURATION_UPDATE</string>
+        <string name="ci_action_on_sys_update_extra_val_string">com.vzwdmserver</string>
+        <boolean name="config_wifi_disable_in_ecbm" value="true" />
+        <boolean name="disable_cdma_activation_code_bool" value="true" />
+        <string-array name="carrier_app_wake_signal_config" num="1">
+            <item value="com.google.android.carriersetup/.VzwActivationReceiver:             com.android.internal.telephony.CARRIER_SIGNAL_REDIRECTED,             com.android.internal.telephony.CARRIER_SIGNAL_REQUEST_NETWORK_FAILED" />
+        </string-array>
+    </carrier_config>
+    <carrier_config mcc="310" mnc="004">
+        <boolean name="ci_action_on_sys_update_bool" value="true" />
+        <string name="ci_action_on_sys_update_extra_string">ServerID</string>
+        <string name="ci_action_on_sys_update_intent_string">com.android.omadm.service.CONFIGURATION_UPDATE</string>
+        <string name="ci_action_on_sys_update_extra_val_string">com.vzwdmserver</string>
+        <boolean name="config_wifi_disable_in_ecbm" value="true" />
+        <boolean name="disable_cdma_activation_code_bool" value="true" />
+        <string-array name="carrier_app_wake_signal_config" num="1">
+            <item value="com.google.android.carriersetup/.VzwActivationReceiver:             com.android.internal.telephony.CARRIER_SIGNAL_REDIRECTED,             com.android.internal.telephony.CARRIER_SIGNAL_REQUEST_NETWORK_FAILED" />
+        </string-array>
+    </carrier_config>
+    <carrier_config mcc="311" mnc="480">
+        <boolean name="ci_action_on_sys_update_bool" value="true" />
+        <string name="ci_action_on_sys_update_extra_string">ServerID</string>
+        <string name="ci_action_on_sys_update_intent_string">com.android.omadm.service.CONFIGURATION_UPDATE</string>
+        <string name="ci_action_on_sys_update_extra_val_string">com.vzwdmserver</string>
+        <boolean name="config_wifi_disable_in_ecbm" value="true" />
+        <boolean name="disable_cdma_activation_code_bool" value="true" />
+        <string-array name="carrier_app_wake_signal_config" num="1">
+            <item value="com.google.android.carriersetup/.VzwActivationReceiver:             com.android.internal.telephony.CARRIER_SIGNAL_REDIRECTED,             com.android.internal.telephony.CARRIER_SIGNAL_REQUEST_NETWORK_FAILED" />
+        </string-array>
+    </carrier_config>
+    <carrier_config mcc="440" mnc="00">
+        <int name="ims_dtmf_tone_delay_int" value="300" />
+        <int name="gsm_dtmf_tone_delay_int" value="300" />
+    </carrier_config>
+    <carrier_config mcc="440" mnc="20">
+        <int name="ims_dtmf_tone_delay_int" value="300" />
+        <int name="gsm_dtmf_tone_delay_int" value="300" />
+    </carrier_config>
+    <carrier_config mcc="441" mnc="00">
+        <int name="ims_dtmf_tone_delay_int" value="300" />
+        <int name="gsm_dtmf_tone_delay_int" value="300" />
+    </carrier_config>
+    <carrier_config mcc="441" mnc="20">
+        <int name="ims_dtmf_tone_delay_int" value="300" />
+        <int name="gsm_dtmf_tone_delay_int" value="300" />
+    </carrier_config>
+    <carrier_config mcc="450" mnc="02">
+        <boolean name="carrier_instant_lettering_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="450" mnc="05">
+        <boolean name="carrier_instant_lettering_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="450" mnc="06">
+        <boolean name="carrier_instant_lettering_available_bool" value="false" />
+        <boolean name="hide_preferred_network_type_bool" value="false" />
+        <boolean name="editable_enhanced_4g_lte_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="450" mnc="08">
+        <boolean name="carrier_instant_lettering_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="241" mnc="01">
+        <boolean name="carrier_volte_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="222" mnc="10">
+        <boolean name="carrier_volte_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="230" mnc="01">
+        <boolean name="carrier_volte_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="262" mnc="02">
+        <boolean name="carrier_volte_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="268" mnc="01">
+        <boolean name="carrier_volte_available_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="234" mnc="30">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+        <boolean name="hide_ims_apn_bool" value="true" />
+        <boolean name="editable_wfc_mode_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="234" mnc="33">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+        <boolean name="hide_ims_apn_bool" value="true" />
+        <boolean name="editable_wfc_mode_bool" value="false" />
+    </carrier_config>
+    <carrier_config mcc="440" mnc="51">
+        <boolean name="carrier_volte_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="840">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="854">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="855">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="856">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="857">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="858">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="859">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="860">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="861">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="862">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="863">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="864">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="865">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="866">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="867">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="868">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="869">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="870">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="871">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="872">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="873">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+    <carrier_config mcc="405" mnc="874">
+        <boolean name="carrier_wfc_ims_available_bool" value="true" />
+    </carrier_config>
+</carrier_config_list>

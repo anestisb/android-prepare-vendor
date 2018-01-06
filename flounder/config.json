@@ -1,0 +1,91 @@
+{
+  "device-name": "nexus-9",
+  "device-model": "flounder",
+  "device-aliases": ["volantis", "volantisg"],
+  "vendor": "htc",
+  "aosp-vendor-dir": "htc",
+  "device-family": "flounder",
+  "supported-apis": ["api-23", "api-24", "api-25"],
+  "extra-partitions": [],
+  "AndroidMk": "flounder/Android.mk",
+  "BoardConfigVendorMk": "flounder/BoardConfigVendor.mk",
+  "DeviceVendorMk": "flounder/device-vendor.mk",
+  "api-23": {
+    "naked": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [
+        "system/etc/RT5506",
+        "system/etc/fmas_eq.dat",
+        "system/lib/soundfx/libfmas.so"
+      ],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    },
+    "full": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    }
+  },
+  "api-24": {
+    "naked": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [
+        "system/etc/RT5506",
+        "system/etc/fmas_eq.dat",
+        "system/lib/soundfx/libfmas.so"
+      ],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    },
+    "full": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    }
+  },
+  "api-25": {
+    "naked": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [
+        "system/etc/RT5506",
+        "system/etc/fmas_eq.dat",
+        "system/lib/soundfx/libfmas.so"
+      ],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    },
+    "full": {
+      "overlays-dir": "",
+      "system-bytecode": [],
+      "system-other": [],
+      "forced-modules": [],
+      "new-modules": [],
+      "dep-dso": [],
+      "BoardConfigVendor": [],
+      "device-vendor": []
+    }
+  }
+}
