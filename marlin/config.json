@@ -32,7 +32,7 @@
         "system/app/atfwd/atfwd.apk",
         "system/app/embms/embms.apk",
         "system/app/fastdormancy/fastdormancy.apk",
-        "system/app/QAS_DVC_MSP/QAS_DVC_MSP.apk",
+        "system/app/QAS_DVC_MSP/QAS_DVC_MSP.apk::PRESIGNED",
         "system/app/QtiTelephonyService/QtiTelephonyService.apk",
         "system/app/radioconfig/radioconfig.apk",
         "system/app/RCSBootstraputil/RCSBootstraputil.apk",
@@ -196,9 +196,9 @@
     "full": {
       "overlays-dir": "",
       "system-bytecode": [
-        "system/app/VZWAPNLib/VZWAPNLib.apk",
+        "system/app/VZWAPNLib/VZWAPNLib.apk::PRESIGNED",
         "system/app/datastatusnotification/datastatusnotification.apk",
-        "system/app/vzw_msdc_api/vzw_msdc_api.apk",
+        "system/app/vzw_msdc_api/vzw_msdc_api.apk::PRESIGNED",
         "system/app/xdivert/xdivert.apk",
         "system/framework/VerizonUnifiedSettings.jar",
         "system/priv-app/AppDirectedSMSService/AppDirectedSMSService.apk",
@@ -215,7 +215,7 @@
         "system/priv-app/VzwLcSilent/VzwLcSilent.apk",
         "system/priv-app/VzwOmaTrigger/VzwOmaTrigger.apk",
         "system/priv-app/WfcActivation/WfcActivation.apk",
-        "system/priv-app/obdm_stub/obdm_stub.apk"
+        "system/priv-app/obdm_stub/obdm_stub.apk::PRESIGNED"
       ],
       "system-other": [
         "system/etc/permissions/com.android.omadm.service.xml",
@@ -238,7 +238,9 @@
       "overlays-dir": "overlays-api26-naked",
       "system-bytecode": [
         "system/priv-app/CNEService/CNEService.apk",
-        "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk"
+        "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk",
+        "vendor/app/QAS_DVC_MSP/QAS_DVC_MSP.apk::PRESIGNED",
+        "vendor/app/vzw_msdc_api/vzw_msdc_api.apk::PRESIGNED"
       ],
       "system-other": [
         "system/bin/mct-unit-test-app",
@@ -282,7 +284,7 @@
     "full": {
       "overlays-dir": "overlays-api26-full",
       "system-bytecode": [
-        "system/app/VZWAPNLib/VZWAPNLib.apk",
+        "system/app/VZWAPNLib/VZWAPNLib.apk::PRESIGNED",
         "system/framework/VerizonUnifiedSettings.jar",
         "system/priv-app/AppDirectedSMSService/AppDirectedSMSService.apk",
         "system/priv-app/CarrierSetup/CarrierSetup.apk",
@@ -357,7 +359,9 @@
       "overlays-dir": "overlays-api26-naked",
       "system-bytecode": [
         "system/priv-app/CNEService/CNEService.apk",
-        "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk"
+        "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk",
+        "vendor/app/QAS_DVC_MSP/QAS_DVC_MSP.apk::PRESIGNED",
+        "vendor/app/vzw_msdc_api/vzw_msdc_api.apk::PRESIGNED"
       ],
       "system-other": [
         "system/bin/mct-unit-test-app",
@@ -410,7 +414,7 @@
     "full": {
       "overlays-dir": "overlays-api26-full",
       "system-bytecode": [
-        "system/app/VZWAPNLib/VZWAPNLib.apk",
+        "system/app/VZWAPNLib/VZWAPNLib.apk::PRESIGNED",
         "system/framework/VerizonUnifiedSettings.jar",
         "system/priv-app/AppDirectedSMSService/AppDirectedSMSService.apk",
         "system/priv-app/CarrierSetup/CarrierSetup.apk",
