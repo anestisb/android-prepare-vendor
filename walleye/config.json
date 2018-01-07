@@ -19,6 +19,7 @@
     "pmic",
     "rpm",
     "tz",
+    "vendor",
     "xbl"
   ],
   "AndroidMk": "walleye/Android.mk",
