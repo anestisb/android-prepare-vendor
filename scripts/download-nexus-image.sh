@@ -169,6 +169,6 @@ fi
 
 echo "[*] Downloading image from '$url'"
 outFile=$OUTPUT_DIR/$(basename "$url")
-wget -O "$outFile" "$url"
+wget --continue -O "$outFile" "$url"
 
 abort 0
