@@ -46,7 +46,7 @@ some functionality when compiled under AOSP:
 * Vendor partition is distributed in a form that does not allow to enable
 verified boot (dm-verity) against it
 * Distributed blobs do not include APK bytecode vendor packages, only some jar
-files. It is still unclear to what extend device functionalities are broken.
+files. It is still unclear to what extent device functionalities are broken.
 * Due to missing proprietary modules, required modules present in AOSP are not
 included as active dependencies resulting into skipped functionality (e.g. IMS,
 RCS).
