@@ -628,9 +628,9 @@ cp "$FACTORY_IMGS_DATA/vendor_partition_size" "$FACTORY_IMGS_R_DATA"
 # Make radio files available to vendor generate script
 ln -s "$FACTORY_IMGS_DATA/radio" "$FACTORY_IMGS_R_DATA/radio"
 
-VGEN_SCRIPT_EXTRA_ARGS=()
+VGEN_SCRIPT_EXTRA_ARGS=(--conf-type "$CONFIG_TYPE")
 if [ $FORCE_PREOPT = true ]; then
-  VGEN_SCRIPT_EXTRA_ARGS=(--allow-preopt)
+  VGEN_SCRIPT_EXTRA_ARGS+=( --allow-preopt)
 fi
 if [ $FORCE_VIMG = true ]; then
   VGEN_SCRIPT_EXTRA_ARGS+=( --force-vimg)
@@ -643,7 +643,6 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
   --output "$OUT_BASE" \
   --api "$API_LEVEL" \
   --conf-file "$CONFIG_FILE" \
-  --conf-type "$CONFIG_TYPE" \
   "${VGEN_SCRIPT_EXTRA_ARGS[@]}" || {
   echo "[-] Vendor generation failed"
   abort 1
