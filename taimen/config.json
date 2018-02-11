@@ -19,7 +19,6 @@
     "pmic",
     "rpm",
     "tz",
-    "vendor",
     "xbl"
   ],
   "AndroidMk": "taimen/Android.mk",
