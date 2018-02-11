@@ -398,7 +398,6 @@ gen_board_family_cfg_mk() {
     {
       echo "# [$EXEC_DATE] Auto-generated file, do not edit"
       echo ""
-      echo 'AB_OTA_PARTITIONS += vendor'
       echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
       echo '  LOCAL_STEM := sailfish/BoardConfigVendorPartial.mk'
       echo 'else'
@@ -885,7 +884,7 @@ update_ab_ota_partitions() {
 
   {
     echo "# Partitions to add in AB OTA images"
-    echo 'AB_OTA_PARTITIONS += \'
+    echo 'AB_OTA_PARTITIONS += vendor \'
     for partition in "${EXTRA_IMGS[@]}"
     do
       echo "    $partition \\"
