@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "umount" "shasum")
+declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "shasum")
 readonly HOST_OS="$(uname -s)"
 
 # Realpath implementation in bash
@@ -108,7 +108,7 @@ unmount_raw_image() {
   local mount_point="$1"
 
   if [[ -d "$mount_point" && "$USE_DEBUGFS" = false ]]; then
-    umount "$mount_point" || {
+    $_UMOUNT "$mount_point" || {
       echo "[-] '$mount_point' unmount failed"
       exit 1
     }
@@ -315,6 +315,17 @@ JAVA_FOUND=false
 # Compatibility
 check_bash_version
 check_compatible_system
+
+# Platform specific commands
+if isDarwin; then
+  SYS_TOOLS+=("umount")
+  _UMOUNT=umount
+else
+  # For Linux use debugfs
+  SYS_TOOLS+=("fusermount")
+  _UMOUNT="fusermount -u"
+fi
+
 
 # Check that system tools exist
 for i in "${SYS_TOOLS[@]}"
