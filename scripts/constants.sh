@@ -24,6 +24,9 @@ readonly L_OATDUMP_URL_API26_2='https://onedrive.live.com/download?cid=D1FAC8CC6
 readonly D_OATDUMP_URL_API26_2='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21570&authkey=AJrlrh0v2GUvxow'
 readonly L_OATDUMP_URL_API27='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21566&authkey=AKWYYxBfd7NMW_k'
 readonly D_OATDUMP_URL_API27='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21567&authkey=AF-cDubRkZdjRxY'
+readonly L_OATDUMP_URL_API28='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21574&authkey=ADSQA_DtfAmmk2c'
+readonly D_OATDUMP_URL_API28='' # TBC
+
 
 readonly L_OATDUMP_API23_SIG='688f1c1f97e3b9eb32702c60ca05abbf313bc98a25334aa3ed4a108095162244'
 readonly D_OATDUMP_API23_SIG='688f1c1f97e3b9eb32702c60ca05abbf313bc98a25334aa3ed4a108095162244'
@@ -37,6 +40,8 @@ readonly L_OATDUMP_API26_2_SIG='22ab2469d32fbb1a4010528695c0c71ed1a3f7f5e956971b
 readonly D_OATDUMP_API26_2_SIG='03b603c09c1dfbdffa0518d39f5d7e5fcf04eac2e8b11bec27f2e4c36b162689'
 readonly L_OATDUMP_API27_SIG='e8363ecbd6bc6bd4d3e86e5a59adfa77f62c3f765f4bb8d32706a538831357ac'
 readonly D_OATDUMP_API27_SIG='2aaab14d1178845bf9d08b06b7afd3dfd845e882c9bf2c403593940a39ff3449'
+readonly L_OATDUMP_API28_SIG='147dc1bb83a9f9edb1107760b5935760e6acf977131032c0da88aadf0f4a8e68'
+readonly D_OATDUMP_API28_SIG='' # TBC
 
 # sub-directories that contain bytecode archives
 declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel")
