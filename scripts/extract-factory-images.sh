@@ -33,11 +33,11 @@ cat <<_EOF
       -o|--output   : Path to save contents extracted from images
       --conf-file   : Device configuration file
       --debugfs     : Use debugfs instead of default ext4fuse
+      --fuse-ext2   : Use fuse-ext2 instead of default ext4fuse
 
     INFO:
       * ext4fuse available at 'https://github.com/gerard/ext4fuse'
       * Caller is responsible to unmount mount points when done
-      * debugfs support is experimental
 _EOF
   abort 1
 }
@@ -116,7 +116,17 @@ mount_linux() {
   local imgFile="$1"
   local mountPoint="$2"
   local mount_log="$TMP_WORK_DIR/mount.log"
-  ext4fuse -o logfile=/dev/stdout,uid=$EUID,ro "$imgFile" "$mountPoint" &>"$mount_log" || {
+  local mount_cmd
+
+  if [ "$RUNS_WITH_ROOT" = true ]; then
+    mount_cmd="mount -t ext4 -o loop,ro"
+  elif [ "$USE_FUSEEXT2" = true ]; then
+    mount_cmd="fuse-ext2 -o uid=$EUID,ro"
+  else
+    mount_cmd="ext4fuse -o logfile=/dev/stdout,uid=$EUID,ro"
+  fi
+
+  $mount_cmd "$imgFile" "$mountPoint" &>"$mount_log" || {
     echo "[-] '$imgFile' mount failed"
     cat "$mount_log"
     abort 1
@@ -183,6 +193,8 @@ INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 CONFIG_FILE=""
 USE_DEBUGFS=false
+USE_FUSEEXT2=false
+RUNS_WITH_ROOT=false
 
 # Compatibility
 HOST_OS=$(uname)
@@ -210,6 +222,9 @@ do
     --debugfs)
       USE_DEBUGFS=true
       ;;
+    --fuse-ext2)
+      USE_FUSEEXT2=true
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -218,9 +233,18 @@ do
   shift
 done
 
+# Check if script is running as root to directly use loopback instead of fuses
+if [ "$EUID" -eq 0 ]; then
+  RUNS_WITH_ROOT=true
+fi
+
 # Additional tools based on chosen image files data extraction method
-if [ "$USE_DEBUGFS" = true ]; then
+if [ "$RUNS_WITH_ROOT" = true ]; then
+  SYS_TOOLS+=("mount")
+elif [ "$USE_DEBUGFS" = true ]; then
   SYS_TOOLS+=("debugfs")
+elif [ "$USE_FUSEEXT2" ]; then
+  SYS_TOOLS+=("fuse-ext2")
 else
   SYS_TOOLS+=("ext4fuse")
   # Platform specific commands

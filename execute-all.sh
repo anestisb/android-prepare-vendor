@@ -62,6 +62,7 @@ cat <<_EOF
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (default: false)
       -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images (default: false)
       --debugfs    : [OPTIONAL] Use debugfs (Linux only) instead of the default ext4fuse (default: false)
+      --fuse-ext2  : [OPTIONAL] Use fuse-ext2 (Linux only) instead of the default ext4fuse (default: false)
       --force-opt  : [OPTIONAL] Override LOCAL_DEX_PREOPT to always pre-optimize /system bytecode (default: false)
       --oatdump    : [OPTIONAL] Force use of oatdump method to revert pre-optimized bytecode
       --smali      : [OPTIONAL] Force use of smali/baksmali to revert pre-optimized bytecode
@@ -75,7 +76,7 @@ cat <<_EOF
       * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method.
         If you need to change the defaults, you can select manually.
       * Darwin systems can use the ext4fuse to extract data from ext4 images without root
-      * Linux system can use the ext4fuse or debugfs to extract data from ext4 images without root
+      * Linux system can use the ext4fuse, fuse-ext2 or debugfs to extract data from ext4 images without root
 _EOF
   abort 1
 }
@@ -208,6 +209,11 @@ check_input_args() {
     fi
   fi
 
+  if [[ "$USE_DEBUGFS" = true && "$USE_FUSEEXT2" = true ]]; then
+    echo "[-] --debugfs & --fuse-ext2 cannot be used at the same time"
+    abort 1
+  fi
+
   # Some business logic related checks
   if [[ "$DEODEX_ALL" = true && $KEEP_DATA = false ]]; then
     echo "[!] It's pointless to deodex all if not keeping runtime generated data"
@@ -309,32 +315,13 @@ BYTECODE_REPAIR_METHOD=""
 DEODEX_ALL=false
 AOSP_ROOT=""
 USE_DEBUGFS=false
+USE_FUSEEXT2=false
 FORCE_VIMG=false
 JAVA_FOUND=false
 
 # Compatibility
 check_bash_version
 check_compatible_system
-
-# Platform specific commands
-if isDarwin; then
-  SYS_TOOLS+=("umount")
-  _UMOUNT=umount
-else
-  # For Linux use debugfs
-  SYS_TOOLS+=("fusermount")
-  _UMOUNT="fusermount -u"
-fi
-
-
-# Check that system tools exist
-for i in "${SYS_TOOLS[@]}"
-do
-  if ! command_exists "$i"; then
-    echo "[-] '$i' command not found"
-    abort 1
-  fi
-done
 
 # Parse calling arguments
 while [[ $# -gt 0 ]]
@@ -380,6 +367,9 @@ do
     --debugfs)
       USE_DEBUGFS=true
       ;;
+    --fuse-ext2)
+      USE_FUSEEXT2=true
+      ;;
     --force-opt)
       FORCE_PREOPT=true
       ;;
@@ -408,6 +398,30 @@ done
 
 # Check user input args
 check_input_args
+
+# Platform specific commands
+if isDarwin; then
+  SYS_TOOLS+=("umount")
+  _UMOUNT=umount
+else
+  # Check if script is running as root to directly use loopback instead of fuses
+  if [ "$EUID" -eq 0 ]; then
+    SYS_TOOLS+=("umount")
+    _UMOUNT="umount"
+  elif [ "$USE_DEBUGFS" = false ]; then
+    SYS_TOOLS+=("fusermount")
+    _UMOUNT="fusermount -uz"
+  fi
+fi
+
+# Check that system tools exist
+for i in "${SYS_TOOLS[@]}"
+do
+  if ! command_exists "$i"; then
+    echo "[-] '$i' command not found"
+    abort 1
+  fi
+done
 
 # Check if output directory is AOSP root
 if is_aosp_root "$OUTPUT_DIR"; then
@@ -490,6 +504,8 @@ EXTRACT_SCRIPT_ARGS=(--input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA")
 
 if [ "$USE_DEBUGFS" = true ]; then
   EXTRACT_SCRIPT_ARGS+=( --debugfs)
+elif [ "$USE_FUSEEXT2" = true ]; then
+  EXTRACT_SCRIPT_ARGS+=( --fuse-ext2)
 fi
 
 $EXTRACT_SCRIPT "${EXTRACT_SCRIPT_ARGS[@]}" --conf-file "$CONFIG_FILE" || {
