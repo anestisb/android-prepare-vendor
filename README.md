@@ -67,7 +67,7 @@ The process to extract and import vendor proprietary blobs requires to:
 1. Obtain device matching factory images archive from Google developer website
 (`scripts/download-nexus-image.sh`)
    * Users need to accept Google ToS for Nexus factory images
-2. Extract images from archive, convert from sparse to raw, mount with fuse-ext2
+2. Extract images from archive, convert from sparse to raw, mount with ext4fuse
 & extract data (`scripts/extract-factory-images.sh`)
    * All vendor partition data are mirrored in order to generate a production
    identical `vendor.img`
@@ -85,7 +85,7 @@ from file-system location using the `-i|--img` flag.
 
 `-k|--keep` flag can be used if you want to keep extracted intermediate files
 for further investigation. Keep in mind that if used the mount-points from
-fuse-ext2 are not unmounted. So be sure that you manually remove them (or run
+ext4fuse are not unmounted. So be sure that you manually remove them (or run
 the script again without the flag) when done.
 
 All scripts can be executed from macOS, Linux & other Unix-based systems as long
@@ -156,10 +156,12 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.4.1 - TBC (master development)
+* 0.4.1 - 11 August 2018
   * Pixel 2 (walleye) support for API 26 & 27
   * Pixel 2 XL (taimen) support for API 26 & 27 (credits to @deeproot2k)
   * Improve debugfs error checking due to improper symlink parsing from some versions
+  * Deprecate fuse-ext2 and replace with ext4fuse
+  * Update simg2img binaries for Darwin & Linux
 * 0.4.0 - 9 December 2017
   * Refactored configuration files
   * API-27 support: Pixel, Pixel XL, Nexus 6p, Nexus 5x
@@ -229,9 +231,6 @@ target device before any pull request.
   * AOSP compatibility bug fixes & performance optimizations
 
 ## Warnings
-* Scripts do **NOT** require root permissions to run. If you're facing problems
-with `fuse-ext2` configuration at your environment, check the following FAQ
-section.
 * No binary vendor data against supported devices will be maintained in this
 repository. Scripts provide all necessary automation to generate them yourself.
 * No promises on how the device configuration files will be maintained. Feel
@@ -268,14 +267,6 @@ location. Some device configurations (e.g. Pixel/Pixel XL) share some root
 directories and might break if `cp` or `mv` are invoked with the wrong base
 paths.
 
-## Frequently Spotted Issues
-### fuse-ext2
-* `fusermount: failed to open /etc/fuse.conf: Permission denied`
-  * FIX-1: Add low privilege username to fuse group (e.g.:
-  `# usermod -a -G fuse anestisb`)
-  * FIX-2: Change file permissions - `# chmod +r /etc/fuse.conf`
-* `fusermount: option allow_other only allowed if 'user_allow_other' is set in /etc/fuse.conf`
-  * Edit `/etc/fuse.conf` and write/uncomment the `user_allow_other` flag
 
 ## Examples
 ### API-24 (Nougat) N9 WiFi (alias volantis) flounder vendor generation after downloading factory image from website

@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_prepare_vendor.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "shasum")
+declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "umount" "shasum")
 readonly HOST_OS="$(uname -s)"
 
 # Realpath implementation in bash
@@ -61,6 +61,7 @@ cat <<_EOF
       -k|--keep    : [OPTIONAL] Keep all extracted factory images & repaired data (default: false)
       -s|--skip    : [OPTIONAL] Skip /system bytecode repairing (default: false)
       -y|--yes     : [OPTIONAL] Auto accept Google ToS when downloading Nexus factory images (default: false)
+      --debugfs    : [OPTIONAL] Use debugfs (Linux only) instead of the default ext4fuse (default: false)
       --force-opt  : [OPTIONAL] Override LOCAL_DEX_PREOPT to always pre-optimize /system bytecode (default: false)
       --oatdump    : [OPTIONAL] Force use of oatdump method to revert pre-optimized bytecode
       --smali      : [OPTIONAL] Force use of smali/baksmali to revert pre-optimized bytecode
@@ -73,7 +74,8 @@ cat <<_EOF
         or you have issues with some carriers
       * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method.
         If you need to change the defaults, you can select manually.
-      * Darwin uses fuse-ext2 and Linux uses debugfs to extract data from ext4 images without root
+      * Darwin systems can use the ext4fuse to extract data from ext4 images without root
+      * Linux system can use the ext4fuse or debugfs to extract data from ext4 images without root
 _EOF
   abort 1
 }
@@ -106,7 +108,7 @@ unmount_raw_image() {
   local mount_point="$1"
 
   if [[ -d "$mount_point" && "$USE_DEBUGFS" = false ]]; then
-    $_UMOUNT "$mount_point" || {
+    umount "$mount_point" || {
       echo "[-] '$mount_point' unmount failed"
       exit 1
     }
@@ -294,7 +296,6 @@ KEEP_DATA=false
 DEV_ALIAS=""
 API_LEVEL=""
 SKIP_SYSDEOPT=false
-_UMOUNT=""
 FACTORY_IMGS_DATA=""
 CONFIG_TYPE="naked"
 CONFIG_FILE=""
@@ -315,17 +316,6 @@ JAVA_FOUND=false
 check_bash_version
 check_compatible_system
 
-# Platform specific commands
-if isDarwin; then
-  SYS_TOOLS+=("umount")
-  _UMOUNT=umount
-else
-  # For Linux use debugfs
-  USE_DEBUGFS=true
-  # SYS_TOOLS+=("fusermount")
-  # _UMOUNT="fusermount -u"
-fi
-
 # Check that system tools exist
 for i in "${SYS_TOOLS[@]}"
 do
@@ -335,6 +325,7 @@ do
   fi
 done
 
+# Parse calling arguments
 while [[ $# -gt 0 ]]
 do
   arg="$1"
@@ -374,6 +365,9 @@ do
       ;;
     -y|--yes)
       AUTO_TOS_ACCEPT=true
+      ;;
+    --debugfs)
+      USE_DEBUGFS=true
       ;;
     --force-opt)
       FORCE_PREOPT=true
@@ -481,7 +475,7 @@ else
   mkdir -p "$FACTORY_IMGS_DATA"
 fi
 
-EXTRACT_SCRIPT_ARGS=(--device "$DEVICE" --input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA")
+EXTRACT_SCRIPT_ARGS=(--input "$factoryImgArchive" --output "$FACTORY_IMGS_DATA")
 
 if [ "$USE_DEBUGFS" = true ]; then
   EXTRACT_SCRIPT_ARGS+=( --debugfs)
@@ -650,7 +644,7 @@ $VGEN_SCRIPT --input "$FACTORY_IMGS_R_DATA" \
 
 if [ "$KEEP_DATA" = false ]; then
   if [ "$USE_DEBUGFS" = false ]; then
-    # Mount points are present only when fuse-ext2 is used
+    # Mount points are present only when ext4fuse is used
     unmount_raw_image "$FACTORY_IMGS_DATA/system"
     unmount_raw_image "$FACTORY_IMGS_DATA/vendor"
   fi

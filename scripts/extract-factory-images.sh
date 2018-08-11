@@ -28,15 +28,14 @@ usage() {
 cat <<_EOF
   Usage: $(basename "$0") [options]
     OPTIONS:
-      -d|--device   : Device codename
       -i|--input    : Archive with factory images as downloaded from
                       Google Nexus images website
       -o|--output   : Path to save contents extracted from images
       --conf-file   : Device configuration file
-      --debugfs     : Use debugfs instead of default fuse-ext2
+      --debugfs     : Use debugfs instead of default ext4fuse
 
     INFO:
-      * fuse-ext2 available at 'https://github.com/alperakcan/fuse-ext2'
+      * ext4fuse available at 'https://github.com/gerard/ext4fuse'
       * Caller is responsible to unmount mount points when done
       * debugfs support is experimental
 _EOF
@@ -106,7 +105,7 @@ mount_darwin() {
     fi
   fi
 
-  fuse-ext2 -o uid=$EUID,ro "$imgFile" "$mountPoint" &>"$mount_log" || {
+  ext4fuse -o logfile=/dev/stdout,uid=$EUID,ro "$imgFile" "$mountPoint" &>"$mount_log" || {
     echo "[-] '$imgFile' mount failed"
     cat "$mount_log"
     abort 1
@@ -117,7 +116,7 @@ mount_linux() {
   local imgFile="$1"
   local mountPoint="$2"
   local mount_log="$TMP_WORK_DIR/mount.log"
-  fuse-ext2 -o uid=$EUID,ro "$imgFile" "$mountPoint" &>"$mount_log" || {
+  ext4fuse -o logfile=/dev/stdout,uid=$EUID,ro "$imgFile" "$mountPoint" &>"$mount_log" || {
     echo "[-] '$imgFile' mount failed"
     cat "$mount_log"
     abort 1
@@ -180,7 +179,6 @@ trap "abort 1" SIGINT SIGTERM
 . "$CONSTS_SCRIPT"
 . "$COMMON_SCRIPT"
 
-DEVICE=""
 INPUT_ARCHIVE=""
 OUTPUT_DIR=""
 CONFIG_FILE=""
@@ -197,10 +195,6 @@ while [[ $# -gt 0 ]]
 do
   arg="$1"
   case $arg in
-    -d|--device)
-      DEVICE=$2
-      shift
-      ;;
     -o|--output)
       OUTPUT_DIR=$(echo "$2" | sed 's:/*$::')
       shift
@@ -228,7 +222,7 @@ done
 if [ "$USE_DEBUGFS" = true ]; then
   SYS_TOOLS+=("debugfs")
 else
-  SYS_TOOLS+=("fuse-ext2")
+  SYS_TOOLS+=("ext4fuse")
   # Platform specific commands
   if [[ "$HOST_OS" == "Darwin" ]]; then
     SYS_TOOLS+=("sw_vers")
