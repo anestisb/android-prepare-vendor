@@ -386,7 +386,7 @@ oatdump_repair() {
         fi
 
         local oatdump_log="$TMP_WORK_DIR/oatdump_log.txt"
-        $OATDUMP_BIN --oat-file="$curOdex" \
+        $OATDUMP_BIN --oat-file="$curOdex" --header-only \
              --export-dex-to="$TMP_WORK_DIR" &>"$oatdump_log" || {
           echo "[-] DEX dump from '$curOdex' failed"
           cat "$oatdump_log"
