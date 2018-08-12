@@ -410,6 +410,13 @@ oatdump_repair() {
       dexrepair -I "$TMP_WORK_DIR" &>/dev/null
       rm -f "$TMP_WORK_DIR/"*_export.dex
 
+      # Check if expected number of repaired files found
+      dexsRepaired=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_repaired.dex" | wc -l | tr -d ' ')
+      if [ "$dexsRepaired" -ne "$dexsExported" ]; then
+        echo "[-] '$dexsExported' DEX files exported, although only '$dexsRepaired' repaired"
+        abort 1
+      fi
+
       # Copy APK/jar to workspace for repair
       cp "$file" "$TMP_WORK_DIR"
 
