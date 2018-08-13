@@ -236,6 +236,15 @@ done
 # Check if script is running as root to directly use loopback instead of fuses
 if [ "$EUID" -eq 0 ]; then
   RUNS_WITH_ROOT=true
+  echo "[*] Running as root - using loopback for image mounts"
+else
+  if [ "$USE_FUSEEXT2" = true ]; then
+    echo "[*] Using fuse-ext2 for image mounts"
+  elif [ "$USE_DEBUGFS" = true ]; then
+    echo "[*] Using debugfs for image mounts"
+  else
+    echo "[*] Using ext4fuse for image mounts"
+  fi
 fi
 
 # Additional tools based on chosen image files data extraction method
