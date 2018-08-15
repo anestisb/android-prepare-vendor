@@ -173,6 +173,13 @@ oat2dex_repair() {
     zipRoot=$(dirname "$file")
     pkgName=$(basename "$file" ".$fileExt")
 
+    # If Apk/Jar is not stripped copy as is, otherwise start processing the optimized data
+    if zipinfo "$file" classes.dex &>/dev/null; then
+      echo "[*] '$relFile' bytecode is not stripped - copying without changes"
+      cp -a "$file" "$OUTPUT_SYS/$relDir"
+      continue
+    fi
+
     # Check if APK/jar bytecode is pre-optimized
     odexFound=0
     if [ -d "$zipRoot/oat" ]; then
@@ -188,13 +195,10 @@ oat2dex_repair() {
                   -iname "$pkgName*.dex" | wc -l | tr -d ' ')
     fi
     if [ "$odexFound" -eq 0 ]; then
-      # shellcheck disable=SC2015
-      zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-      } || {
+      if ! zipinfo "$file" classes.dex &>/dev/null; then
         echo "[!] '$relFile' not pre-optimized & without 'classes.dex' - copying without changes"
-      }
-      cp -a "$file" "$OUTPUT_SYS/$relDir"
+        cp -a "$file" "$OUTPUT_SYS/$relDir"
+      fi
     else
       # If pre-compiled, de-optimize to original DEX bytecode
       deoptSuccess=false
@@ -348,9 +352,16 @@ oatdump_repair() {
       fi
     fi
 
-    # For APK/jar files apply bytecode repair
+    # For Apk/Jar files apply bytecode repair
     zipRoot=$(dirname "$file")
     pkgName=$(basename "$file" ".$fileExt")
+
+    # If Apk/Jar is not stripped copy as is, otherwise start processing the optimized data
+    if zipinfo "$file" classes.dex &>/dev/null; then
+      echo "[*] '$relFile' bytecode is not stripped - copying without changes"
+      cp -a "$file" "$OUTPUT_SYS/$relDir"
+      continue
+    fi
 
     # Check if APK/jar bytecode is pre-optimized
     if [ -d "$zipRoot/oat" ]; then
@@ -359,13 +370,10 @@ oatdump_repair() {
                   wc -l | tr -d ' ')
     fi
     if [ "$odexFound" -eq 0 ]; then
-      # shellcheck disable=SC2015
-      zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-      } || {
+      if ! zipinfo "$file" classes.dex &>/dev/null; then
         echo "[!] '$relFile' not pre-optimized & without 'classes.dex' - copying without changes"
-      }
-      cp -a "$file" "$OUTPUT_SYS/$relDir"
+        cp -a "$file" "$OUTPUT_SYS/$relDir"
+      fi
     else
       # If pre-compiled, dump bytecode from oat .rodata section
       # If bytecode compiled for more than one ABIs - only the first is kept
@@ -523,6 +531,13 @@ smali_repair() {
     zipRoot=$(dirname "$file")
     pkgName=$(basename "$file" ".$fileExt")
 
+    # If Apk/Jar is not stripped copy as is, otherwise start processing the optimized data
+    if zipinfo "$file" classes.dex &>/dev/null; then
+      echo "[*] '$relFile' bytecode is not stripped - copying without changes"
+      cp -a "$file" "$OUTPUT_SYS/$relDir"
+      continue
+    fi
+
     # Check if APK/jar bytecode is pre-optimized
     odexFound=0
     if [ -d "$zipRoot/oat" ]; then
@@ -531,13 +546,10 @@ smali_repair() {
                   wc -l | tr -d ' ')
     fi
     if [ "$odexFound" -eq 0 ]; then
-      # shellcheck disable=SC2015
-      zipinfo "$file" classes.dex &>/dev/null && {
-        echo "[!] '$relFile' not pre-optimized with sanity checks passed - copying without changes"
-      } || {
+      if ! zipinfo "$file" classes.dex &>/dev/null; then
         echo "[!] '$relFile' not pre-optimized & without 'classes.dex' - copying without changes"
-      }
-      cp -a "$file" "$OUTPUT_SYS/$relDir"
+        cp -a "$file" "$OUTPUT_SYS/$relDir"
+      fi
     else
       deoptDir="$TMP_WORK_DIR/$pkgName/deopt"
       mkdir -p "$deoptDir"
