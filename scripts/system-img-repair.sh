@@ -397,6 +397,7 @@ oatdump_repair() {
         dexsExported=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_export.dex" | wc -l | tr -d ' ')
         if [ "$dexsExported" -eq 0 ]; then
           echo "[-] '$relFile' DEX export failed"
+          cat "$oatdump_log"
           abort 1
         else
           # Generate an empty directory under package dir with the detected ABI
