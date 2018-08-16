@@ -305,6 +305,7 @@ update_vendor_blobs_mk() {
 
   if [ $FORCE_VIMG = true ]; then
     echo '    $(PRODUCT_COPY_FILES)' >> "$BOARD_CONFIG_VENDOR_MK"
+    echo "" >> "$BOARD_CONFIG_VENDOR_MK"
   fi
 }
 
