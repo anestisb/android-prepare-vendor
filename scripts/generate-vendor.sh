@@ -166,11 +166,11 @@ extract_blobs() {
   local outDir_prop="$3/proprietary"
   local outDir_vendor="$3/vendor"
 
-  local src="" dst="" dstDir="" outBase="" openTag=""
+  local src="" dst="" dstDir="" outBase="" outPath="" openTag=""
 
   while read -r file
   do
-    # Input format allows optional store under a different directory
+    # Input format allows optional store under a different directory/name
     src=$(echo "$file" | cut -d ":" -f1)
     dst=$(echo "$file" | cut -d ":" -f2)
     if [[ "$dst" == "" ]]; then
@@ -212,18 +212,23 @@ extract_blobs() {
     if [ ! -d "$outBase/$dstDir" ]; then
       mkdir -p "$outBase/$dstDir"
     fi
-    cp -a "$inDir/$src" "$outBase/$dst" || {
+
+    # Keep the same file name when including the resource (will be renamed at build time when
+    # writing to destination)
+    outPath="$outBase/$dstDir/$(basename "$src")"
+
+    cp -a "$inDir/$src" "$outPath" || {
       echo "[-] Failed to copy '$src'"
       abort 1
     }
 
     # Some vendor xml files don't satisfy xmllint so fix here
     if [[ "${file##*.}" == "xml" ]]; then
-      openTag=$(grep '^<?xml version' "$outBase/$dst" || true )
+      openTag=$(grep '^<?xml version' "$outPath" || true )
       if [[ "$openTag" != "" ]]; then
-        grep -v '^<?xml version' "$outBase/$dst" > "$TMP_WORK_DIR/xml_fixup.tmp" || true
-        echo "$openTag" > "$outBase/$dst"
-        cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outBase/$dst"
+        grep -v '^<?xml version' "$outPath" > "$TMP_WORK_DIR/xml_fixup.tmp" || true
+        echo "$openTag" > "$outPath"
+        cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outPath"
         rm "$TMP_WORK_DIR/xml_fixup.tmp"
       fi
     fi
