@@ -580,6 +580,7 @@
         "system/etc/sysconfig/google_build.xml",
         "system/etc/sysconfig/google.xml",
         "system/etc/sysconfig/marlin_common.xml",
+        "system/etc/sysconfig/pixel_2016_exclusive.xml",
         "system/etc/sysconfig/whitelist_com.android.omadm.service.xml"
       ],
       "forced-modules": [
