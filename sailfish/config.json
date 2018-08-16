@@ -501,7 +501,7 @@
         "system/etc/cne/Nexus/ROW/ROW_profiles.xml",
         "system/etc/cne/Nexus/VZW/VZW_profiles.xml",
         "system/etc/old-apns-conf.xml",
-        "system/etc/permissions/privapp-permissions-marlin.xml",
+        "system/etc/permissions/privapp-permissions-marlin.xml:system/etc/permissions/privapp-permissions-apv.xml:google",
         "system/etc/sysconfig/nexus.xml",
         "system/lib64/libaptX_encoder.so",
         "system/lib64/libaptXHD_encoder.so",
@@ -531,7 +531,10 @@
       "new-modules": [],
       "dep-dso": [],
       "BoardConfigVendor": [],
-      "device-vendor": []
+      "device-vendor": [
+        "PRODUCT_PROPERTY_OVERRIDES += \\",
+        "    ro.control_privapp_permissions=enforce"
+      ]
     },
     "full": {
       "overlays-dir": "overlays-api26-full",
