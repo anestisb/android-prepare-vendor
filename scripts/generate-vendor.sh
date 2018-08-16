@@ -12,7 +12,7 @@ readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly REALPATH_SCRIPT="$SCRIPTS_DIR/realpath.sh"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
-readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_vendor_setup.XXXXXX) || exit 1
+readonly TMP_WORK_DIR=$(mktemp -d "${TMPDIR:-/tmp}"/android_vendor_setup.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jarsigner" "awk" "shasum")
 
 # Standalone symlinks. Need to also take care standalone firmware bin
@@ -55,7 +55,7 @@ cat <<_EOF
       --allow-preopt : [OPTIONAL] Don't disable LOCAL_DEX_PREOPT for /system
       --force-vimg   : [OPTIONAL] Always override AOSP definitions with included vendor blobs
     INFO:
-      * If '--aosp-root' is used intermediate output is set to /tmp and rsynced when success
+      * If '--aosp-root' is used intermediate output is set to tmp and rsynced when success
 _EOF
   abort 1
 }

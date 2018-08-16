@@ -10,7 +10,7 @@ set -u # fail on undefined variable
 readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
-readonly TMP_WORK_DIR=$(mktemp -d /tmp/android_img_download.XXXXXX) || exit 1
+readonly TMP_WORK_DIR=$(mktemp -d "${TMPDIR:-/tmp}"/android_img_download.XXXXXX) || exit 1
 declare -a SYS_TOOLS=("curl" "wget")
 
 abort() {
