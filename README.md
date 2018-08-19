@@ -135,16 +135,16 @@ vendor blobs).
 
 
 ## Supported devices
-| Device                          | API 23                      | API 24           | API 25           | API 26  | API 27  |
-| ------------------------------- | --------------------------- | -----------------| -----------------| --------| --------|
-| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump | oatdump |
-| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump | oatdump |
-| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A     | N/A     |
-| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A     | N/A     |
-| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | oatdump | oatdump |
-| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump | oatdump |
-| Pixel 2 walleye                 | N/A                         | N/A              | N/A              | oatdump | oatdump |
-| Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | oatdump | oatdump |
+| Device                          | API 23                      | API 24           | API 25           | API 26  | API 27  | API 28  |
+| ------------------------------- | --------------------------- | -----------------| -----------------| --------| --------| --------|
+| N5x bullhead                    | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump | oatdump | N/A     |
+| N6p angler                      | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | oatdump | oatdump | N/A     |
+| N9 flounder<br> WiFi (volantis) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A     | N/A     | N/A     |
+| N9 flounder<br> LTE (volantisg) | smaliex<br>smali<br>oatdump | oatdump<br>smali | oatdump<br>smali | N/A     | N/A     | N/A     |
+| Pixel sailfish                  | N/A                         | N/A              | oatdump<br>smali | oatdump | oatdump | oatdump |
+| Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump | oatdump | oatdump |
+| Pixel 2 walleye                 | N/A                         | N/A              | N/A              | oatdump | oatdump | oatdump |
+| Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | oatdump | oatdump | oatdump |
 
 
 Please check existing
@@ -156,6 +156,13 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.5.0 - XXX
+  * API-28 support for Pixel (sailfish), Pixel XL (marlin), Pixel 2 (walleye) & Pixel 2 XL (taimen)
+  * Use env's TMPDIR if set instead of defaulting to /tmp
+  * Restore option to mount with fuse-ext2 (`--fuse-ext2`)
+  * Add option to mount via loopback when running script as root
+  * oatdump repair method performance improvements
+  * Improve error handling and output formating
 * 0.4.1 - 11 August 2018
   * Pixel 2 (walleye) support for API 26 & 27
   * Pixel 2 XL (taimen) support for API 26 & 27 (credits to @deeproot2k)
