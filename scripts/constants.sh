@@ -25,7 +25,7 @@ readonly D_OATDUMP_URL_API26_2='https://onedrive.live.com/download?cid=D1FAC8CC6
 readonly L_OATDUMP_URL_API27='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21566&authkey=AKWYYxBfd7NMW_k'
 readonly D_OATDUMP_URL_API27='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21567&authkey=AF-cDubRkZdjRxY'
 readonly L_OATDUMP_URL_API28='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21574&authkey=ADSQA_DtfAmmk2c'
-readonly D_OATDUMP_URL_API28='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21576&authkey=AGOVRCZzc27gsc0'
+readonly D_OATDUMP_URL_API28='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21582&authkey=ABMMORAJ-GGjs2k'
 
 
 readonly L_OATDUMP_API23_SIG='688f1c1f97e3b9eb32702c60ca05abbf313bc98a25334aa3ed4a108095162244'
