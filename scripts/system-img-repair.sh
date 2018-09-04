@@ -423,7 +423,7 @@ oatdump_repair() {
       dexsRepaired=$(find "$TMP_WORK_DIR" -maxdepth 1 -type f -name "*_repaired.dex" | wc -l | tr -d ' ')
       if [ "$dexsRepaired" -ne "$dexsExported" ]; then
         echo "[-] '$dexsExported' DEX files exported, although only '$dexsRepaired' repaired"
-        echo "[-] '$pkgName' bytecode repair failed (most probably due to CDEX)"
+        echo "[-] '$pkgName' bytecode repair failed"
         abort 1
       fi
 

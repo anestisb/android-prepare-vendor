@@ -40,8 +40,8 @@ readonly L_OATDUMP_API26_2_SIG='22ab2469d32fbb1a4010528695c0c71ed1a3f7f5e956971b
 readonly D_OATDUMP_API26_2_SIG='03b603c09c1dfbdffa0518d39f5d7e5fcf04eac2e8b11bec27f2e4c36b162689'
 readonly L_OATDUMP_API27_SIG='e8363ecbd6bc6bd4d3e86e5a59adfa77f62c3f765f4bb8d32706a538831357ac'
 readonly D_OATDUMP_API27_SIG='2aaab14d1178845bf9d08b06b7afd3dfd845e882c9bf2c403593940a39ff3449'
-readonly L_OATDUMP_API28_SIG='147dc1bb83a9f9edb1107760b5935760e6acf977131032c0da88aadf0f4a8e68'
-readonly D_OATDUMP_API28_SIG='7215bb0b6d5a073088f6daff6181e726f4137bc3b6b38bd9ab88effbda157859'
+readonly L_OATDUMP_API28_SIG='394a47491de4def3b825b22713f5ecfd8f16e00497f35213ffd83c2cc709384e'
+readonly D_OATDUMP_API28_SIG='95ce6c296c5115861db3c876eb5bfd11cdc34deebace18462275368492c6ea87'
 
 # sub-directories that contain bytecode archives
 declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel" "product")

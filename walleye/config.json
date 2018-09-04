@@ -315,8 +315,11 @@
         "system/framework/com.quicinc.cne.api-V1.0-java.jar",
         "system/framework/com.quicinc.cne.jar",
         "system/framework/embmslibrary.jar",
+        "system/framework/libhwinfo.jar",
+        "system/framework/PowerAnomalyDataModemInterface.jar",
         "system/framework/qcrilhook.jar",
         "system/framework/rcsimssettings.jar",
+        "system/framework/vendor.qti.qcril.am-V1.0-java.jar",
         "system/priv-app/CNEService/CNEService.apk",
         "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk"
       ],
