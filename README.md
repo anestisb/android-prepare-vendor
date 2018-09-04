@@ -156,8 +156,12 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
-* 0.5.0 - XXX
-  * API-28 support for Pixel (sailfish), Pixel XL (marlin), Pixel 2 (walleye) & Pixel 2 XL (taimen)
+* 0.5.0 - 4 September 2018
+  * Android 9 (API-28) support for Pixel (sailfish), Pixel XL (marlin), Pixel 2 (walleye) & Pixel 2
+    XL (taimen)
+  * Developed an oatdump patch (see
+    [here](https://gist.github.com/anestisb/26ecf8ae13746dc476eddd8d04a5dd23)) to handle CompactDex
+    introduced in Android 9
   * Use env's TMPDIR if set instead of defaulting to /tmp
   * Restore option to mount with fuse-ext2 (`--fuse-ext2`)
   * Add option to mount via loopback when running script as root
