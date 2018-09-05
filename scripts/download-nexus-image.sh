@@ -161,7 +161,7 @@ fi
 
 # Then retrieve the index page
 url=$(curl -L -b "$COOKIE_FILE" --silent -H "X_XSRFToken: $xsrf_token" "$GURL" | \
-      grep -i "<a href=.*$DEV_ALIAS-$BUILDID" | cut -d '"' -f2)
+      grep -i "<a href=.*$DEV_ALIAS-$BUILDID-" | cut -d '"' -f2)
 if [ "$url" == "" ]; then
   echo "[-] Image URL not found"
   abort 1
