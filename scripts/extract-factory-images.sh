@@ -252,7 +252,7 @@ if [ "$RUNS_WITH_ROOT" = true ]; then
   SYS_TOOLS+=("mount")
 elif [ "$USE_DEBUGFS" = true ]; then
   SYS_TOOLS+=("debugfs")
-elif [ "$USE_FUSEEXT2" ]; then
+elif [ "$USE_FUSEEXT2" = true ]; then
   SYS_TOOLS+=("fuse-ext2")
 else
   SYS_TOOLS+=("ext4fuse")
