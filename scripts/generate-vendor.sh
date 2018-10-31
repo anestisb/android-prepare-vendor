@@ -227,6 +227,7 @@ extract_blobs() {
       openTag=$(grep '^<?xml version' "$outPath" || true )
       if [[ "$openTag" != "" ]]; then
         grep -v '^<?xml version' "$outPath" > "$TMP_WORK_DIR/xml_fixup.tmp" || true
+        rm -f "$outPath"
         echo "$openTag" > "$outPath"
         cat "$TMP_WORK_DIR/xml_fixup.tmp" >> "$outPath"
         rm "$TMP_WORK_DIR/xml_fixup.tmp"
