@@ -29,6 +29,14 @@ taimen/*
 !taimen/config.json
 !taimen/overlays-*
 
+blueline/*
+!blueline/config.json
+!blueline/overlays-*
+
+crosshatch/*
+!crosshatch/config.json
+!crosshatch/overlays-*
+
 # Due to large files they're downloaded at manual step
 # and not part of git files
 hostTools/Linux/api*

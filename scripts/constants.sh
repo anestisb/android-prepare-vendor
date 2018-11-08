@@ -4,7 +4,7 @@
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && exit 1
 
 # List of supported devices
-declare -ra SUPPORTED_DEVICES=("bullhead" "flounder" "angler" "sailfish" "marlin" "walleye" "taimen")
+declare -ra SUPPORTED_DEVICES=("bullhead" "flounder" "angler" "sailfish" "marlin" "walleye" "taimen" "blueline" "crosshatch")
 
 # URLs to download factory images from
 readonly NID_URL="https://google.com"
