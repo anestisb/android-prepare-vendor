@@ -30,6 +30,7 @@
         "system/app/embms/embms.apk",
         "system/app/ims/ims.apk",
         "system/app/QAS_DVC_MSP/QAS_DVC_MSP.apk",
+        "system/app/QtiTelephonyService/QtiTelephonyService.apk",
         "system/framework/com.qualcomm.qti.uceservice-V2.0-java.jar",
         "system/framework/embmslibrary.jar",
         "system/framework/qcrilhook.jar",
