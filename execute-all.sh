@@ -88,6 +88,13 @@ check_bash_version() {
   fi
 }
 
+dir_exists_or_create() {
+  local path="$1"
+  if [[ ! -d "$path" ]]; then
+    mkdir -p "$path"
+  fi
+}
+
 check_compatible_system() {
   local hostOS
   hostOS=$(uname -s)
@@ -329,6 +336,7 @@ do
   arg="$1"
   case $arg in
     -o|--output)
+      dir_exists_or_create "$2"
       OUTPUT_DIR="$(_realpath "$2")"
       shift
       ;;
