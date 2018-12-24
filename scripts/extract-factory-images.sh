@@ -66,12 +66,7 @@ extract_vendor_partition_size() {
   local out_file="$2/vendor_partition_size"
   local size=""
 
-  if [[ "$(uname)" == "Darwin" ]]; then
-    size="$(stat -f %z "$vendor_img_raw")"
-  else
-    size="$(du -b "$vendor_img_raw" | tr '\t' ' ' | cut -d' ' -f1)"
-  fi
-
+  size="$((du -b "$vendor_img_raw" || stat -f %z "$vendor_img_raw" || echo "") 2>/dev/null | tr '\t' ' ' | cut -d' ' -f1)"
   if [[ "$size" == "" ]]; then
     echo "[!] Failed to extract vendor partition size from '$vendor_img_raw'"
     abort 1
