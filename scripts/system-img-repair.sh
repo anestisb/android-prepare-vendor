@@ -33,7 +33,7 @@ readonly SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly CONSTS_SCRIPT="$SCRIPTS_DIR/constants.sh"
 readonly COMMON_SCRIPT="$SCRIPTS_DIR/common.sh"
 readonly TMP_WORK_DIR=$(mktemp -d "${TMPDIR:-/tmp}"/android_img_repair.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("cp" "sed" "zipinfo" "jar" "zip" "wc" "cut" "dexrepair")
+declare -a SYS_TOOLS=("cp" "touch" "date" "sed" "zipinfo" "jar" "zip" "wc" "cut" "dexrepair")
 
 abort() {
   # If debug keep work dir for bugs investigation
@@ -60,6 +60,7 @@ cat <<_EOF
       --bytecode-list : [OPTIONAL] list with bytecode archive files to be included in
                         generated MKs. When provided only required bytecode is repaired,
                         otherwise all bytecode in partition is repaired.
+      --timestamp     : [OPTIONAL] Timestamp to use for all extracted bytecode files (seconds since Epoch)
     INFO:
       * Input path expected to be system root as extracted from factory system image
       * Download oat2dex.jar from 'https://github.com/testwhat/SmaliEx'
@@ -70,6 +71,16 @@ cat <<_EOF
       * '--bytecode-list' flag is provided to speed up things in case only specific files are wanted
 _EOF
   abort 1
+}
+
+# Cover as many cases as possible (Linux, macOS with BSD, macOS with GNU)
+stamp_file() {
+  local _tstamp="$1"
+  local _file="$2"
+
+  touch -d @"$_tstamp" "$_file" 2>/dev/null || \
+    touch -d "$(date -r "$_tstamp" +%Y%m%d%H%M.%S)" "$_file" 2>/dev/null || \
+      echo "[-] File timestamp failed"
 }
 
 # Print RAM size memory warning when using smali jar tools
@@ -258,6 +269,7 @@ oat2dex_repair() {
         while [ -f "$curMultiDex" ]
         do
           mv "$curMultiDex" "$TMP_WORK_DIR/classes$counter.dex"
+          stamp_file "$TIMESTAMP" "$TMP_WORK_DIR/classes$counter.dex"
           jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
                "classes$counter.dex" &>/dev/null || {
             echo "[-] '$fileName' 'classes$counter.dex' append failed"
@@ -271,6 +283,7 @@ oat2dex_repair() {
       fi
 
       mv "$TMP_WORK_DIR/$pkgName.dex" "$TMP_WORK_DIR/classes.dex"
+      stamp_file "$TIMESTAMP" "$TMP_WORK_DIR/classes.dex"
       jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
            classes.dex &>/dev/null || {
         echo "[-] '$fileName' classes.dex append failed"
@@ -442,6 +455,7 @@ oatdump_repair() {
         while [ "$curMultiDex" != "" ]
         do
           mv "$curMultiDex" "$TMP_WORK_DIR/classes$counter.dex"
+          stamp_file "$TIMESTAMP" "$TMP_WORK_DIR/classes$counter.dex"
           jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
                "classes$counter.dex" &>/dev/null || {
             echo "[-] '$fileName' 'classes$counter.dex' append failed"
@@ -457,6 +471,7 @@ oatdump_repair() {
 
       # All archives have at least one "classes.dex"
       mv "$TMP_WORK_DIR/"*_repaired.dex "$TMP_WORK_DIR/classes.dex"
+      stamp_file "$TIMESTAMP" "$TMP_WORK_DIR/classes.dex"
       jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR" \
          classes.dex &>/dev/null || {
         echo "[-] '$fileName' classes.dex append failed"
@@ -630,6 +645,7 @@ smali_repair() {
       find "$TMP_WORK_DIR/$pkgName" -maxdepth 1 -name "*.dex" | while read -r dexFile
       do
         dexEntry="$(basename "$dexFile")"
+        stamp_file "$TIMESTAMP" "$dexEntry"
         jar -uf "$TMP_WORK_DIR/$fileName" -C "$TMP_WORK_DIR/$pkgName" \
              "$dexEntry" &>/dev/null || {
           echo "[-] '$fileName' $dexEntry append failed"
@@ -665,6 +681,7 @@ INPUT_DIR=""
 OUTPUT_DIR=""
 REPAIR_METHOD=""
 BYTECODE_LIST_FILE=""
+TIMESTAMP="$(date +%s)"
 
 # Paths for external tools provided from args
 OAT2DEX_JAR=""
@@ -712,6 +729,10 @@ do
       BYTECODE_LIST_FILE="$2"
       shift
       ;;
+    --timestamp)
+      TIMESTAMP="$2"
+      shift
+      ;;
     *)
       echo "[-] Invalid argument '$1'"
       usage
@@ -738,7 +759,6 @@ check_opt_file "$OAT2DEX_JAR" "oat2dex.jar"
 check_opt_file "$OATDUMP_BIN" "oatdump"
 check_opt_file "$SMALI_JAR" "smali.jar"
 check_opt_file "$BAKSMALI_JAR" "baksmali.jar"
-
 
 # Verify input is an Android system partition
 if [ ! -f "$INPUT_DIR/build.prop" ]; then

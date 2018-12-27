@@ -9,7 +9,7 @@ set -u # fail on undefined variable
 
 readonly SCRIPTS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly TMP_WORK_DIR=$(mktemp -d "${TMPDIR:-/tmp}"/android_prepare_vendor.XXXXXX) || exit 1
-declare -a SYS_TOOLS=("mkdir" "dirname" "wget" "mount" "shasum" "unzip")
+declare -a SYS_TOOLS=("mkdir" "dirname" "date" "touch" "wget" "mount" "shasum" "unzip")
 readonly HOST_OS="$(uname -s)"
 
 # Realpath implementation in bash
@@ -69,6 +69,7 @@ cat <<_EOF
       --smaliex    : [OPTIONAL] Force use of smaliEx to revert pre-optimized bytecode [DEPRECATED]
       --deodex-all : [OPTIONAL] De-optimize all packages under /system (default: false)
       --force-vimg : [OPTIONAL] Force factory extracted blobs under /vendor to be always used regardless AOSP definitions (default: false)
+      --timestamp  : [OPTIONAL] Timestamp to use for all extracted bytecode files (seconds since Epoch)
 
     INFO:
       * Default configuration is naked. Use "-f|--full" if you plan to install Google Play Services
@@ -292,6 +293,18 @@ check_supported_api() {
   abort 1
 }
 
+is_valid_date() {
+  local _tstamp="$1"
+  local _date=""
+  _date=$(date -d @"$_tstamp" 2>/dev/null || date -r "$_tstamp" 2>/dev/null || echo "")
+  if [[ "$_date" != "" ]]; then
+    echo "[*] Using '$_date' timestamp for all the repaired bytecode entries"
+  else
+    echo "[-] '$1' is an invalid date. Should be seconds since Epoch"
+    abort 1
+  fi
+}
+
 trap "abort 1" SIGINT SIGTERM
 . "$REALPATH_SCRIPT"
 . "$CONSTS_SCRIPT"
@@ -325,6 +338,7 @@ USE_DEBUGFS=false
 USE_FUSEEXT2=false
 FORCE_VIMG=false
 JAVA_FOUND=false
+TIMESTAMP=""
 
 # Compatibility
 check_bash_version
@@ -395,6 +409,10 @@ do
       ;;
     --force-vimg)
       FORCE_VIMG=true
+      ;;
+    --timestamp)
+      TIMESTAMP="$2"
+      shift
       ;;
     *)
       echo "[-] Invalid argument '$1'"
@@ -636,6 +654,12 @@ if [ $DEODEX_ALL = false ]; then
   BYTECODE_LIST="$TMP_WORK_DIR/bytecode_list.txt"
   jqIncRawArray "$API_LEVEL" "$CONFIG_TYPE" "system-bytecode" "$CONFIG_FILE" > "$BYTECODE_LIST"
   REPAIR_SCRIPT_ARG+=( --bytecode-list "$BYTECODE_LIST")
+fi
+
+# If a timestamp is set, pass it to repair script
+if [[ "$TIMESTAMP" != "" ]]; then
+  is_valid_date "$TIMESTAMP"
+  REPAIR_SCRIPT_ARG+=( --timestamp "$TIMESTAMP")
 fi
 
 $REPAIR_SCRIPT --method "$BYTECODE_REPAIR_METHOD" --input "$SYSTEM_ROOT" \
