@@ -487,16 +487,20 @@ gen_standalone_symlinks() {
 
     local dst="${S_SLINKS_DST[$cnt]}"
     local src="${S_SLINKS_SRC[$cnt]}"
+    local linknm=""
 
     # Skip symbolic links the destination of which is under bytecode directories
     if [[ "$dst" == *app/* ]]; then
       continue
     fi
 
-    # Skip toybox & toolbox links since already built from AOSP
+    linknm="$(basename "$link")"
+
+    # Skip toybox, toolbox & grep links since already built from AOSP
     #  - external/toybox/Android.mk#419
     #  - system/core/toolbox/Android.bp#79
-    if [[ "$(basename "$link")" == "toybox_vendor" || "$(basename "$link")" == "toolbox" ]]; then
+    #  - system/core/toolbox/Android.bp
+    if [[ "$linknm" == "toybox_vendor" || "$linknm" == "toolbox" || "$linknm" == "grep" ]]; then
       continue
     fi
 

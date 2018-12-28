@@ -59,6 +59,7 @@ declare -ra VENDOR_SKIP_FILES=(
   "manifest.xml"
   "bin/toybox_vendor"
   "bin/toolbox"
+  "bin/grep"
 )
 
 # Files to skip from vendor partition when parsing factory images (for naked config only)
