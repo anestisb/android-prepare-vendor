@@ -57,6 +57,8 @@ declare -ra VENDOR_SKIP_FILES=(
   "etc/NOTICE.xml.gz"
   "etc/wifi/wpa_supplicant.conf"
   "manifest.xml"
+  "bin/toybox_vendor"
+  "bin/toolbox"
 )
 
 # Files to skip from vendor partition when parsing factory images (for naked config only)

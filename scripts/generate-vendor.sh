@@ -493,6 +493,13 @@ gen_standalone_symlinks() {
       continue
     fi
 
+    # Skip toybox & toolbox links since already built from AOSP
+    #  - external/toybox/Android.mk#419
+    #  - system/core/toolbox/Android.bp#79
+    if [[ "$(basename "$link")" == "toybox_vendor" || "$(basename "$link")" == "toolbox" ]]; then
+      continue
+    fi
+
     if [[ "$link" == *lib64/*.so ]]; then
       pkgName="$(basename "$link" .so)_64.so__$(basename "$dst")"
     elif [[ "$link" == *lib/*.so ]]; then
