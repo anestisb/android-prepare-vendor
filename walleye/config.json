@@ -394,7 +394,7 @@
         "system/app/VZWAPNLib/VZWAPNLib.apk",
         "system/app/vzw_msdc_api/vzw_msdc_api.apk",
         "system/framework/VerizonUnifiedSettings.jar",
-        "system/priv-app/AmbientSensePrebuilt/AmbientSensePrebuilt.apk",
+        "system/priv-app/AmbientSensePrebuilt/AmbientSensePrebuilt.apk::PRESIGNED",
         "system/priv-app/HotwordEnrollmentOKGoogleWCD9340/HotwordEnrollmentOKGoogleWCD9340.apk::PRESIGNED",
         "system/priv-app/HotwordEnrollmentTGoogleWCD9340/HotwordEnrollmentTGoogleWCD9340.apk::PRESIGNED",
         "system/priv-app/HotwordEnrollmentXGoogleWCD9340/HotwordEnrollmentXGoogleWCD9340.apk::PRESIGNED",
