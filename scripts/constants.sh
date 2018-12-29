@@ -4,7 +4,17 @@
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && exit 1
 
 # List of supported devices
-declare -ra SUPPORTED_DEVICES=("bullhead" "flounder" "angler" "sailfish" "marlin" "walleye" "taimen" "blueline" "crosshatch")
+declare -ra SUPPORTED_DEVICES=(
+  "bullhead"      # Nexus 5x
+  "flounder"      # Nexus 9
+  "angler"        # Nexus 6p
+  "sailfish"      # Pixel
+  "marlin"        # Pixel XL
+  "walleye"       # Pixel 2
+  "taimen"        # Pixel 2 XL
+  "blueline"      # Pixel 3
+  "crosshatch"    # Pixel 3 XL
+)
 
 # URLs to download factory images from
 readonly NID_URL="https://google.com"
@@ -44,7 +54,7 @@ readonly L_OATDUMP_API28_SIG='394a47491de4def3b825b22713f5ecfd8f16e00497f35213ff
 readonly D_OATDUMP_API28_SIG='95ce6c296c5115861db3c876eb5bfd11cdc34deebace18462275368492c6ea87'
 
 # sub-directories that contain bytecode archives
-declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay/Pixel" "product" "overlay")
+declare -ra SUBDIRS_WITH_BC=("app" "framework" "priv-app" "overlay" "product")
 
 # ART runtime files
 declare -ra ART_FILE_EXTS=("odex" "oat" "art" "vdex")
@@ -60,6 +70,10 @@ declare -ra VENDOR_SKIP_FILES=(
   "bin/toybox_vendor"
   "bin/toolbox"
   "bin/grep"
+  "overlay/DisplayCutoutEmulationCorner/DisplayCutoutEmulationCornerOverlay.apk"
+  "overlay/DisplayCutoutEmulationDoubleOverlay/DisplayCutoutEmulationDoubleOverlay.apk"
+  "overlay/DisplayCutoutEmulationTallOverlay/DisplayCutoutEmulationTallOverlay.apk"
+  "overlay/NoCutoutOverlay/NoCutoutOverlay.apk"
 )
 
 # Files to skip from vendor partition when parsing factory images (for naked config only)

@@ -715,8 +715,7 @@ gen_mk_for_bytecode() {
 
     # Add to global array
     ALL_BC_PKGS+=("$pkgName")
-  done < <(find "$outBase/$relRoot/$relSubRoot" -maxdepth 2 \
-           -type f -iname '*.apk' -o -iname '*.jar' | sort)
+  done < <(find "$outBase/$relRoot/$relSubRoot" -type f -iname '*.apk' -o -iname '*.jar' | sort)
 
   # Update vendor mk
   {
