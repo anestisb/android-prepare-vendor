@@ -71,11 +71,11 @@ declare -ra VENDOR_SKIP_FILES=(
   "bin/toolbox"
   "bin/grep"
   "overlay/DisplayCutoutEmulationCorner/DisplayCutoutEmulationCornerOverlay.apk"
-  "overlay/DisplayCutoutEmulationDoubleOverlay.apk"
-  "overlay/DisplayCutoutEmulationTallOverlay.apk"
+  "overlay/DisplayCutoutEmulationDouble/DisplayCutoutEmulationDoubleOverlay.apk"
+  "overlay/DisplayCutoutEmulationTall/DisplayCutoutEmulationTallOverlay.apk"
+  "overlay/DisplayCutoutNoCutout/NoCutoutOverlay.apk"
   "overlay/framework-res__auto_generated_rro.apk"
-  "overlay/NoCutoutOverlay.apk"
-  "overlay/SysuiDarkThemeOverlay.apk"
+  "overlay/SysuiDarkTheme/SysuiDarkThemeOverlay.apk"
 )
 
 # Files to skip from vendor partition when parsing factory images (for naked config only)
