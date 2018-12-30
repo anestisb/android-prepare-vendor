@@ -554,7 +554,7 @@ gen_mk_for_bytecode() {
   local -a pkgs
   local -a pkgs_SLinks
 
-  local origin="" zipName="" fileExt="" pkgName="" src="" class="" suffix=""
+  local origin="" zipName="" fileExt="" pkgName="" src="" class="" suffix="" relPkgDir=""
   local priv="" cert="" stem="" lcMPath="" appDir="" dsoRootBase="" dsoRoot=""
   local dsoName="" dsoMName="" arch="" apk_lib_slinks=""
   local has_bc_file
@@ -575,6 +575,7 @@ gen_mk_for_bytecode() {
 
   while read -r file
   do
+    relPkgDir="$(dirname "$file" | sed -e "s#$outBase/$relRoot/$relSubRoot##g")"
     zipName=$(basename "$file")
     fileExt="${zipName##*.}"
     pkgName=$(basename "$file" ".$fileExt")
@@ -589,6 +590,8 @@ gen_mk_for_bytecode() {
     elif [[ "$fileExt" == "apk" ]]; then
       if [ -d "$outBase/$relRoot/$relSubRoot/$pkgName" ]; then
         src="$relRoot/$relSubRoot/$pkgName/$zipName"
+      elif [ -d "$outBase/$relRoot/$relSubRoot/$relPkgDir" ]; then
+        src="$relRoot/$relSubRoot/$relPkgDir/$zipName"
       else
         src="$relRoot/$relSubRoot/$zipName"
       fi
