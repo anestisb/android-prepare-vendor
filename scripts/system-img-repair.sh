@@ -186,7 +186,7 @@ oat2dex_repair() {
 
     # If Apk/Jar is not stripped copy as is, otherwise start processing the optimized data
     if zipinfo "$file" classes.dex &>/dev/null; then
-      echo "[*] '$relFile' bytecode is not stripped - copying without changes"
+      echo "[!] '$relFile' bytecode is not stripped - copying without changes"
       cp -a "$file" "$OUTPUT_SYS/$relDir"
       continue
     fi
@@ -371,7 +371,7 @@ oatdump_repair() {
 
     # If Apk/Jar is not stripped copy as is, otherwise start processing the optimized data
     if zipinfo "$file" classes.dex &>/dev/null; then
-      echo "[*] '$relFile' bytecode is not stripped - copying without changes"
+      echo "[!] '$relFile' bytecode is not stripped - copying without changes"
       cp -a "$file" "$OUTPUT_SYS/$relDir"
       continue
     fi
@@ -548,7 +548,7 @@ smali_repair() {
 
     # If Apk/Jar is not stripped copy as is, otherwise start processing the optimized data
     if zipinfo "$file" classes.dex &>/dev/null; then
-      echo "[*] '$relFile' bytecode is not stripped - copying without changes"
+      echo "[!] '$relFile' bytecode is not stripped - copying without changes"
       cp -a "$file" "$OUTPUT_SYS/$relDir"
       continue
     fi
