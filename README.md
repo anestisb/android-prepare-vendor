@@ -145,6 +145,8 @@ vendor blobs).
 | Pixel XL marlin                 | N/A                         | N/A              | oatdump<br>smali | oatdump | oatdump | oatdump |
 | Pixel 2 walleye                 | N/A                         | N/A              | N/A              | oatdump | oatdump | oatdump |
 | Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | oatdump | oatdump | oatdump |
+| Pixel 3 blueline                | N/A                         | N/A              | N/A              | N/A     | N/A     | oatdump |
+| Pixel 3 XL crosshatch           | N/A                         | N/A              | N/A              | N/A     | N/A     | oatdump |
 
 
 Please check existing
@@ -156,6 +158,12 @@ If you want to contribute to device configuration files, please test against the
 target device before any pull request.
 
 ## Change Log
+* 0.6.0 - TBC
+  * Android 9 (API-28) support for Pixel 3 (blueline) & Pixel 3 XL (crosshatch) - WIP
+  * Improve support for deterministic builds (`--timestamp` option)
+  * Compatibility fixes in image downloader logic
+  * Create output directory if does not exist
+  * Remove prebuilts that are available in AOSP
 * 0.5.0 - 4 September 2018
   * Android 9 (API-28) support for Pixel (sailfish), Pixel XL (marlin), Pixel 2 (walleye) & Pixel 2
     XL (taimen)
