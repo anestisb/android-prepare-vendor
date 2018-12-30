@@ -430,7 +430,7 @@ gen_dev_vendor_family_cfg_mk() {
 
   # So far required for Pixel 3rd generation
   if [[ "$DEVICE_FAMILY" == "crosshatch" ]]; then
-    familyDevVendorCfgMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/proprietary/device-vendor.mk)"
+    familyDevVendorCfgMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/proprietary/device-vendor.mk"
     majorTarget="crosshatch"
     minorTarget="blueline"
   else
