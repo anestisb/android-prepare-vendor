@@ -945,7 +945,7 @@ update_ab_ota_partitions() {
 
   {
     echo "# Partitions to add in AB OTA images"
-    echo 'AB_OTA_PARTITIONS += vendor \'
+    echo 'AB_OTA_PARTITIONS += \'
     for partition in "${EXTRA_IMGS[@]}"
     do
       echo "    $partition \\"

@@ -18,6 +18,7 @@
     "msadp",
     "pmic",
     "rpm",
+    "vendor",
     "tz",
     "xbl"
   ],

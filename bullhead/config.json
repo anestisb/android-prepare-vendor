@@ -6,7 +6,9 @@
   "aosp-vendor-dir": "lge",
   "device-family": "bullhead",
   "supported-apis": ["api-23", "api-24", "api-25", "api-26", "api-27"],
-  "extra-partitions": [],
+  "extra-partitions": [
+    "vendor"
+  ],
   "AndroidMk": "bullhead/Android.mk",
   "BoardConfigVendorMk": "bullhead/BoardConfigVendor.mk",
   "DeviceVendorMk": "bullhead/device-vendor.mk",
