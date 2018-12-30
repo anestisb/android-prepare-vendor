@@ -398,20 +398,55 @@ gen_board_cfg_mk() {
 }
 
 gen_board_family_cfg_mk() {
-  # So far required only for Pixel 1st generation
+  local familyBoardCfgVendorMk="" majorTarget="" minorTarget=""
+
+  # So far required for Pixel 1st & 3rd generation
   if [[ "$DEVICE_FAMILY" == "marlin" ]]; then
-    local familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
-    {
-      echo "# [$EXEC_DATE] Auto-generated file, do not edit"
-      echo ""
-      echo 'ifneq ($(filter sailfish,$(TARGET_DEVICE)),)'
-      echo '  LOCAL_STEM := sailfish/BoardConfigVendorPartial.mk'
-      echo 'else'
-      echo '  LOCAL_STEM := marlin/BoardConfigVendorPartial.mk'
-      echo 'endif'
-      echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
-    } > "$familyBoardCfgVendorMk"
+    familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/BoardConfigVendor.mk"
+    majorTarget="marlin"
+    minorTarget="sailfish"
+  elif [[ "$DEVICE_FAMILY" == "crosshatch" ]]; then
+    familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/proprietary/BoardConfigVendor.mk"
+    majorTarget="crosshatch"
+    minorTarget="blueline"
+  else
+    return
   fi
+
+  {
+    echo "# [$EXEC_DATE] Auto-generated file, do not edit"
+    echo ""
+    echo "ifneq (\$(filter $minorTarget,\$(TARGET_DEVICE)),)"
+    echo "  LOCAL_STEM := $minorTarget/BoardConfigVendorPartial.mk"
+    echo "else"
+    echo "  LOCAL_STEM := $majorTarget/BoardConfigVendorPartial.mk"
+    echo "endif"
+    echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
+  } > "$familyBoardCfgVendorMk"
+}
+
+gen_dev_vendor_family_cfg_mk() {
+  local familyDevVendorCfgMk="" majorTarget="" minorTarget=""
+
+  # So far required for Pixel 3rd generation
+  if [[ "$DEVICE_FAMILY" == "crosshatch" ]]; then
+    familyDevVendorCfgMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/proprietary/device-vendor.mk)"
+    majorTarget="crosshatch"
+    minorTarget="blueline"
+  else
+    return
+  fi
+
+  {
+    echo "# [$EXEC_DATE] Auto-generated file, do not edit"
+    echo ""
+    echo "ifneq (\$(filter $minorTarget,\$(TARGET_DEVICE)),)"
+    echo "  LOCAL_STEM := $minorTarget/device-vendor-partial.mk"
+    echo "else"
+    echo "  LOCAL_STEM := $majorTarget/device-vendor-partial.mk"
+    echo "endif"
+    echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
+  } > "$familyDevVendorCfgMk"
 }
 
 gen_board_info_txt() {
@@ -1199,6 +1234,7 @@ update_vendor_blobs_mk "$BLOBS_LIST"
 
 # Generate device-vendor.mk makefile (will be updated later)
 echo "[*] Generating '$(basename "$DEVICE_VENDOR_MK")'"
+gen_dev_vendor_family_cfg_mk
 echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
 # Append items listed in device vendor configuration file

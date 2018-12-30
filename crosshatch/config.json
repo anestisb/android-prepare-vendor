@@ -23,8 +23,8 @@
     "xbl_config"
   ],
   "AndroidMk": "crosshatch/Android.mk",
-  "BoardConfigVendorMk": "crosshatch/proprietary/BoardConfigVendor.mk",
-  "DeviceVendorMk": "crosshatch/proprietary/device-vendor.mk",
+  "BoardConfigVendorMk": "crosshatch/BoardConfigVendorPartial.mk",
+  "DeviceVendorMk": "crosshatch/device-vendor-partial.mk",
   "api-28": {
     "naked": {
       "overlays-dir": "",
