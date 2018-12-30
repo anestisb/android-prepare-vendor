@@ -437,6 +437,7 @@ gen_dev_vendor_family_cfg_mk() {
     return
   fi
 
+  mkdir -p "$(dirname "$familyDevVendorCfgMk")"
   {
     echo "# [$EXEC_DATE] Auto-generated file, do not edit"
     echo ""
