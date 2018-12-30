@@ -25,7 +25,7 @@
   ],
   "AndroidMk": "crosshatch/Android.mk",
   "BoardConfigVendorMk": "crosshatch/BoardConfigVendorPartial.mk",
-  "DeviceVendorMk": "crosshatch/device-vendor-partial.mk",
+  "DeviceVendorMk": "crosshatch/proprietary/device-vendor.mk",
   "api-28": {
     "naked": {
       "overlays-dir": "",

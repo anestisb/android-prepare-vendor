@@ -425,31 +425,6 @@ gen_board_family_cfg_mk() {
   } > "$familyBoardCfgVendorMk"
 }
 
-gen_dev_vendor_family_cfg_mk() {
-  local familyDevVendorCfgMk="" majorTarget="" minorTarget=""
-
-  # So far required for Pixel 3rd generation
-  if [[ "$DEVICE_FAMILY" == "crosshatch" ]]; then
-    familyDevVendorCfgMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/proprietary/device-vendor.mk"
-    majorTarget="crosshatch"
-    minorTarget="blueline"
-  else
-    return
-  fi
-
-  mkdir -p "$(dirname "$familyDevVendorCfgMk")"
-  {
-    echo "# [$EXEC_DATE] Auto-generated file, do not edit"
-    echo ""
-    echo "ifneq (\$(filter $minorTarget,\$(TARGET_DEVICE)),)"
-    echo "  LOCAL_STEM := $minorTarget/device-vendor-partial.mk"
-    echo "else"
-    echo "  LOCAL_STEM := $majorTarget/device-vendor-partial.mk"
-    echo "endif"
-    echo "-include vendor/$VENDOR_DIR/\$(LOCAL_STEM)"
-  } > "$familyDevVendorCfgMk"
-}
-
 gen_board_info_txt() {
   local outDir="$1"
   local outTxt="$outDir/vendor-board-info.txt"
@@ -1235,7 +1210,6 @@ update_vendor_blobs_mk "$BLOBS_LIST"
 
 # Generate device-vendor.mk makefile (will be updated later)
 echo "[*] Generating '$(basename "$DEVICE_VENDOR_MK")'"
-gen_dev_vendor_family_cfg_mk
 echo -e "\$(call inherit-product, vendor/$VENDOR_DIR/$DEVICE/$DEVICE-vendor-blobs.mk)\n" >> "$DEVICE_VENDOR_MK"
 
 # Append items listed in device vendor configuration file

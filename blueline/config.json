@@ -25,7 +25,7 @@
   ],
   "AndroidMk": "blueline/Android.mk",
   "BoardConfigVendorMk": "blueline/BoardConfigVendorPartial.mk",
-  "DeviceVendorMk": "blueline/device-vendor-partial.mk",
+  "DeviceVendorMk": "crosshatch/proprietary/device-vendor.mk",
   "api-28": {
     "naked": {
       "overlays-dir": "",
