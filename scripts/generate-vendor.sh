@@ -420,6 +420,12 @@ gen_board_info_txt() {
 
   {
     echo "require board=$DEVICE"
+
+    # Pixel 3 added an extra product partition
+    if [[ "$DEVICE_FAMILY" == "crosshatch" ]]; then
+      echo 'require partition-exists=product'
+    fi
+
     echo "require version-bootloader=$BOOTLOADER_VER"
     if [[ "$RADIO_VER" != "" ]]; then
       echo "require version-baseband=$RADIO_VER"
