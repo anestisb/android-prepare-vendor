@@ -77,7 +77,8 @@ cat <<_EOF
       * Default bytecode de-optimization repair choise is based on most stable/heavily-tested method.
         If you need to change the defaults, you can select manually.
       * Darwin systems can use the ext4fuse to extract data from ext4 images without root
-      * Linux system can use the ext4fuse, fuse-ext2 or debugfs to extract data from ext4 images without root
+      * Linux system can use the ext4fuse, fuse-ext2 or debugfs to extract data from ext4 images
+        without root. If script is run as root, loopback mount is used instead of fuses.
 _EOF
   abort 1
 }
