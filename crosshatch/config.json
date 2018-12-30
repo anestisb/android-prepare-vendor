@@ -12,6 +12,7 @@
     "cmnlib",
     "cmnlib64",
     "devcfg",
+    "dto",
     "hyp",
     "keymaster",
     "modem",
