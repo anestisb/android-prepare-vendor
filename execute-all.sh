@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-#  Generate AOSP compatible vendor data for provided device & buildID
+# Generate AOSP compatible vendor data for the provided device & build ID
 #
 
 set -e # fail on unhandled error
@@ -12,14 +12,14 @@ readonly TMP_WORK_DIR=$(mktemp -d "${TMPDIR:-/tmp}"/android_prepare_vendor.XXXXX
 declare -a SYS_TOOLS=("mkdir" "dirname" "date" "touch" "wget" "mount" "shasum" "unzip")
 readonly HOST_OS="$(uname -s)"
 
-# Realpath implementation in bash
+# Realpath implementation in bash (required for macOS support)
 readonly REALPATH_SCRIPT="$SCRIPTS_ROOT/scripts/realpath.sh"
 
 # Common & global constants scripts
 readonly CONSTS_SCRIPT="$SCRIPTS_ROOT/scripts/constants.sh"
 readonly COMMON_SCRIPT="$SCRIPTS_ROOT/scripts/common.sh"
 
-# Helper script to download Nexus factory images from web
+# Helper script to download factory images
 readonly DOWNLOAD_SCRIPT="$SCRIPTS_ROOT/scripts/download-nexus-image.sh"
 
 # Helper script to extract system & vendor images data

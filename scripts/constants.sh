@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Ensure script is sourced
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && exit 1
 
 # List of supported devices

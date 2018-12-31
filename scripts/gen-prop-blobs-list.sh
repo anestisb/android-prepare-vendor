@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 #
-#  Walk vendor partition and extract file list
-#  to be copied from vendor blobs generator script.
-#  Script combines system-proprietary-blobs.txt into
-#  a unified file so that following scripts can pick-up
-#  the complete list.
+# Iterate vendor partition and extract the list of files to be copied from vendor blobs generator
+# script. The script combines vendor partition files and items included in the selected
+# configuration, into a unified file so that following scripts can pick-up the complete list.
 #
 
 set -e # fail on unhandled error

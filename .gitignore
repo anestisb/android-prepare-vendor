@@ -1,6 +1,5 @@
 .DS_Store
 
-# Ignore merged / intermediate files & generated data
 angler/*
 !angler/config.json
 !angler/overlays-*
@@ -37,16 +36,6 @@ crosshatch/*
 !crosshatch/config.json
 !crosshatch/overlays-*
 
-# Due to large files they're downloaded at manual step
-# and not part of git files
+# oatdump host tools are downloaded on first run and are not part of the repo
 hostTools/Linux/api*
 hostTools/Darwin/api*
-
-# Old hostTools dir structure - keep them excluded for now until
-# new layout is finalized
-hostTools/Linux/*.zip
-hostTools/Linux/bin/oatdump
-hostTools/Linux/lib*
-hostTools/Darwin/*.zip
-hostTools/Darwin/bin/oatdump
-hostTools/Darwin/lib*

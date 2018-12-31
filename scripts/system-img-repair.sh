@@ -1,28 +1,6 @@
 #!/usr/bin/env bash
 #
-# For latest Android Nexus devices (N5x, N6p, N9, etc.), Google is no longer
-# providing vendor archives to be included into AOSP build trees.
-# Officially it is claimed that all vendor proprietary blobs have been moved
-# to /vendor partition. Unfortunately that is not true since a few vendor
-# executables, DSOs and APKs/JARs are present under /system although missing
-# from AOSP public tree.
-#
-# As such custom AOSP builds require to first extract such blobs from /system
-# of factory images and manually include them in vendor directory of AOSP tree.
-# This process is going anal++ due to the fact that APKs/JARs under /system are
-# pre-optimized, requiring to reverse the process (de-optimize them) before
-# being capable to copy and include them in AOSP build trees.
-#
-# This script aims to automate the archive reconstruct process by creating a copy
-# of the input system partition while repairing all optimized bytecode
-# packages. Before using this script you'll be required to perform the
-# following steps:
-#  a) Download matching factory image from Google developers website
-#  b) Extract downloaded archives & use simg2img tool to convert the system.
-#     img sparse image to raw Linux image
-#  c) Mount system raw image to loopback interface and extract all directories
-#     while maintaining directory structure
-#  d) Execute this script against the root of extracted system directory
+# Process the system partition and try to de-optimize applications from factory images
 #
 
 set -e # fail on unhandled error

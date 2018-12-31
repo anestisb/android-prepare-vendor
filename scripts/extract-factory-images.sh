@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-#  Extract system & vendor images from factory archive
-#  after converting from sparse to raw
+# Extract system & vendor images from factory archive after converting from sparse to raw
 #
 
 set -e # fail on unhandled error

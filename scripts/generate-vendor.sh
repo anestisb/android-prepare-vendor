@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Script to parse list of proprietary blobs from file and generate
-# vendor directory structure and makefiles
+# Script to parse the list of proprietary blobs and generate the vendor directory structure and
+# makefiles
 #
 
 set -e # fail on unhandled error

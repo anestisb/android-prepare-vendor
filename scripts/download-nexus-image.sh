@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-#  Download Nexus images archive for provided device & build id
+# Download factory image for the provided device & build id
 #
 
 set -e # fail on unhandled error

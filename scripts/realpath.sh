@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 #
-# Script to parse list of proprietary blobs from file and generate
-# vendor directory structure and makefiles
+# sh-realpath implementation from mkropat
+# https://github.com/mkropat/sh-realpath
 #
 
 set -e # fail on unhandled error
 
-# sh-realpath implementation from mkropat
-# https://github.com/mkropat/sh-realpath
 _realpath() {
-    _canonicalize_path "$(_resolve_symlinks "$1")"
+  _canonicalize_path "$(_resolve_symlinks "$1")"
 }
 
 _resolve_symlinks() {
