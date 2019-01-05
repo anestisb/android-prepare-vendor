@@ -410,7 +410,7 @@ gen_board_family_cfg_mk() {
     majorTarget="crosshatch"
     minorTarget="blueline"
   else
-    return
+    return 0
   fi
 
   {
