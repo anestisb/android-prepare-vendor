@@ -915,6 +915,7 @@ gen_mk_for_shared_libs() {
   fi
 }
 
+# Include vendor in AB_OTA_PARTITIONS without treating it a radio image
 update_ab_ota_partitions() {
   local outMk="$1"
 
