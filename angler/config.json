@@ -6,9 +6,7 @@
   "aosp-vendor-dir": "huawei",
   "device-family": "angler",
   "supported-apis": ["api-23", "api-24", "api-25", "api-26", "api-27"],
-  "extra-partitions": [
-    "vendor"
-  ],
+  "extra-partitions": [],
   "AndroidMk": "angler/Android.mk",
   "BoardConfigVendorMk": "angler/BoardConfigVendor.mk",
   "DeviceVendorMk": "angler/device-vendor.mk",

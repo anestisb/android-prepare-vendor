@@ -6,9 +6,7 @@
   "aosp-vendor-dir": "htc",
   "device-family": "flounder",
   "supported-apis": ["api-23", "api-24", "api-25"],
-  "extra-partitions": [
-    "vendor"
-  ],
+  "extra-partitions": [],
   "AndroidMk": "flounder/Android.mk",
   "BoardConfigVendorMk": "flounder/BoardConfigVendor.mk",
   "DeviceVendorMk": "flounder/device-vendor.mk",
