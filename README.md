@@ -159,7 +159,7 @@ target device before any pull request.
 
 ## Change Log
 * 0.6.0 - TBC
-  * Android 9 (API-28) support for Pixel 3 (blueline) & Pixel 3 XL (crosshatch) - WIP
+  * Android 9 (API-28) support for Pixel 3 (blueline) & Pixel 3 XL (crosshatch)
   * Improve support for deterministic builds (`--timestamp` option)
   * Compatibility fixes in image downloader logic
   * Create output directory if does not exist
