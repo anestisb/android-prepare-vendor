@@ -63,7 +63,6 @@
         "system/etc/firmware/music_detector.descriptor",
         "system/etc/firmware/music_detector.sound_model",
         "system/etc/permissions/cneapiclient.xml",
-        "system/etc/permissions/com.google.android.factoryota.xml",
         "system/etc/permissions/com.google.modemservice.xml",
         "system/etc/permissions/com.qualcomm.qti.imscmservice.xml",
         "system/etc/permissions/com.quicinc.cne.xml",
