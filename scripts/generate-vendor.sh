@@ -440,6 +440,11 @@ gen_board_info_txt() {
     if [[ "$DEVICE_FAMILY" == "crosshatch" ]]; then
       echo 'require partition-exists=product'
     fi
+	
+	# Pixel 3a added an extra product partition
+    if [[ "$DEVICE_FAMILY" == "bonito" ]]; then
+      echo 'require partition-exists=product'
+    fi
 
     echo "require version-bootloader=$BOOTLOADER_VER"
     if [[ "$RADIO_VER" != "" ]]; then
