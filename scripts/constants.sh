@@ -13,6 +13,7 @@ declare -ra SUPPORTED_DEVICES=(
   "taimen"        # Pixel 2 XL
   "blueline"      # Pixel 3
   "crosshatch"    # Pixel 3 XL
+  "sargo"		  # Pixel 3a
 )
 
 # URLs to download factory images from
