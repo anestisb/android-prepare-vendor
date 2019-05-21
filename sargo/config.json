@@ -54,6 +54,7 @@
         "system/priv-app/ModemService/ModemService.apk",
         "system/priv-app/qcrilmsgtunnel/qcrilmsgtunnel.apk",
         "system/priv-app/grilservice/grilservice.apk"
+	"system/priv-app/DiagMon/DiagMon.apk"
       ],
       "system-other": [
         "system/bin/icm",
@@ -283,7 +284,6 @@
         "system/priv-app/SprintHM/SprintHM.apk",
         "system/priv-app/VerizonAuthDialog/VerizonAuthDialog.apk",
 	"system/priv-app/ConnMO/ConnMO.apk",
-	"system/priv-app/DiagMon/DiagMon.apk",
 	"system/priv-app/DCMO/DCMO.apk",
 	"system/priv-app/LLKAgent/LLKAgent.apk",
 	"system/priv-app/MyVerizonServices/MyVerizonServices.apk",
