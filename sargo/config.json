@@ -27,6 +27,9 @@
     "naked": {
       "overlays-dir": "",
       "system-bytecode": [
+	"system/product/app/com.qualcomm.qti.services.secureui/com.qualcomm.qti.services.secureui.apk",
+	"system/product/app/SSRestartDetector/SSRestartDetector.apk",
+	"system/product/framework/com.qti.snapdragon.sdk.display.jar",
         "system/app/datastatusnotification/datastatusnotification.apk",
         "system/app/embms/embms.apk",
         "system/app/ims/ims.apk",
@@ -132,6 +135,8 @@
         "system/lib64/vendor.qti.ims.callinfo@1.0.so",
         "system/lib64/vendor.qti.imsrtpservice@1.0.so",
         "system/lib64/vendor.qti.voiceprint@1.0.so",
+	"system/product/lib64/libsecureuisvc_jni.so",
+	"system/lib64/libqcbor_system.so",
 	"system/lib64/com.quicinc.cne.server@1.0.so",
 	"system/lib64/libdisplayconfig.so",
 	"system/lib64/libFidoCrypto_system.so",
@@ -217,6 +222,8 @@
         "system/lib/vendor.qti.ims.callinfo@1.0.so",
         "system/lib/vendor.qti.imsrtpservice@1.0.so",
         "system/lib/vendor.qti.voiceprint@1.0.so",
+	"system/product/lib/libsecureuisvc_jni.so",
+	"system/lib/libqcbor_system.so",
 	"system/lib/com.quicinc.cne.server@1.0.so",
 	"system/lib/libdisplayconfig.so",
 	"system/lib/libFidoCrypto_system.so",
