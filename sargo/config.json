@@ -63,6 +63,7 @@
         "system/bin/pktlogconf",
         "system/bin/smcinvoked",
         "system/bin/vendor_cmd_tool",
+	"system/bin/move_time_data.sh",
 	"system/etc/cne/andsfCne.xml",
         "system/etc/firmware/music_detector.descriptor",
         "system/etc/firmware/music_detector.sound_model",
@@ -136,10 +137,10 @@
         "system/lib64/vendor.qti.imsrtpservice@1.0.so",
         "system/lib64/vendor.qti.voiceprint@1.0.so",
 	"system/product/lib64/libsecureuisvc_jni.so",
-	"system/lib64/libqcbor_system.so",
 	"system/lib64/com.quicinc.cne.server@1.0.so",
 	"system/lib64/libdisplayconfig.so",
 	"system/lib64/libFidoCrypto_system.so",
+	"system/lib/libnl.so",
 	"system/lib64/libqcbor_system.so",
 	"system/lib64/libqsap_sdk.so",
 	"system/lib64/libseccam.so",
@@ -223,7 +224,6 @@
         "system/lib/vendor.qti.imsrtpservice@1.0.so",
         "system/lib/vendor.qti.voiceprint@1.0.so",
 	"system/product/lib/libsecureuisvc_jni.so",
-	"system/lib/libqcbor_system.so",
 	"system/lib/com.quicinc.cne.server@1.0.so",
 	"system/lib/libdisplayconfig.so",
 	"system/lib/libFidoCrypto_system.so",
@@ -302,7 +302,8 @@
 	"system/priv-app/obdm_stub/obdm_stub.apk",
 	"system/priv-app/Showcase/Showcase.apk",
 	"system/priv-app/VzwOmaTrigger/VzwOmaTrigger.apk",
-	"system/priv-app/DiagMon/DiagMon.apk"
+	"system/priv-app/DiagMon/DiagMon.apk",
+	"system/priv-app/AppDirectedSMSService/AppDirectedSMSService.apk"
       ],
       "system-other": [
         "system/etc/ambient/matcher_tah.leveldb",
