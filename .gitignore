@@ -40,6 +40,10 @@ sargo/*
 !sargo/config.json
 !sargo/overlays-*
 
+bonito/*
+!bonito/config.json
+!bonito/overlays-*
+
 # oatdump host tools are downloaded on first run and are not part of the repo
 hostTools/Linux/api*
 hostTools/Darwin/api*
