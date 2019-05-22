@@ -72,6 +72,7 @@
 	"system/etc/permissions/com.qualcomm.qti.imscmservice.xml",
 	"system/etc/permissions/com.quicinc.cne.xml",
 	"system/etc/permissions/embms.xml",
+	"system/product/etc/permissions/com.qti.snapdragon.sdk.display.xml",
         "system/etc/permissions/lpa.xml",
         "system/etc/permissions/LteDirectDiscovery.xml",
         "system/etc/permissions/qcrilhook.xml",
