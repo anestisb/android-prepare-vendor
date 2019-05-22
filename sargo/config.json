@@ -29,7 +29,6 @@
       "system-bytecode": [
 	"system/product/app/com.qualcomm.qti.services.secureui/com.qualcomm.qti.services.secureui.apk",
 	"system/product/app/SSRestartDetector/SSRestartDetector.apk",
-	"system/product/framework/com.qti.snapdragon.sdk.display.jar",
         "system/app/datastatusnotification/datastatusnotification.apk",
         "system/app/embms/embms.apk",
         "system/app/ims/ims.apk",
