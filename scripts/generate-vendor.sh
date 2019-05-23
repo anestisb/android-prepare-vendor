@@ -409,6 +409,10 @@ gen_board_family_cfg_mk() {
     familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/proprietary/BoardConfigVendor.mk"
     majorTarget="crosshatch"
     minorTarget="blueline"
+  elif [[ "$DEVICE_FAMILY" == "bonito" ]]; then
+    familyBoardCfgVendorMk="$OUTPUT_DIR/vendor/$VENDOR_DIR/$DEVICE_FAMILY/proprietary/BoardConfigVendor.mk"
+    majorTarget="bonito"
+    minorTarget="sargo"
   else
     return 0
   fi
