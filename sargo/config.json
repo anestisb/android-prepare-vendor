@@ -100,7 +100,6 @@
         "system/lib/liblistenjni.so",
         "system/lib/liblistensoundmodel2.so",
         "system/lib/libmdsprpc_system.so",
-        "system/lib/libnl.so",
         "system/lib/libqcbor_system.so",
         "system/lib/libqct_resampler.so",
         "system/lib/libqsap_sdk.so",
