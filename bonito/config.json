@@ -311,7 +311,6 @@
         "system/etc/permissions/com.android.sdm.plugins.sprintdm.xml",
         "system/etc/permissions/com.android.vzwomatrigger.xml",
         "system/etc/permissions/com.customermobile.preload.vzw.xml",
-        "system/etc/permissions/com.google.modemservice.xml",
         "system/etc/permissions/com.google.omadm.trigger.xml",
         "system/etc/permissions/com.verizon.apn.xml",
         "system/etc/permissions/com.verizon.embms.xml",

@@ -239,7 +239,6 @@
         "system/etc/permissions/android.hardware.telephony.euicc.xml",
         "system/etc/permissions/com.android.omadm.service.xml",
         "system/etc/permissions/com.android.sdm.plugins.sprintdm.xml",
-        "system/etc/permissions/com.google.modemservice.xml",
         "system/etc/permissions/com.google.omadm.trigger.xml",
         "system/etc/permissions/com.verizon.embms.xml",
         "system/etc/permissions/com.verizon.provider.xml",
