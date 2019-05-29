@@ -147,6 +147,8 @@ vendor blobs).
 | Pixel 2 XL taimen               | N/A                         | N/A              | N/A              | oatdump | oatdump | oatdump |
 | Pixel 3 blueline                | N/A                         | N/A              | N/A              | N/A     | N/A     | oatdump |
 | Pixel 3 XL crosshatch           | N/A                         | N/A              | N/A              | N/A     | N/A     | oatdump |
+| Pixel 3a sargo                  | N/A                         | N/A              | N/A              | N/A     | N/A     | oatdump |
+| Pixel 3a XL bonito              | N/A                         | N/A              | N/A              | N/A     | N/A     | oatdump |
 
 
 Please check existing
@@ -159,6 +161,7 @@ target device before any pull request.
 
 ## Change Log
 * 0.6.0 - TBC
+  * Android 9 (API-28) support for Pixel 3a (sargo) & Pixel 3a XL (bonito)
   * Android 9 (API-28) support for Pixel 3 (blueline) & Pixel 3 XL (crosshatch)
   * Improve support for deterministic builds (`--timestamp` option)
   * Compatibility fixes in image downloader logic
