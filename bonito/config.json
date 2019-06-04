@@ -159,7 +159,7 @@
         "system/lib/vendor.qti.hardware.vpp@1.1.so",
         "system/lib/vendor.qti.hardware.vpp@1.2.so",
         "system/lib/vendor.qti.hardware.wigig.netperftuner@1.0.so",
-        "system/lib/vendor.qti.hardware.wigig.supptunnel@1.0.so"
+        "system/lib/vendor.qti.hardware.wigig.supptunnel@1.0.so",
         "system/lib/vendor.qti.ims.callinfo@1.0.so",
         "system/lib/vendor.qti.imsrtpservice@1.0.so",
         "system/lib/vendor.qti.voiceprint@1.0.so",
