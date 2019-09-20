@@ -20,7 +20,6 @@ declare -ra SUPPORTED_DEVICES=(
 # URLs to download factory images from
 readonly NID_URL="https://google.com"
 readonly GURL="https://developers.google.com/android/nexus/images"
-readonly TOSURL="https://developers.google.com/profile/acknowledgeNotification"
 
 # oatdump dependencies URLs as compiled from AOSP matching API levels
 readonly L_OATDUMP_URL_API23='https://onedrive.live.com/download?cid=D1FAC8CC6BE2C2B0&resid=D1FAC8CC6BE2C2B0%21490&authkey=ACA4f4Zvs3Tb_SY'
